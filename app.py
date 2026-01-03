@@ -1,11 +1,11 @@
 """
 Chat-First Crypto Wallet MVP
+A Streamlit app with an AI Agent managing crypto on Base Sepolia
 """
 
 import os
 import json
 import streamlit as st
-from typing import Optional
 from datetime import datetime
 
 from langchain_anthropic import ChatAnthropic
@@ -14,8 +14,12 @@ from langchain_core.tools import tool
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from cdp_langchain.agent_toolkits import CdpToolkit
-from cdp_langchain.utils import CdpAgentkitWrapper
+try:
+    from cdp_langchain.agent_toolkits import CdpToolkit
+    from cdp_langchain.utils import CdpAgentkitWrapper
+    CDP_AVAILABLE = True
+except ImportError:
+    CDP_AVAILABLE = False
 
 # ============================================================================
 # CONFIG
@@ -98,77 +102,134 @@ def get_faucet_link() -> str:
 # ============================================================================
 
 def init_cdp_agent():
-    if not os.getenv("CDP_API_KEY_NAME") or os.getenv("CDP_API_KEY_NAME") == "skip-for-now":
+    """Initialize the CDP Agent with wallet capabilities."""
+    if not CDP_AVAILABLE:
+        st.sidebar.warning("CDP packages not installed")
         return None, None
+        
+    cdp_key_name = os.getenv("CDP_API_KEY_NAME")
+    cdp_private_key = os.getenv("CDP_API_KEY_PRIVATE_KEY")
+    
+    if not cdp_key_name or cdp_key_name == "skip-for-now":
+        return None, None
+    if not cdp_private_key or cdp_private_key == "skip-for-now":
+        return None, None
+        
     try:
         cdp = CdpAgentkitWrapper(network_id=NETWORK_ID)
         toolkit = CdpToolkit.from_cdp_agentkit_wrapper(cdp)
         return cdp, toolkit.get_tools()
     except Exception as e:
-        st.error(f"CDP init failed: {e}")
+        st.sidebar.error(f"CDP init failed: {e}")
         return None, None
 
 def create_agent():
-    llm = ChatAnthropic(model="claude-sonnet-4-20250514", temperature=0.3, max_tokens=4096)
+    """Create the LangChain agent with all tools."""
+    llm = ChatAnthropic(
+        model="claude-sonnet-4-20250514",
+        temperature=0.3,
+        max_tokens=4096
+    )
+    
     cdp, cdp_tools = init_cdp_agent()
-    tools = [search_bitrefill, buy_gift_card, read_latest_emails, get_faucet_link] + (cdp_tools or [])
+    
+    custom_tools = [search_bitrefill, buy_gift_card, read_latest_emails, get_faucet_link]
+    all_tools = custom_tools + (cdp_tools if cdp_tools else [])
+    
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
-    agent = create_tool_calling_agent(llm, tools, prompt)
-    return AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True), cdp
+    
+    agent = create_tool_calling_agent(llm, all_tools, prompt)
+    executor = AgentExecutor(
+        agent=agent,
+        tools=all_tools,
+        verbose=True,
+        handle_parsing_errors=True,
+        max_iterations=10
+    )
+    
+    return executor, cdp
 
 # ============================================================================
 # UI
 # ============================================================================
 
 def init_state():
-    defaults = {"messages": [], "agent": None, "cdp": None, "gmail_connected": False, "purchases": [], "tool_outputs": []}
+    """Initialize Streamlit session state."""
+    defaults = {
+        "messages": [],
+        "agent": None,
+        "cdp": None,
+        "gmail_connected": False,
+        "purchases": [],
+        "tool_outputs": []
+    }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
 
 def sidebar():
+    """Render the sidebar."""
     with st.sidebar:
-        st.title("🔐 Wallet")
+        st.title("🔐 Wallet Status")
         st.markdown("**Network:** `Base Sepolia` 🧪")
         st.divider()
+        
         if st.session_state.cdp:
-            st.success("✅ Wallet Connected")
+            try:
+                wallet = st.session_state.cdp.wallet
+                st.success("✅ Wallet Connected")
+                st.code(wallet.default_address.address_id[:20] + "...")
+            except:
+                st.success("✅ CDP Connected")
         else:
             st.warning("⚠️ CDP not configured (mock mode)")
+            st.caption("Add CDP keys in Railway Variables")
+        
         st.divider()
+        
         st.subheader("📧 Email")
         if st.session_state.gmail_connected:
             st.success("Gmail Connected")
-            if st.button("Disconnect"):
+            if st.button("Disconnect Gmail"):
                 st.session_state.gmail_connected = False
                 st.rerun()
         else:
             if st.button("Connect Gmail", type="primary"):
                 st.session_state.gmail_connected = True
+                st.toast("Gmail connected (simulated)!")
                 st.rerun()
+        
         st.divider()
+        
         if st.session_state.purchases:
-            st.subheader("🎁 Purchases")
+            st.subheader("🎁 Recent Purchases")
             for p in st.session_state.purchases[-3:]:
-                st.code(f"{p['product']['name']}: {p['code']}")
+                with st.expander(p["product"]["name"]):
+                    st.code(p["code"])
+                    st.caption(f"${p['product']['price_usd']}")
+        
+        st.divider()
+        
         if st.button("🗑️ Clear Chat", use_container_width=True):
             st.session_state.messages = []
+            st.session_state.tool_outputs = []
             st.rerun()
 
 def chat():
+    """Render the chat interface."""
     st.title("💬 Chat-First Crypto Wallet")
-    st.caption("Claude 3.5 Sonnet + Coinbase AgentKit")
+    st.caption("Powered by Claude 3.5 Sonnet + Coinbase AgentKit")
     
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
     
-    if prompt := st.chat_input("Ask me anything..."):
+    if prompt := st.chat_input("Ask me anything about your wallet..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -176,25 +237,47 @@ def chat():
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    history = [HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"]) for m in st.session_state.messages[:-1]]
-                    result = st.session_state.agent.invoke({"input": prompt, "chat_history": history})
+                    history = []
+                    for m in st.session_state.messages[:-1]:
+                        if m["role"] == "user":
+                            history.append(HumanMessage(content=m["content"]))
+                        else:
+                            history.append(AIMessage(content=m["content"]))
+                    
+                    result = st.session_state.agent.invoke({
+                        "input": prompt,
+                        "chat_history": history
+                    })
+                    
                     response = result.get("output", "Sorry, I couldn't process that.")
+                    
                 except Exception as e:
                     response = f"Error: {e}"
+                    st.error(f"Agent error: {e}")
+                
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
 def main():
-    st.set_page_config(page_title="Chat Crypto Wallet", page_icon="💰", layout="wide")
+    """Main application entry point."""
+    st.set_page_config(
+        page_title="Chat-First Crypto Wallet",
+        page_icon="💰",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    
     init_state()
     
     if st.session_state.agent is None:
-        with st.spinner("Starting AI Agent..."):
+        with st.spinner("Initializing AI Agent..."):
             try:
-                st.session_state.agent, st.session_state.cdp = create_agent()
+                agent, cdp = create_agent()
+                st.session_state.agent = agent
+                st.session_state.cdp = cdp
             except Exception as e:
-                st.error(f"Failed to start: {e}")
-                st.info("Check that ANTHROPIC_API_KEY is set in .env")
+                st.error(f"Failed to initialize agent: {e}")
+                st.info("Check that ANTHROPIC_API_KEY is set in Railway Variables.")
                 st.stop()
     
     sidebar()
@@ -203,13 +286,16 @@ def main():
     if not st.session_state.messages:
         welcome = """👋 **Welcome to your Chat-First Crypto Wallet!**
 
-I can help you with:
-- 💰 Check balances
-- 💸 Transfer crypto
-- 🎁 Buy gift cards (simulated)
-- 📧 Read emails (simulated)
+I'm your AI assistant for managing crypto on Base Sepolia testnet. Here's what I can help you with:
 
-**Try:** "Search for Amazon gift cards" or "Read my emails"
+- 💰 **Check balances** - View your ETH and token holdings
+- 💸 **Transfer assets** - Send crypto to any address  
+- 🔄 **Swap tokens** - Exchange between different assets
+- 🚰 **Get testnet funds** - Request from faucets
+- 🎁 **Buy gift cards** - Shop with crypto (simulated)
+- 📧 **Read emails** - Check your inbox (simulated)
+
+**Try asking:** "What's my wallet balance?" or "Search for Amazon gift cards"
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
         st.rerun()
