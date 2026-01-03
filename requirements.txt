@@ -1,0 +1,9 @@
+streamlit>=1.28.0
+python-dotenv>=1.0.0
+langchain>=0.3.0
+langchain-anthropic>=0.3.0
+langchain-core>=0.3.0
+cdp-langchain>=0.0.8
+cdp-agentkit-core>=0.0.5
+cdp-sdk>=0.0.8
+pydantic>=2.0.0
