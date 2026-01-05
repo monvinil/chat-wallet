@@ -37,15 +37,36 @@ def create_user(email: str, primary_wallet_address: str = None, auth_provider: s
         if not client:
             return None
 
-        result = client.table("users").insert({
+        # Try with primary_wallet_address first (if migration run)
+        data = {
             "email": email,
             "auth_provider": auth_provider,
-            "primary_wallet_address": primary_wallet_address,
             "created_at": datetime.utcnow().isoformat()
-        }).execute()
+        }
 
-        if result.data:
-            return result.data[0]
+        # Only add primary_wallet_address if column exists
+        if primary_wallet_address:
+            data["primary_wallet_address"] = primary_wallet_address
+
+        try:
+            result = client.table("users").insert(data).execute()
+            if result.data:
+                return result.data[0]
+        except Exception as e:
+            # If error due to missing column, try without it
+            if "primary_wallet_address" in str(e):
+                st.warning("⚠️ Database needs migration. Creating user without primary_wallet_address field.")
+                data_without = {
+                    "email": email,
+                    "auth_provider": auth_provider,
+                    "created_at": datetime.utcnow().isoformat()
+                }
+                result = client.table("users").insert(data_without).execute()
+                if result.data:
+                    return result.data[0]
+            else:
+                raise e
+
         return None
     except Exception as e:
         st.error(f"Failed to create user: {e}")

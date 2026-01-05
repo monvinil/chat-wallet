@@ -267,7 +267,12 @@ def wallet_setup_ui():
 
                         if wallet_info:
                             # Create user in Supabase
-                            user = create_user(email, wallet_info["address"])
+                            try:
+                                user = create_user(email, wallet_info["address"])
+                            except Exception as e:
+                                st.error(f"Database error: {str(e)}")
+                                st.info("💡 Tip: Make sure you've run the Supabase migrations (supabase_migration_wallet_backup.sql)")
+                                user = None
 
                             if user:
                                 # Encrypt and save to session
