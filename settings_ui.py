@@ -17,8 +17,22 @@ def settings_page():
         st.warning("Please log in to access settings")
         return
 
-    # Get user ID (for now, use wallet address as user_id)
-    user_id = st.session_state.wallet_address
+    # Get user ID (UUID from database, NOT wallet address)
+    user_id = st.session_state.get("user_id")
+
+    # Fallback: if user_id not in session, try to get from database
+    if not user_id:
+        from supabase_client import get_user_by_email
+        user_email = st.session_state.get("user_email")
+        if user_email:
+            user = get_user_by_email(user_email)
+            if user:
+                user_id = user["id"]
+                st.session_state.user_id = user_id
+
+    if not user_id:
+        st.warning("Please log in again to access settings")
+        return
 
     # Load existing settings
     existing_settings = SettingsManager.get_user_settings(user_id)

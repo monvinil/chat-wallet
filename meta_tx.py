@@ -14,14 +14,6 @@ from web3 import Web3
 class MetaTransaction:
     """Handle meta-transactions (gasless transactions)"""
 
-    # EIP-712 Domain
-    DOMAIN = {
-        "name": "ChatWallet",
-        "version": "1",
-        "chainId": 84532,  # Base Sepolia
-        "verifyingContract": "0x0000000000000000000000000000000000000000"
-    }
-
     # EIP-712 Types
     TYPES = {
         "MetaTx": [
@@ -33,6 +25,16 @@ class MetaTransaction:
             {"name": "deadline", "type": "uint256"}
         ]
     }
+
+    @staticmethod
+    def get_domain(chain_id: int = 84532) -> dict:
+        """Get EIP-712 domain with specified chain ID"""
+        return {
+            "name": "ChatWallet",
+            "version": "1",
+            "chainId": chain_id,
+            "verifyingContract": "0x0000000000000000000000000000000000000000"
+        }
 
     @staticmethod
     def create_message(
@@ -63,8 +65,8 @@ class MetaTransaction:
         return message
 
     @staticmethod
-    def sign_message(message: Dict[str, Any], private_key: str) -> str:
-        """Sign a meta-transaction message"""
+    def sign_message(message: Dict[str, Any], private_key: str, chain_id: int = 84532) -> str:
+        """Sign a meta-transaction message with specified chain ID"""
 
         # Create EIP-712 structured data
         structured_data = {
@@ -78,7 +80,7 @@ class MetaTransaction:
                 "MetaTx": MetaTransaction.TYPES["MetaTx"]
             },
             "primaryType": "MetaTx",
-            "domain": MetaTransaction.DOMAIN,
+            "domain": MetaTransaction.get_domain(chain_id),
             "message": message
         }
 
@@ -93,9 +95,10 @@ class MetaTransaction:
     def verify_signature(
         message: Dict[str, Any],
         signature: str,
-        expected_signer: str
+        expected_signer: str,
+        chain_id: int = 84532
     ) -> bool:
-        """Verify a meta-transaction signature"""
+        """Verify a meta-transaction signature with specified chain ID"""
 
         try:
             # Create EIP-712 structured data
@@ -110,7 +113,7 @@ class MetaTransaction:
                     "MetaTx": MetaTransaction.TYPES["MetaTx"]
                 },
                 "primaryType": "MetaTx",
-                "domain": MetaTransaction.DOMAIN,
+                "domain": MetaTransaction.get_domain(chain_id),
                 "message": message
             }
 

@@ -109,8 +109,9 @@ class TransactionRelayer:
     ) -> Tuple[bool, Optional[str]]:
         """Validate meta-transaction"""
 
-        # Verify signature
-        if not MetaTransaction.verify_signature(message, signature, user_address):
+        # Verify signature with correct chain ID
+        chain_id = self.network["chain_id"]
+        if not MetaTransaction.verify_signature(message, signature, user_address, chain_id=chain_id):
             return False, "Invalid signature"
 
         # Check if expired

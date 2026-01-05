@@ -27,7 +27,9 @@ from supabase_client import (
     create_user,
     save_wallet_address,
     get_user_wallets,
-    log_transaction
+    log_transaction,
+    get_user_password_hash,
+    update_user_password_hash
 )
 from settings_ui import settings_page
 
@@ -251,12 +253,19 @@ def wallet_setup_ui():
                         wallet_info = WalletManager.create_new_wallet()
 
                         if wallet_info:
-                            # Create user in Supabase
+                            # Hash password for storage (for login verification)
+                            password_hash = WalletManager.hash_password(password)
+
+                            # Create user in Supabase with password hash
                             try:
-                                user = create_user(email, wallet_info["address"])
+                                user = create_user(
+                                    email=email,
+                                    primary_wallet_address=wallet_info["address"],
+                                    password_hash=password_hash
+                                )
                             except Exception as e:
                                 st.error(f"Database error: {str(e)}")
-                                st.info("💡 Tip: Make sure you've run the Supabase migrations (supabase_migration_wallet_backup.sql)")
+                                st.info("💡 Tip: Make sure you've run the Supabase migrations")
                                 user = None
 
                             if user:
@@ -314,26 +323,36 @@ def wallet_setup_ui():
                 if not user:
                     st.error("❌ Account not found. Please sign up first.")
                 else:
-                    # Get user's wallet
-                    wallets = get_user_wallets(user["id"])
+                    # Verify password
+                    stored_hash = get_user_password_hash(user["id"])
 
-                    if wallets and len(wallets) > 0:
-                        wallet_address = wallets[0]["wallet_address"]
-
-                        # For now, we'll create a temporary session
-                        # In production, you'd decrypt the stored wallet with the password
-                        st.session_state.wallet_address = wallet_address
-                        st.session_state.wallet_locked = False
-                        st.session_state.user_email = login_email
-                        st.session_state.user_id = user["id"]
-                        st.session_state.show_auth_modal = False
-
-                        st.success(f"✅ Welcome back!")
-                        st.info("⚠️ Note: Full wallet recovery with password verification coming soon. For now, import your private key if you need to make transactions.")
-                        time.sleep(1)
-                        st.rerun()
+                    if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
+                        st.error("❌ Incorrect password. Please try again.")
                     else:
-                        st.error("❌ No wallet found for this account.")
+                        # Password verified (or no hash stored - legacy account)
+                        # Get user's wallet
+                        wallets = get_user_wallets(user["id"])
+
+                        if wallets and len(wallets) > 0:
+                            wallet_address = wallets[0]["wallet_address"]
+
+                            st.session_state.wallet_address = wallet_address
+                            st.session_state.wallet_locked = True  # Start locked until they import/unlock
+                            st.session_state.user_email = login_email
+                            st.session_state.user_id = user["id"]
+                            st.session_state.show_auth_modal = False
+
+                            # If no password hash stored (legacy), update it now
+                            if not stored_hash:
+                                new_hash = WalletManager.hash_password(login_password)
+                                update_user_password_hash(user["id"], new_hash)
+
+                            st.success(f"✅ Welcome back!")
+                            st.info("💡 To access your funds, import your wallet using your seed phrase or private key.")
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.error("❌ No wallet found for this account.")
 
     # ========== TAB 3: IMPORT WALLET ==========
     with tab3:
@@ -494,12 +513,26 @@ def send_modal():
             total = amount
 
     # Validate inputs
-    can_send = (
-        recipient and
-        recipient.startswith("0x") and
-        len(recipient) == 42 and
-        amount > 0
-    )
+    valid_recipient = False
+    recipient_error = ""
+
+    if recipient:
+        if not recipient.startswith("0x"):
+            recipient_error = "Address must start with 0x"
+        elif len(recipient) != 42:
+            recipient_error = "Address must be 42 characters"
+        else:
+            # Check if valid hex
+            try:
+                int(recipient, 16)
+                valid_recipient = True
+            except ValueError:
+                recipient_error = "Invalid address format"
+
+    if recipient and not valid_recipient:
+        st.warning(f"⚠️ {recipient_error}")
+
+    can_send = valid_recipient and amount > 0
 
     col1, col2 = st.columns([1, 1])
 
@@ -519,19 +552,24 @@ def send_modal():
                         st.error("Could not load wallet. Please unlock first.")
                         return
 
+                    # Get chain ID for signing
+                    network = NETWORKS[network_key]
+                    chain_id = network["chain_id"]
+
                     # Create meta-transaction message
                     message = MetaTransaction.create_message(
                         from_address=st.session_state.wallet_address,
                         to_address=recipient,
                         amount=amount,
                         currency="USDC",
-                        nonce=int(time.time())  # Simple nonce for now
+                        nonce=int(time.time() * 1000)  # Millisecond-precision nonce for uniqueness
                     )
 
                     # Sign message (user's signature, no gas!)
                     signature = MetaTransaction.sign_message(
                         message,
-                        wallet_data["private_key"]
+                        wallet_data["private_key"],
+                        chain_id=chain_id
                     )
 
                     # Execute via relayer
@@ -655,14 +693,19 @@ def sidebar():
                 unlock_password = st.text_input("Enter password to unlock", type="password", key="unlock_pwd")
                 if st.button("🔓 Unlock", use_container_width=True, type="primary"):
                     if unlock_password:
-                        # Try to decrypt with the stored key (simplified - in production you'd re-derive from password)
-                        wallet_data = WalletManager.get_wallet_from_session()
-                        if wallet_data:
-                            st.session_state.wallet_locked = False
+                        # Re-derive encryption key from password and verify
+                        if WalletManager.unlock_wallet_with_password(unlock_password):
                             st.success("Wallet unlocked!")
                             st.rerun()
                         else:
                             st.error("Incorrect password")
+            elif st.session_state.get("wallet_address"):
+                # Logged in but no wallet data in session - need to import
+                st.info("🔑 Import your wallet to access it")
+                st.caption(f"Address: {ChainUtils.format_address(st.session_state.wallet_address)}")
+                if st.button("📥 Import Wallet", use_container_width=True, type="primary"):
+                    st.session_state.show_auth_modal = True
+                    st.rerun()
 
 
 def chat_interface():

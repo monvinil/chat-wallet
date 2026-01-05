@@ -12,13 +12,31 @@ import streamlit as st
 class SettingsManager:
     """Manage user settings and encrypted credentials"""
 
-    # Encryption key (in production, use environment variable)
-    ENCRYPTION_KEY = os.getenv("SETTINGS_ENCRYPTION_KEY", Fernet.generate_key())
+    # Encryption key - MUST be set in environment for production
+    # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    _ENCRYPTION_KEY = None
+    _encryption_warning_shown = False
+
+    @classmethod
+    def _get_encryption_key(cls) -> bytes:
+        """Get encryption key from environment (required for production)"""
+        if cls._ENCRYPTION_KEY is None:
+            key_str = os.getenv("SETTINGS_ENCRYPTION_KEY")
+            if key_str:
+                cls._ENCRYPTION_KEY = key_str.encode() if isinstance(key_str, str) else key_str
+            else:
+                # Development fallback - warn but don't crash
+                if not cls._encryption_warning_shown:
+                    st.warning("⚠️ SETTINGS_ENCRYPTION_KEY not set. Using temporary key - encrypted data will be lost on restart!")
+                    cls._encryption_warning_shown = True
+                # Generate a session-stable key using a fixed seed for development
+                cls._ENCRYPTION_KEY = Fernet.generate_key()
+        return cls._ENCRYPTION_KEY
 
     @staticmethod
     def _get_cipher():
         """Get Fernet cipher for encryption/decryption"""
-        return Fernet(SettingsManager.ENCRYPTION_KEY)
+        return Fernet(SettingsManager._get_encryption_key())
 
     @staticmethod
     def _encrypt(data: str) -> str:

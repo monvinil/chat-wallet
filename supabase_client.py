@@ -50,39 +50,42 @@ def get_supabase_client(use_service_key: bool = False) -> Optional[Client]:
         return None
 
 
-def create_user(email: str, primary_wallet_address: str = None, auth_provider: str = "email") -> Optional[Dict[str, Any]]:
-    """Create a new user in the database"""
+def create_user(email: str, primary_wallet_address: str = None, auth_provider: str = "email", password_hash: str = None) -> Optional[Dict[str, Any]]:
+    """Create a new user in the database with password hash for verification"""
     try:
         # Use service key for admin operation (bypasses RLS)
         client = get_supabase_client(use_service_key=True)
         if not client:
             return None
 
-        # Try with primary_wallet_address first (if migration run)
+        # Build data dict with required fields
         data = {
             "email": email,
             "auth_provider": auth_provider,
             "created_at": datetime.utcnow().isoformat()
         }
 
-        # Only add primary_wallet_address if column exists
+        # Add optional fields if column exists
         if primary_wallet_address:
             data["primary_wallet_address"] = primary_wallet_address
+        if password_hash:
+            data["password_hash"] = password_hash
 
         try:
             result = client.table("users").insert(data).execute()
             if result.data:
                 return result.data[0]
         except Exception as e:
-            # If error due to missing column, try without it
-            if "primary_wallet_address" in str(e):
-                st.warning("⚠️ Database needs migration. Creating user without primary_wallet_address field.")
-                data_without = {
+            error_str = str(e)
+            # If error due to missing columns, try with minimal fields
+            if "primary_wallet_address" in error_str or "password_hash" in error_str:
+                st.warning("⚠️ Database needs migration for new columns.")
+                data_minimal = {
                     "email": email,
                     "auth_provider": auth_provider,
                     "created_at": datetime.utcnow().isoformat()
                 }
-                result = client.table("users").insert(data_without).execute()
+                result = client.table("users").insert(data_minimal).execute()
                 if result.data:
                     return result.data[0]
             else:
@@ -91,6 +94,41 @@ def create_user(email: str, primary_wallet_address: str = None, auth_provider: s
         return None
     except Exception as e:
         st.error(f"Failed to create user: {e}")
+        return None
+
+
+def update_user_password_hash(user_id: str, password_hash: str) -> bool:
+    """Update user's password hash"""
+    try:
+        client = get_supabase_client(use_service_key=True)
+        if not client:
+            return False
+
+        client.table("users").update({
+            "password_hash": password_hash,
+            "updated_at": datetime.utcnow().isoformat()
+        }).eq("id", user_id).execute()
+        return True
+    except Exception as e:
+        # Column might not exist yet
+        if "password_hash" not in str(e):
+            st.error(f"Failed to update password: {e}")
+        return False
+
+
+def get_user_password_hash(user_id: str) -> Optional[str]:
+    """Get user's password hash for verification"""
+    try:
+        client = get_supabase_client(use_service_key=True)
+        if not client:
+            return None
+
+        result = client.table("users").select("password_hash").eq("id", user_id).execute()
+        if result.data and len(result.data) > 0:
+            return result.data[0].get("password_hash")
+        return None
+    except Exception as e:
+        # Column might not exist yet - silently return None
         return None
 
 
@@ -138,12 +176,19 @@ def save_wallet_address(user_id: str, address: str, chain: str = "evm", encrypte
 def get_user_wallets(user_id: str) -> list:
     """Get all wallet addresses for a user"""
     try:
-        client = get_supabase_client()
+        client = get_supabase_client(use_service_key=True)
         if not client:
             return []
 
         result = client.table("wallets").select("*").eq("user_id", user_id).execute()
-        return result.data if result.data else []
+        wallets = result.data if result.data else []
+
+        # Normalize field names for consistency
+        for wallet in wallets:
+            if "address" in wallet and "wallet_address" not in wallet:
+                wallet["wallet_address"] = wallet["address"]
+
+        return wallets
     except Exception as e:
         st.error(f"Failed to fetch wallets: {e}")
         return []
