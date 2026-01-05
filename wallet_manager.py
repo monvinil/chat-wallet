@@ -10,7 +10,8 @@ import streamlit as st
 from typing import Optional, Dict, Any
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.backends import default_backend
 
 try:
     from cdp import Wallet
@@ -25,13 +26,15 @@ class WalletManager:
     @staticmethod
     def _derive_key(password: str, salt: bytes) -> bytes:
         """Derive encryption key from password"""
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
             iterations=100000,
+            backend=default_backend()
         )
-        return Fernet.generate_key()
+        key = kdf.derive(password.encode())
+        return key
 
     @staticmethod
     def encrypt_wallet_data(wallet_data: str, password: str) -> Dict[str, str]:
@@ -40,22 +43,27 @@ class WalletManager:
         salt = os.urandom(16)
 
         # Derive key from password
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
             iterations=100000,
+            backend=default_backend()
         )
-        key = Fernet.generate_key()
+        key = kdf.derive(password.encode())
+
+        # Convert to Fernet key format (base64 encoded)
+        import base64
+        fernet_key = base64.urlsafe_b64encode(key)
 
         # Encrypt the wallet data
-        f = Fernet(key)
+        f = Fernet(fernet_key)
         encrypted_data = f.encrypt(wallet_data.encode())
 
         return {
             "encrypted_data": encrypted_data.hex(),
             "salt": salt.hex(),
-            "key": key.decode()  # In production, store this securely!
+            "key": fernet_key.decode()  # Store this for decryption
         }
 
     @staticmethod
@@ -71,20 +79,26 @@ class WalletManager:
 
     @staticmethod
     def create_new_wallet() -> Optional[Dict[str, Any]]:
-        """Create a new CDP wallet (EVM)"""
-        if not CDP_AVAILABLE:
-            st.error("CDP SDK not available")
-            return None
-
+        """Create a new EVM wallet"""
         try:
-            # Create new wallet
-            wallet = Wallet.create(network_id="base-sepolia")
+            # Use web3 to create a new wallet (doesn't require CDP)
+            from eth_account import Account
+            import secrets
 
-            # Export wallet data (contains private key)
-            wallet_data = wallet.export_data()
+            # Generate a new private key
+            private_key = "0x" + secrets.token_hex(32)
 
-            # Get address
-            address = wallet.default_address.address_id
+            # Create account from private key
+            account = Account.from_key(private_key)
+            address = account.address
+
+            # Wallet data to encrypt
+            wallet_data = {
+                "private_key": private_key,
+                "address": address,
+                "network": "base-sepolia",
+                "type": "evm"
+            }
 
             return {
                 "address": address,
@@ -97,21 +111,26 @@ class WalletManager:
             return None
 
     @staticmethod
-    def import_wallet(seed_phrase: str) -> Optional[Dict[str, Any]]:
-        """Import wallet from seed phrase"""
-        if not CDP_AVAILABLE:
-            st.error("CDP SDK not available")
-            return None
-
+    def import_wallet(private_key: str) -> Optional[Dict[str, Any]]:
+        """Import wallet from private key"""
         try:
-            # Import wallet using seed
-            wallet_data = {
-                "seed": seed_phrase,
-                "network_id": "base-sepolia"
-            }
+            from eth_account import Account
 
-            wallet = Wallet.import_data(wallet_data)
-            address = wallet.default_address.address_id
+            # Clean up private key format
+            if not private_key.startswith("0x"):
+                private_key = "0x" + private_key
+
+            # Create account from private key
+            account = Account.from_key(private_key)
+            address = account.address
+
+            # Wallet data to encrypt
+            wallet_data = {
+                "private_key": private_key,
+                "address": address,
+                "network": "base-sepolia",
+                "type": "evm"
+            }
 
             return {
                 "address": address,
@@ -124,7 +143,7 @@ class WalletManager:
             return None
 
     @staticmethod
-    def get_wallet_from_session() -> Optional[Any]:
+    def get_wallet_from_session() -> Optional[Dict[str, Any]]:
         """Load wallet from session state"""
         if "wallet_encrypted" not in st.session_state:
             return None
@@ -141,13 +160,9 @@ class WalletManager:
         if not wallet_data_str:
             return None
 
-        if not CDP_AVAILABLE:
-            return None
-
         try:
             wallet_data = json.loads(wallet_data_str)
-            wallet = Wallet.import_data(wallet_data)
-            return wallet
+            return wallet_data
         except Exception as e:
             st.error(f"Failed to load wallet: {e}")
             return None
