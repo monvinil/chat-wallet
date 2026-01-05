@@ -10,6 +10,7 @@ load_dotenv()
 # Supabase Config (you'll add these after setup)
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")  # For admin operations
 
 # Anthropic API
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")

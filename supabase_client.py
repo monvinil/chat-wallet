@@ -12,21 +12,39 @@ try:
 except ImportError:
     SUPABASE_AVAILABLE = False
 
-from config import SUPABASE_URL, SUPABASE_ANON_KEY
+from config import SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
 
 
-def get_supabase_client() -> Optional[Client]:
-    """Get Supabase client instance"""
+def get_supabase_client(use_service_key: bool = False) -> Optional[Client]:
+    """
+    Get Supabase client instance
+
+    Args:
+        use_service_key: If True, uses service role key (bypasses RLS, for admin operations)
+                        If False, uses anon key (respects RLS, for user operations)
+    """
     if not SUPABASE_AVAILABLE:
         st.error("⚠️ Supabase library not installed. Run: pip install supabase")
         return None
 
-    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-        st.error("⚠️ Supabase credentials missing. Check SUPABASE_URL and SUPABASE_ANON_KEY environment variables.")
+    if not SUPABASE_URL:
+        st.error("⚠️ SUPABASE_URL environment variable missing.")
         return None
 
+    # Choose appropriate key
+    if use_service_key:
+        if not SUPABASE_SERVICE_KEY:
+            st.error("⚠️ SUPABASE_SERVICE_KEY environment variable missing.")
+            return None
+        key = SUPABASE_SERVICE_KEY
+    else:
+        if not SUPABASE_ANON_KEY:
+            st.error("⚠️ SUPABASE_ANON_KEY environment variable missing.")
+            return None
+        key = SUPABASE_ANON_KEY
+
     try:
-        return create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        return create_client(SUPABASE_URL, key)
     except Exception as e:
         st.error(f"Supabase connection failed: {e}")
         return None
@@ -35,7 +53,8 @@ def get_supabase_client() -> Optional[Client]:
 def create_user(email: str, primary_wallet_address: str = None, auth_provider: str = "email") -> Optional[Dict[str, Any]]:
     """Create a new user in the database"""
     try:
-        client = get_supabase_client()
+        # Use service key for admin operation (bypasses RLS)
+        client = get_supabase_client(use_service_key=True)
         if not client:
             return None
 
@@ -94,7 +113,8 @@ def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
 def save_wallet_address(user_id: str, address: str, chain: str = "evm", encrypted_wallet_data: str = None) -> bool:
     """Save a wallet address for a user with optional encrypted backup"""
     try:
-        client = get_supabase_client()
+        # Use service key for admin operation (bypasses RLS)
+        client = get_supabase_client(use_service_key=True)
         if not client:
             return False
 
