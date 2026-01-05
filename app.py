@@ -352,12 +352,14 @@ def wallet_setup_ui():
         import_email = st.text_input("Email (optional - to save wallet)", key="import_email", placeholder="your@email.com")
         recovery_input = st.text_area(
             "Seed Phrase (12 words) or Private Key (0x...)",
-            type="password",
             key="import_recovery",
             placeholder="word1 word2 word3... OR 0x123...",
-            help="Enter either your 12-word seed phrase or your private key"
+            help="Enter either your 12-word seed phrase or your private key",
+            height=100
         )
         import_password = st.text_input("Password to encrypt wallet", type="password", key="import_pwd")
+
+        st.caption("⚠️ Your seed phrase/key will be encrypted and stored securely")
 
         if st.button("Import Wallet", type="primary", disabled=not (recovery_input and import_password)):
             with st.spinner("Importing wallet..."):
