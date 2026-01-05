@@ -479,6 +479,30 @@ def sidebar():
     with st.sidebar:
         st.title("🔐 Wallet")
 
+        # Show login button if no wallet
+        if not st.session_state.wallet_address:
+            st.info("👋 Welcome! Log in to access your wallet.")
+            if st.button("🔑 Log In / Sign Up", use_container_width=True, type="primary"):
+                st.session_state.show_auth_modal = True
+
+            st.divider()
+            st.caption("**Preview Mode** - Explore the interface")
+            st.metric("Total USDC", "$0.00", help="Log in to see your balance")
+
+            with st.expander("📊 Balance by Chain"):
+                st.caption("Base Sepolia: $0.00")
+                st.caption("Base Mainnet: $0.00")
+                st.caption("Arbitrum Sepolia: $0.00")
+
+            st.divider()
+
+            # Preview buttons (disabled)
+            st.button("💰 Add USDC", use_container_width=True, disabled=True, help="Log in to add funds")
+            st.button("💸 Send", use_container_width=True, disabled=True, help="Log in to send")
+            st.button("🔄 Refresh", use_container_width=True, disabled=True, help="Log in to refresh")
+
+            return
+
         if st.session_state.wallet_address and not st.session_state.get("wallet_locked", True):
             # Wallet info
             address = st.session_state.wallet_address
@@ -540,8 +564,6 @@ def sidebar():
                             st.rerun()
                         else:
                             st.error("Incorrect password")
-            else:
-                st.warning("No wallet connected")
 
 
 def chat_interface():
@@ -549,6 +571,34 @@ def chat_interface():
     st.title("💬 Chat-First Crypto Wallet")
     st.caption("Powered by Claude 3.5 Sonnet")
 
+    # Preview mode if not logged in
+    if not st.session_state.wallet_address:
+        # Show demo conversation
+        with st.chat_message("assistant"):
+            st.markdown("""👋 **Welcome to Chat Wallet!**
+
+I'm your AI-powered crypto assistant. I can help you with:
+
+- 💰 Check balances across multiple chains
+- 💸 Send USDC with gasless transactions
+- 📥 Get deposit addresses with QR codes
+- 🔄 Swap tokens and manage assets
+- 🎁 Buy gift cards with crypto
+
+**Example questions:**
+- "What's my balance?"
+- "Send $10 USDC to 0x123..."
+- "Show me my Base Sepolia address"
+- "How do I add funds?"
+
+**🔑 Log in to start chatting with your real wallet!**
+""")
+
+        # Disabled chat input
+        st.chat_input("Log in to chat with your wallet...", disabled=True)
+        return
+
+    # Normal logged-in chat interface
     # Show messages
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
@@ -584,7 +634,7 @@ def chat_interface():
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # Welcome message
+    # Welcome message for logged in users
     if not st.session_state.messages:
         welcome = f"""👋 **Welcome to your Chat Wallet!**
 
@@ -613,13 +663,16 @@ def main():
 
     init_state()
 
-    # Check if wallet exists
-    if not st.session_state.wallet_address:
+    # Show auth modal if requested
+    if st.session_state.get("show_auth_modal"):
         wallet_setup_ui()
+        if st.button("← Back to Preview"):
+            st.session_state.show_auth_modal = False
+            st.rerun()
         return
 
-    # Initialize agent
-    if st.session_state.agent is None:
+    # Initialize agent only if wallet exists
+    if st.session_state.wallet_address and st.session_state.agent is None:
         with st.spinner("Initializing AI Agent..."):
             try:
                 agent = create_agent()
@@ -632,20 +685,20 @@ def main():
                 st.error(f"Failed to initialize: {e}")
                 st.stop()
 
-    # Show deposit modal if requested
-    if st.session_state.get("show_deposit_modal"):
+    # Show deposit modal if requested (only if logged in)
+    if st.session_state.get("show_deposit_modal") and st.session_state.wallet_address:
         deposit_modal()
         if st.button("Close"):
             st.session_state.show_deposit_modal = False
             st.rerun()
         return
 
-    # Show send modal if requested
-    if st.session_state.get("show_send_modal"):
+    # Show send modal if requested (only if logged in)
+    if st.session_state.get("show_send_modal") and st.session_state.wallet_address:
         send_modal()
         return
 
-    # Main layout
+    # Main layout - always show (preview or logged in)
     sidebar()
     chat_interface()
 
