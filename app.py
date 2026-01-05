@@ -6,7 +6,6 @@ User controls their own wallet, AI agent assists with transactions
 import os
 import json
 import time
-import secrets
 import streamlit as st
 import qrcode
 from io import BytesIO
@@ -237,55 +236,20 @@ def wallet_setup_ui():
 
     st.info("👉 **You control your keys.** Your wallet is encrypted and stored only in your browser.")
 
-    # Quick Start option
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        st.markdown("#### Get started in seconds")
-
-    with col2:
-        if st.button("🚀 Quick Start", type="primary", use_container_width=True):
-            with st.spinner("Creating wallet..."):
-                import secrets
-                auto_password = secrets.token_urlsafe(16)
-
-                wallet_info = WalletManager.create_new_wallet()
-                if wallet_info:
-                    WalletManager.save_wallet_to_session(
-                        wallet_info["wallet_data"],
-                        auto_password
-                    )
-
-                    st.session_state.wallet_address = wallet_info["address"]
-                    st.session_state.wallet_locked = False
-                    st.session_state.auto_password = auto_password
-
-                    st.success("✅ Wallet created! Starting...")
-                    st.rerun()
-
-    st.caption("Quick Start creates a wallet instantly (no password needed for this session)")
-
-    st.divider()
-
     tab1, tab2 = st.tabs(["Create New Wallet", "Import Existing"])
 
     with tab1:
         st.subheader("Create New Wallet")
-        st.write("Generate a new wallet with custom password protection.")
+        st.write("We'll generate a new wallet for you on Base Sepolia testnet.")
 
-        password = st.text_input(
-            "Set a password (optional, min 4 chars for security)",
-            type="password",
-            key="create_pwd",
-            help="Leave empty for no password this session"
-        )
+        password = st.text_input("Set a password to encrypt your wallet", type="password", key="create_pwd")
+        password_confirm = st.text_input("Confirm password", type="password", key="create_pwd_confirm")
 
-        if st.button("Create Wallet", type="primary"):
-            # Use password if provided, otherwise generate temporary one
-            pwd = password if password else secrets.token_urlsafe(8)
-
-            if password and len(password) < 4:
-                st.error("Password must be at least 4 characters")
+        if st.button("Create Wallet", type="primary", disabled=not password):
+            if password != password_confirm:
+                st.error("Passwords don't match")
+            elif len(password) < 8:
+                st.error("Password must be at least 8 characters")
             else:
                 with st.spinner("Creating wallet..."):
                     wallet_info = WalletManager.create_new_wallet()
@@ -294,23 +258,17 @@ def wallet_setup_ui():
                         # Encrypt and save
                         WalletManager.save_wallet_to_session(
                             wallet_info["wallet_data"],
-                            pwd
+                            password
                         )
 
                         st.session_state.wallet_address = wallet_info["address"]
                         st.session_state.wallet_locked = False
 
-                        if not password:
-                            st.session_state.auto_password = pwd
-
-                        # Show address
+                        # Show seed phrase
                         st.success("✅ Wallet created!")
                         st.code(wallet_info["address"])
 
-                        if password:
-                            st.warning("⚠️ **Important:** Save your password! Without it, you cannot access your wallet later.")
-                        else:
-                            st.info("ℹ️ No password set. Wallet accessible this session only.")
+                        st.warning("⚠️ **Important:** Save your password! Without it, you cannot access your wallet.")
 
                         st.rerun()
 
@@ -319,30 +277,20 @@ def wallet_setup_ui():
         st.write("Import an existing wallet using your private key.")
 
         private_key = st.text_input("Enter your private key (0x...)", type="password", key="import_pk")
-        import_password = st.text_input(
-            "Set a password (optional)",
-            type="password",
-            key="import_pwd",
-            help="Leave empty for session-only access"
-        )
+        import_password = st.text_input("Set a password", type="password", key="import_pwd")
 
-        if st.button("Import Wallet", disabled=not private_key):
+        if st.button("Import Wallet", disabled=not private_key or not import_password):
             with st.spinner("Importing wallet..."):
-                pwd = import_password if import_password else secrets.token_urlsafe(8)
-
                 wallet_info = WalletManager.import_wallet(private_key.strip())
 
                 if wallet_info:
                     WalletManager.save_wallet_to_session(
                         wallet_info["wallet_data"],
-                        pwd
+                        import_password
                     )
 
                     st.session_state.wallet_address = wallet_info["address"]
                     st.session_state.wallet_locked = False
-
-                    if not import_password:
-                        st.session_state.auto_password = pwd
 
                     st.success("✅ Wallet imported!")
                     st.rerun()
