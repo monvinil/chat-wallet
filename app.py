@@ -48,14 +48,32 @@ SYSTEM_PROMPT = """You are a helpful crypto wallet assistant. You help users man
 1. Check wallet balances across Base Sepolia, Base Mainnet, Arbitrum, Polygon, Solana
 2. Help prepare transactions (user must approve each one)
 3. Provide deposit addresses for receiving funds
-4. Search and buy gift cards (simulated)
-5. Read emails (simulated)
+4. **Buy gift cards with crypto** via Bitrefill API:
+   - Search for Amazon, Uber, Netflix, Starbucks, and 1000+ other gift cards
+   - Purchase gift cards with USDC/crypto
+   - Send gift card codes to user's email automatically
+5. **Email automation** - If user connected email:
+   - Read verification codes from emails (for signups/2FA)
+   - Search recent emails (last 24 hours)
+   - Help with automated signups on external services
+6. Autonomous tasks - buy domains, purchase gift cards, sign up for services
+
+**Email Automation Workflow:**
+When user asks to sign up for a service (e.g., Porkbun, Amazon):
+1. Check if email is connected (use check_email_connected tool)
+2. If not connected, ask user to connect email in Settings → Connected Accounts
+3. Use the user's connected email to fill signup forms
+4. After submitting form, wait 30-60 seconds
+5. Use get_verification_code tool to retrieve code from email
+6. Complete signup with the code
 
 **Important:**
 - User controls their own private keys (non-custodial)
 - Always show fees upfront before transactions
 - User must approve every transaction
 - Never promise anything without user confirmation
+- For email automation: Only access recent emails (last 24 hours)
+- Always ask permission before signing up for external services
 
 Network Support:
 - Base Sepolia (testnet) ✅ Real
@@ -126,42 +144,7 @@ def get_deposit_address(chain: str = "base-sepolia") -> str:
     }, indent=2)
 
 
-@tool
-def search_bitrefill(query: str) -> str:
-    """Search for gift cards. Args: query - search term"""
-    q = query.lower()
-    results = [c for c in MOCK_GIFT_CARDS if q in c["name"].lower()] or MOCK_GIFT_CARDS[:3]
-    return json.dumps({"status": "success", "results": results, "note": "[SIMULATED]"}, indent=2)
-
-
-@tool
-def buy_gift_card(product_id: str) -> str:
-    """Buy a gift card (requires user approval). Args: product_id - e.g. 'gc_001'"""
-    card = next((c for c in MOCK_GIFT_CARDS if c["id"] == product_id), None)
-    if not card:
-        return json.dumps({"status": "error", "message": "Product not found"})
-
-    fee = calculate_fee(card["price_usd"])
-    total = card["price_usd"] + fee
-
-    # Store pending transaction for user approval
-    if "pending_tx" not in st.session_state:
-        st.session_state.pending_tx = {
-            "type": "gift_card_purchase",
-            "product": card,
-            "amount": card["price_usd"],
-            "fee": fee,
-            "total": total
-        }
-
-    return json.dumps({
-        "status": "pending_approval",
-        "product": card["name"],
-        "amount": card["price_usd"],
-        "fee": fee,
-        "total": total,
-        "message": "Transaction ready for user approval"
-    }, indent=2)
+# Old mock tools removed - now using real Bitrefill API tools from bitrefill_tools.py
 
 
 @tool
@@ -182,13 +165,15 @@ def create_agent():
         max_tokens=4096
     )
 
+    # Import email and Bitrefill tools
+    from email_tools import get_email_tools
+    from bitrefill_tools import get_bitrefill_tools
+
     custom_tools = [
         get_wallet_balance,
         get_deposit_address,
-        search_bitrefill,
-        buy_gift_card,
         read_latest_emails
-    ]
+    ] + get_email_tools() + get_bitrefill_tools()  # Add email automation and Bitrefill tools
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
@@ -775,6 +760,34 @@ def main():
     )
 
     init_state()
+
+    # Handle OAuth callback
+    query_params = st.query_params
+    if "code" in query_params and "state" in query_params:
+        # OAuth callback from Google
+        from gmail_oauth import GmailOAuth
+
+        code = query_params["code"]
+        user_id = query_params["state"]  # User ID passed as state
+
+        # Get app URL for redirect
+        app_url = os.getenv("APP_URL", "http://localhost:8501")
+        redirect_uri = f"{app_url}/oauth/callback"
+
+        with st.spinner("Connecting Gmail..."):
+            success = GmailOAuth.handle_oauth_callback(code, redirect_uri, user_id)
+
+        if success:
+            st.success("✅ Gmail connected successfully!")
+            st.balloons()
+        else:
+            st.error("❌ Failed to connect Gmail")
+
+        # Clear query params and redirect back to settings
+        st.query_params.clear()
+        st.session_state.show_settings = True
+        time.sleep(2)  # Show success message
+        st.rerun()
 
     # Show auth modal if requested
     if st.session_state.get("show_auth_modal"):

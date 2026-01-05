@@ -22,3 +22,8 @@ mnemonic>=0.20
 # QR code generation
 qrcode>=7.4.0
 pillow>=10.0.0
+
+# Google OAuth and Gmail API
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+google-api-python-client>=2.100.0

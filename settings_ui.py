@@ -148,21 +148,28 @@ def settings_page():
         st.divider()
 
         # Connect new accounts
-        st.markdown("### Connect New Account")
+        st.markdown("### Connect Email for AI Automation")
+
+        # Email connection (universal - Gmail, Yahoo, Outlook, etc.)
+        from email_manager import show_email_connection_ui
+        show_email_connection_ui(user_id)
+
+        st.divider()
+
+        # Other providers (coming soon)
+        st.markdown("### Other Integrations")
 
         col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("📧 Connect Gmail", use_container_width=True, disabled=True):
-                st.info("Gmail OAuth coming soon!")
-                # TODO: Implement OAuth flow
+            if st.button("🛒 Connect Amazon", use_container_width=True, disabled=True):
+                st.info("Amazon OAuth coming soon!")
 
         with col2:
-            if st.button("🔐 Connect Google", use_container_width=True, disabled=True):
-                st.info("Google OAuth coming soon!")
-                # TODO: Implement OAuth flow
+            if st.button("🐦 Connect Twitter", use_container_width=True, disabled=True):
+                st.info("Twitter OAuth coming soon!")
 
-        st.caption("More integrations coming: Amazon, Twitter, Discord, etc.")
+        st.caption("More integrations coming: Discord, LinkedIn, etc.")
 
     # ============================================================================
     # TAB 3: Spending & Approvals
