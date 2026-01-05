@@ -293,7 +293,8 @@ def wallet_setup_ui():
                                 time.sleep(3)
                                 st.rerun()
                             else:
-                                st.error("❌ Failed to create account. Try again.")
+                                st.error("❌ Failed to create database user.")
+                                st.info("💡 Possible causes:\n- Supabase credentials not configured\n- Email already exists\n- Database migrations not run")
 
         st.caption("✨ Your wallet will be accessible from any browser with your email & password")
 
