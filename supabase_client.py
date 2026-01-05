@@ -135,7 +135,8 @@ def get_user_password_hash(user_id: str) -> Optional[str]:
 def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
     """Get user by email"""
     try:
-        client = get_supabase_client()
+        # Use service key to bypass RLS (needed for login check)
+        client = get_supabase_client(use_service_key=True)
         if not client:
             return None
 
