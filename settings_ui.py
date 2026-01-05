@@ -262,6 +262,51 @@ def settings_page():
 
         st.divider()
 
+        # Export private key
+        st.markdown("### Export Private Key")
+        st.warning("⚠️ **NEVER share your private key with anyone!** Anyone with your private key has full access to your funds.")
+
+        if st.button("🔑 Show Private Key", type="secondary"):
+            st.session_state.show_private_key = True
+
+        if st.session_state.get("show_private_key"):
+            # Get wallet from session
+            from wallet_manager import WalletManager
+            wallet_data = WalletManager.get_wallet_from_session()
+
+            if wallet_data and wallet_data.get("private_key"):
+                st.error("**⚠️ KEEP THIS SAFE! DO NOT SHARE!**")
+                st.code(wallet_data["private_key"], language=None)
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("📋 Copy to Clipboard"):
+                        st.toast("Private key copied! Keep it safe!")
+
+                with col2:
+                    if st.button("👁️ Hide"):
+                        st.session_state.show_private_key = False
+                        st.rerun()
+
+                st.caption("""
+                **Use this private key to:**
+                - Import wallet into MetaMask, Trust Wallet, etc.
+                - Backup for recovery
+                - Access funds from other apps
+
+                **Security tips:**
+                - Store offline in a safe place
+                - Never send via email or messaging apps
+                - Consider using a hardware wallet for large amounts
+                """)
+            else:
+                st.error("❌ Cannot retrieve private key. Please unlock your wallet first.")
+                if st.button("Hide"):
+                    st.session_state.show_private_key = False
+                    st.rerun()
+
+        st.divider()
+
         # Danger zone
         st.markdown("### Danger Zone")
 
