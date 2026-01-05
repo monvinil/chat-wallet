@@ -287,8 +287,20 @@ def wallet_setup_ui():
                                 st.session_state.show_auth_modal = False
 
                                 st.success("✅ Account created!")
+
+                                # Show seed phrase
+                                if wallet_info.get("mnemonic"):
+                                    st.warning("🔐 **SAVE YOUR SEED PHRASE!**")
+                                    st.code(wallet_info["mnemonic"], language=None)
+                                    st.caption("""
+                                    **Write this down and store it safely!**
+                                    - This 12-word phrase can recover your wallet
+                                    - Never share it with anyone
+                                    - Store it offline (paper, steel backup)
+                                    """)
+
                                 st.balloons()
-                                time.sleep(1)
+                                time.sleep(3)
                                 st.rerun()
                             else:
                                 st.error("❌ Failed to create account. Try again.")
@@ -335,15 +347,21 @@ def wallet_setup_ui():
     # ========== TAB 3: IMPORT WALLET ==========
     with tab3:
         st.subheader("Import Existing Wallet")
-        st.write("Import a wallet you already own using your private key.")
+        st.write("Import a wallet using your 12-word seed phrase or private key.")
 
         import_email = st.text_input("Email (optional - to save wallet)", key="import_email", placeholder="your@email.com")
-        private_key = st.text_input("Private Key (0x...)", type="password", key="import_pk")
+        recovery_input = st.text_area(
+            "Seed Phrase (12 words) or Private Key (0x...)",
+            type="password",
+            key="import_recovery",
+            placeholder="word1 word2 word3... OR 0x123...",
+            help="Enter either your 12-word seed phrase or your private key"
+        )
         import_password = st.text_input("Password to encrypt wallet", type="password", key="import_pwd")
 
-        if st.button("Import Wallet", type="primary", disabled=not (private_key and import_password)):
+        if st.button("Import Wallet", type="primary", disabled=not (recovery_input and import_password)):
             with st.spinner("Importing wallet..."):
-                wallet_info = WalletManager.import_wallet(private_key.strip())
+                wallet_info = WalletManager.import_wallet(recovery_input.strip())
 
                 if wallet_info:
                     # Save to session

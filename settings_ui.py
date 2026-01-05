@@ -276,12 +276,23 @@ def settings_page():
 
             if wallet_data and wallet_data.get("private_key"):
                 st.error("**⚠️ KEEP THIS SAFE! DO NOT SHARE!**")
+
+                # Show seed phrase if available (preferred method)
+                if wallet_data.get("mnemonic"):
+                    st.markdown("**Seed Phrase (12 words) - RECOMMENDED**")
+                    st.code(wallet_data["mnemonic"], language=None)
+                    st.caption("✅ This is the recommended backup method. More user-friendly than private key.")
+
+                    st.divider()
+
+                # Show private key
+                st.markdown("**Private Key (Advanced)**")
                 st.code(wallet_data["private_key"], language=None)
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    if st.button("📋 Copy to Clipboard"):
-                        st.toast("Private key copied! Keep it safe!")
+                    if st.button("📋 Copy Seed Phrase" if wallet_data.get("mnemonic") else "📋 Copy Private Key"):
+                        st.toast("Copied! Keep it safe!")
 
                 with col2:
                     if st.button("👁️ Hide"):
@@ -289,13 +300,14 @@ def settings_page():
                         st.rerun()
 
                 st.caption("""
-                **Use this private key to:**
+                **Use your seed phrase or private key to:**
                 - Import wallet into MetaMask, Trust Wallet, etc.
                 - Backup for recovery
                 - Access funds from other apps
 
                 **Security tips:**
-                - Store offline in a safe place
+                - **Seed phrase is preferred** - easier to write down and remember
+                - Store offline in a safe place (paper, steel backup)
                 - Never send via email or messaging apps
                 - Consider using a hardware wallet for large amounts
                 """)

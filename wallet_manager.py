@@ -79,22 +79,29 @@ class WalletManager:
 
     @staticmethod
     def create_new_wallet() -> Optional[Dict[str, Any]]:
-        """Create a new EVM wallet"""
+        """Create a new EVM wallet with mnemonic seed phrase"""
         try:
-            # Use web3 to create a new wallet (doesn't require CDP)
             from eth_account import Account
-            import secrets
+            from mnemonic import Mnemonic
 
-            # Generate a new private key
-            private_key = "0x" + secrets.token_hex(32)
+            # Generate 12-word mnemonic
+            mnemo = Mnemonic("english")
+            mnemonic_phrase = mnemo.generate(strength=128)  # 12 words
 
-            # Create account from private key
-            account = Account.from_key(private_key)
+            # Enable HD wallet functionality
+            Account.enable_unaudited_hdwallet_features()
+
+            # Derive account from mnemonic (first address: m/44'/60'/0'/0/0)
+            account = Account.from_mnemonic(mnemonic_phrase)
+            private_key = account.key.hex()
+            if not private_key.startswith("0x"):
+                private_key = "0x" + private_key
             address = account.address
 
             # Wallet data to encrypt
             wallet_data = {
                 "private_key": private_key,
+                "mnemonic": mnemonic_phrase,
                 "address": address,
                 "network": "base-sepolia",
                 "type": "evm"
@@ -102,6 +109,7 @@ class WalletManager:
 
             return {
                 "address": address,
+                "mnemonic": mnemonic_phrase,
                 "wallet_data": json.dumps(wallet_data),
                 "network": "base-sepolia",
                 "type": "evm"
@@ -111,26 +119,60 @@ class WalletManager:
             return None
 
     @staticmethod
-    def import_wallet(private_key: str) -> Optional[Dict[str, Any]]:
-        """Import wallet from private key"""
+    def import_wallet(private_key_or_mnemonic: str) -> Optional[Dict[str, Any]]:
+        """Import wallet from private key or seed phrase"""
         try:
             from eth_account import Account
+            from mnemonic import Mnemonic
 
-            # Clean up private key format
-            if not private_key.startswith("0x"):
-                private_key = "0x" + private_key
+            input_str = private_key_or_mnemonic.strip()
 
-            # Create account from private key
-            account = Account.from_key(private_key)
-            address = account.address
+            # Check if input is a mnemonic (12 or 24 words)
+            words = input_str.split()
+            is_mnemonic = len(words) in [12, 24]
 
-            # Wallet data to encrypt
-            wallet_data = {
-                "private_key": private_key,
-                "address": address,
-                "network": "base-sepolia",
-                "type": "evm"
-            }
+            if is_mnemonic:
+                # Validate mnemonic
+                mnemo = Mnemonic("english")
+                if not mnemo.check(input_str):
+                    st.error("Invalid seed phrase")
+                    return None
+
+                # Enable HD wallet functionality
+                Account.enable_unaudited_hdwallet_features()
+
+                # Derive account from mnemonic
+                account = Account.from_mnemonic(input_str)
+                private_key = account.key.hex()
+                if not private_key.startswith("0x"):
+                    private_key = "0x" + private_key
+                address = account.address
+
+                # Wallet data to encrypt
+                wallet_data = {
+                    "private_key": private_key,
+                    "mnemonic": input_str,
+                    "address": address,
+                    "network": "base-sepolia",
+                    "type": "evm"
+                }
+            else:
+                # Treat as private key
+                private_key = input_str
+                if not private_key.startswith("0x"):
+                    private_key = "0x" + private_key
+
+                # Create account from private key
+                account = Account.from_key(private_key)
+                address = account.address
+
+                # Wallet data to encrypt
+                wallet_data = {
+                    "private_key": private_key,
+                    "address": address,
+                    "network": "base-sepolia",
+                    "type": "evm"
+                }
 
             return {
                 "address": address,
