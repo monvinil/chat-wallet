@@ -7,7 +7,7 @@ import json
 import time
 from typing import Dict, Any, Optional
 from eth_account import Account
-from eth_account.messages import encode_structured_data
+from eth_account.messages import encode_typed_data
 from web3 import Web3
 
 
@@ -85,7 +85,7 @@ class MetaTransaction:
         }
 
         # Sign the structured data
-        encoded_data = encode_structured_data(structured_data)
+        encoded_data = encode_typed_data(full_message=structured_data)
         account = Account.from_key(private_key)
         signed = account.sign_message(encoded_data)
 
@@ -118,7 +118,7 @@ class MetaTransaction:
             }
 
             # Recover signer from signature
-            encoded_data = encode_structured_data(structured_data)
+            encoded_data = encode_typed_data(full_message=structured_data)
             recovered_address = Account.recover_message(
                 encoded_data,
                 signature=bytes.fromhex(signature.replace("0x", ""))
