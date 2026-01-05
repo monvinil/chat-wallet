@@ -18,9 +18,11 @@ from config import SUPABASE_URL, SUPABASE_ANON_KEY
 def get_supabase_client() -> Optional[Client]:
     """Get Supabase client instance"""
     if not SUPABASE_AVAILABLE:
+        st.error("⚠️ Supabase library not installed. Run: pip install supabase")
         return None
 
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        st.error("⚠️ Supabase credentials missing. Check SUPABASE_URL and SUPABASE_ANON_KEY environment variables.")
         return None
 
     try:
