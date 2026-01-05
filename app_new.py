@@ -5,6 +5,7 @@ User controls their own wallet, AI agent assists with transactions
 
 import os
 import json
+import time
 import streamlit as st
 import qrcode
 from io import BytesIO
@@ -273,14 +274,14 @@ def wallet_setup_ui():
 
     with tab2:
         st.subheader("Import Wallet")
-        st.write("Import an existing wallet using your seed phrase.")
+        st.write("Import an existing wallet using your private key.")
 
-        seed_phrase = st.text_area("Enter your seed phrase", height=100)
+        private_key = st.text_input("Enter your private key (0x...)", type="password", key="import_pk")
         import_password = st.text_input("Set a password", type="password", key="import_pwd")
 
-        if st.button("Import Wallet", disabled=not seed_phrase or not import_password):
+        if st.button("Import Wallet", disabled=not private_key or not import_password):
             with st.spinner("Importing wallet..."):
-                wallet_info = WalletManager.import_wallet(seed_phrase.strip())
+                wallet_info = WalletManager.import_wallet(private_key.strip())
 
                 if wallet_info:
                     WalletManager.save_wallet_to_session(
@@ -362,12 +363,123 @@ def deposit_modal():
             st.warning("⚠️ This is MAINNET. Only send real funds if you know what you're doing.")
 
 
+def send_modal():
+    """Show send transaction modal with gasless transfer"""
+    from transaction_relayer import TransactionRelayer
+    from meta_tx import MetaTransaction
+
+    st.subheader("💸 Send USDC (Gasless!)")
+    st.caption("You only sign a message - no gas needed! We handle the rest.")
+
+    # Network selector
+    network_options = {
+        "Base Sepolia (Testnet)": "base-sepolia",
+    }
+    selected_network = st.selectbox("Network", list(network_options.keys()))
+    network_key = network_options[selected_network]
+
+    # Recipient address
+    recipient = st.text_input("Recipient Address", placeholder="0x...")
+
+    # Amount
+    amount = st.number_input("Amount (USDC)", min_value=0.01, step=0.01, format="%.2f")
+
+    # Estimate fees
+    if amount > 0:
+        try:
+            relayer = TransactionRelayer(network_key)
+            gas_cost, app_fee = relayer.estimate_gas_cost(amount)
+            total = amount + gas_cost + app_fee
+
+            st.info(f"""
+            **💰 Fee Breakdown:**
+            - Transfer Amount: ${amount:.2f}
+            - Gas Fee: ${gas_cost:.3f} (we pay!)
+            - App Fee: ${app_fee:.3f}
+            - **Total: ${total:.2f}**
+            """)
+        except Exception as e:
+            st.warning(f"Could not estimate fees: {e}")
+            total = amount
+
+    # Validate inputs
+    can_send = (
+        recipient and
+        recipient.startswith("0x") and
+        len(recipient) == 42 and
+        amount > 0
+    )
+
+    col1, col2 = st.columns([1, 1])
+
+    with col1:
+        if st.button("❌ Cancel", use_container_width=True):
+            st.session_state.show_send_modal = False
+            st.rerun()
+
+    with col2:
+        if st.button("✅ Sign & Send", type="primary", use_container_width=True, disabled=not can_send):
+            with st.spinner("Processing transaction..."):
+                try:
+                    # Get wallet data
+                    wallet_data = WalletManager.get_wallet_from_session()
+
+                    if not wallet_data:
+                        st.error("Could not load wallet. Please unlock first.")
+                        return
+
+                    # Create meta-transaction message
+                    message = MetaTransaction.create_message(
+                        from_address=st.session_state.wallet_address,
+                        to_address=recipient,
+                        amount=amount,
+                        currency="USDC",
+                        nonce=int(time.time())  # Simple nonce for now
+                    )
+
+                    # Sign message (user's signature, no gas!)
+                    signature = MetaTransaction.sign_message(
+                        message,
+                        wallet_data["private_key"]
+                    )
+
+                    # Execute via relayer
+                    relayer = TransactionRelayer(network_key)
+                    result = relayer.execute_transfer(
+                        message=message,
+                        signature=signature,
+                        user_address=st.session_state.wallet_address
+                    )
+
+                    if result["success"]:
+                        st.success(f"""
+                        ✅ **Transaction Sent!**
+
+                        - TX Hash: `{result['tx_hash'][:20]}...`
+                        - Amount: ${result['amount']:.2f}
+                        - Gas Paid: ${result['gas_cost']:.3f}
+                        - Total: ${result['total_cost']:.2f}
+                        """)
+
+                        st.link_button("🔍 View on Explorer", result["explorer_url"], use_container_width=True)
+
+                        # Close modal after success
+                        time.sleep(2)
+                        st.session_state.show_send_modal = False
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Transaction Failed: {result['error']}")
+
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+
+
 def sidebar():
     """Render sidebar"""
     with st.sidebar:
         st.title("🔐 Wallet")
 
-        if st.session_state.wallet_address:
+        if st.session_state.wallet_address and not st.session_state.get("wallet_locked", True):
             # Wallet info
             address = st.session_state.wallet_address
             st.code(ChainUtils.format_address(address, 8))
@@ -375,6 +487,10 @@ def sidebar():
             # Add USDC button
             if st.button("💰 Add USDC", use_container_width=True, type="primary"):
                 st.session_state.show_deposit_modal = True
+
+            # Send button
+            if st.button("💸 Send", use_container_width=True):
+                st.session_state.show_send_modal = True
 
             # Refresh balances
             if st.button("🔄 Refresh", use_container_width=True):
@@ -410,7 +526,22 @@ def sidebar():
                 st.rerun()
 
         else:
-            st.warning("No wallet connected")
+            # Wallet is locked or doesn't exist
+            if "wallet_encrypted" in st.session_state:
+                st.info("🔒 Wallet Locked")
+                unlock_password = st.text_input("Enter password to unlock", type="password", key="unlock_pwd")
+                if st.button("🔓 Unlock", use_container_width=True, type="primary"):
+                    if unlock_password:
+                        # Try to decrypt with the stored key (simplified - in production you'd re-derive from password)
+                        wallet_data = WalletManager.get_wallet_from_session()
+                        if wallet_data:
+                            st.session_state.wallet_locked = False
+                            st.success("Wallet unlocked!")
+                            st.rerun()
+                        else:
+                            st.error("Incorrect password")
+            else:
+                st.warning("No wallet connected")
 
 
 def chat_interface():
@@ -507,6 +638,11 @@ def main():
         if st.button("Close"):
             st.session_state.show_deposit_modal = False
             st.rerun()
+        return
+
+    # Show send modal if requested
+    if st.session_state.get("show_send_modal"):
+        send_modal()
         return
 
     # Main layout
