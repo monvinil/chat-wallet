@@ -149,7 +149,8 @@ def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def save_wallet_address(user_id: str, address: str, chain: str = "evm", encrypted_wallet_data: str = None) -> bool:
+def save_wallet_address(user_id: str, address: str, chain: str = "evm",
+                        encrypted_wallet_data: str = None, encryption_salt: str = None) -> bool:
     """Save a wallet address for a user with optional encrypted backup"""
     try:
         # Use service key for admin operation (bypasses RLS)
@@ -164,14 +165,60 @@ def save_wallet_address(user_id: str, address: str, chain: str = "evm", encrypte
             "created_at": datetime.utcnow().isoformat()
         }
 
+        # Store encrypted wallet data for cloud backup
         if encrypted_wallet_data:
             data["wallet_data_encrypted"] = encrypted_wallet_data
+        if encryption_salt:
+            data["encryption_salt"] = encryption_salt
 
         client.table("wallets").insert(data).execute()
         return True
     except Exception as e:
+        # Check if columns don't exist yet
+        error_str = str(e)
+        if "wallet_data_encrypted" in error_str or "encryption_salt" in error_str:
+            # Try without encrypted data columns (need migration)
+            st.warning("⚠️ Database needs migration for encrypted wallet backup. Run supabase_migration_wallet_backup.sql")
+            data_minimal = {
+                "user_id": user_id,
+                "chain": chain,
+                "address": address,
+                "created_at": datetime.utcnow().isoformat()
+            }
+            try:
+                client.table("wallets").insert(data_minimal).execute()
+                return True
+            except Exception as e2:
+                st.error(f"Failed to save wallet: {e2}")
+                return False
         st.error(f"Failed to save wallet address: {e}")
         return False
+
+
+def get_encrypted_wallet(user_id: str, chain: str = "evm") -> Optional[Dict[str, Any]]:
+    """Get encrypted wallet data for a user (for cloud backup restoration)"""
+    try:
+        client = get_supabase_client(use_service_key=True)
+        if not client:
+            return None
+
+        result = client.table("wallets").select(
+            "address, wallet_data_encrypted, encryption_salt"
+        ).eq("user_id", user_id).eq("chain", chain).execute()
+
+        if result.data and len(result.data) > 0:
+            wallet = result.data[0]
+            # Only return if we have encrypted data
+            if wallet.get("wallet_data_encrypted") and wallet.get("encryption_salt"):
+                return {
+                    "address": wallet["address"],
+                    "encrypted_data": wallet["wallet_data_encrypted"],
+                    "salt": wallet["encryption_salt"]
+                }
+        return None
+    except Exception as e:
+        # Columns might not exist - return None silently
+        return None
 
 
 def get_user_wallets(user_id: str) -> list:

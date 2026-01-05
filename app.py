@@ -29,7 +29,8 @@ from supabase_client import (
     get_user_wallets,
     log_transaction,
     get_user_password_hash,
-    update_user_password_hash
+    update_user_password_hash,
+    get_encrypted_wallet
 )
 from settings_ui import settings_page
 
@@ -269,14 +270,25 @@ def wallet_setup_ui():
                                 user = None
 
                             if user:
-                                # Encrypt and save to session
-                                WalletManager.save_wallet_to_session(
+                                # Encrypt wallet data
+                                encrypted = WalletManager.encrypt_wallet_data(
                                     wallet_info["wallet_data"],
                                     password
                                 )
 
-                                # Save encrypted wallet to Supabase for recovery
-                                save_wallet_address(user["id"], wallet_info["address"])
+                                # Save to session
+                                st.session_state.wallet_encrypted = encrypted["encrypted_data"]
+                                st.session_state.wallet_salt = encrypted["salt"]
+                                st.session_state.wallet_key = encrypted["key"]
+                                st.session_state.wallet_locked = False
+
+                                # Save encrypted wallet to Supabase for cloud backup
+                                save_wallet_address(
+                                    user["id"],
+                                    wallet_info["address"],
+                                    encrypted_wallet_data=encrypted["encrypted_data"],
+                                    encryption_salt=encrypted["salt"]
+                                )
 
                                 # Update session
                                 st.session_state.wallet_address = wallet_info["address"]
@@ -337,7 +349,6 @@ def wallet_setup_ui():
                             wallet_address = wallets[0]["wallet_address"]
 
                             st.session_state.wallet_address = wallet_address
-                            st.session_state.wallet_locked = True  # Start locked until they import/unlock
                             st.session_state.user_email = login_email
                             st.session_state.user_id = user["id"]
                             st.session_state.show_auth_modal = False
@@ -347,8 +358,27 @@ def wallet_setup_ui():
                                 new_hash = WalletManager.hash_password(login_password)
                                 update_user_password_hash(user["id"], new_hash)
 
-                            st.success(f"✅ Welcome back!")
-                            st.info("💡 To access your funds, import your wallet using your seed phrase or private key.")
+                            # Try to restore encrypted wallet from cloud backup
+                            encrypted_wallet = get_encrypted_wallet(user["id"])
+                            if encrypted_wallet:
+                                # Restore wallet to session
+                                st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
+                                st.session_state.wallet_salt = encrypted_wallet["salt"]
+
+                                # Decrypt with password
+                                if WalletManager.unlock_wallet_with_password(login_password):
+                                    st.session_state.wallet_locked = False
+                                    st.success("✅ Welcome back! Wallet restored from cloud.")
+                                else:
+                                    st.session_state.wallet_locked = True
+                                    st.success("✅ Welcome back!")
+                                    st.warning("⚠️ Could not decrypt wallet. Try unlocking with your password.")
+                            else:
+                                # No cloud backup - need manual import (legacy account)
+                                st.session_state.wallet_locked = True
+                                st.success("✅ Welcome back!")
+                                st.info("💡 To access your funds, import your wallet using your seed phrase or private key.")
+
                             time.sleep(1)
                             st.rerun()
                         else:
