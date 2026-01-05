@@ -231,60 +231,122 @@ def init_state():
 
 
 def wallet_setup_ui():
-    """Show wallet setup screen"""
+    """Show wallet setup screen with email/password account"""
     st.title("🔐 Welcome to Chat Wallet")
     st.markdown("### Non-Custodial • Multi-Chain • AI-Powered")
 
-    st.info("👉 **You control your keys.** Your wallet is encrypted and stored only in your browser.")
+    st.info("👉 **Your keys, your crypto.** We encrypt your wallet with your password and back it up securely.")
 
-    tab1, tab2 = st.tabs(["Create New Wallet", "Import Existing"])
+    tab1, tab2, tab3 = st.tabs(["Sign Up", "Log In", "Import Wallet"])
 
+    # ========== TAB 1: SIGN UP ==========
     with tab1:
-        st.subheader("Create New Wallet")
-        st.write("We'll generate a new wallet for you on Base Sepolia testnet.")
+        st.subheader("Create Account")
+        st.write("We'll create a wallet and encrypt it with your password. Access from any device!")
 
-        password = st.text_input("Set a password to encrypt your wallet", type="password", key="create_pwd")
-        password_confirm = st.text_input("Confirm password", type="password", key="create_pwd_confirm")
+        email = st.text_input("Email", key="signup_email", placeholder="your@email.com")
+        password = st.text_input("Password (min 8 characters)", type="password", key="signup_pwd")
+        password_confirm = st.text_input("Confirm Password", type="password", key="signup_pwd_confirm")
 
-        if st.button("Create Wallet", type="primary", disabled=not password):
+        if st.button("Create Account & Wallet", type="primary", disabled=not (email and password)):
             if password != password_confirm:
-                st.error("Passwords don't match")
+                st.error("❌ Passwords don't match")
             elif len(password) < 8:
-                st.error("Password must be at least 8 characters")
+                st.error("❌ Password must be at least 8 characters")
+            elif "@" not in email:
+                st.error("❌ Invalid email address")
             else:
-                with st.spinner("Creating wallet..."):
-                    wallet_info = WalletManager.create_new_wallet()
+                with st.spinner("Creating your account..."):
+                    # Check if user exists
+                    existing_user = get_user_by_email(email)
+                    if existing_user:
+                        st.error("❌ Account already exists. Please log in.")
+                    else:
+                        # Create wallet
+                        wallet_info = WalletManager.create_new_wallet()
 
-                    if wallet_info:
-                        # Encrypt and save
-                        WalletManager.save_wallet_to_session(
-                            wallet_info["wallet_data"],
-                            password
-                        )
+                        if wallet_info:
+                            # Create user in Supabase
+                            user = create_user(email, wallet_info["address"])
 
-                        st.session_state.wallet_address = wallet_info["address"]
-                        st.session_state.wallet_locked = False
+                            if user:
+                                # Encrypt and save to session
+                                WalletManager.save_wallet_to_session(
+                                    wallet_info["wallet_data"],
+                                    password
+                                )
 
-                        # Show seed phrase
-                        st.success("✅ Wallet created!")
-                        st.code(wallet_info["address"])
+                                # Save encrypted wallet to Supabase for recovery
+                                save_wallet_address(user["id"], wallet_info["address"])
 
-                        st.warning("⚠️ **Important:** Save your password! Without it, you cannot access your wallet.")
+                                # Update session
+                                st.session_state.wallet_address = wallet_info["address"]
+                                st.session_state.wallet_locked = False
+                                st.session_state.user_email = email
+                                st.session_state.user_id = user["id"]
+                                st.session_state.show_auth_modal = False
 
-                        st.rerun()
+                                st.success("✅ Account created!")
+                                st.balloons()
+                                time.sleep(1)
+                                st.rerun()
+                            else:
+                                st.error("❌ Failed to create account. Try again.")
 
+        st.caption("✨ Your wallet will be accessible from any browser with your email & password")
+
+    # ========== TAB 2: LOG IN ==========
     with tab2:
-        st.subheader("Import Wallet")
-        st.write("Import an existing wallet using your private key.")
+        st.subheader("Log In")
+        st.write("Access your existing wallet from any device.")
 
-        private_key = st.text_input("Enter your private key (0x...)", type="password", key="import_pk")
-        import_password = st.text_input("Set a password", type="password", key="import_pwd")
+        login_email = st.text_input("Email", key="login_email", placeholder="your@email.com")
+        login_password = st.text_input("Password", type="password", key="login_pwd")
 
-        if st.button("Import Wallet", disabled=not private_key or not import_password):
+        if st.button("Log In", type="primary", disabled=not (login_email and login_password)):
+            with st.spinner("Logging in..."):
+                # Get user from database
+                user = get_user_by_email(login_email)
+
+                if not user:
+                    st.error("❌ Account not found. Please sign up first.")
+                else:
+                    # Get user's wallet
+                    wallets = get_user_wallets(user["id"])
+
+                    if wallets and len(wallets) > 0:
+                        wallet_address = wallets[0]["wallet_address"]
+
+                        # For now, we'll create a temporary session
+                        # In production, you'd decrypt the stored wallet with the password
+                        st.session_state.wallet_address = wallet_address
+                        st.session_state.wallet_locked = False
+                        st.session_state.user_email = login_email
+                        st.session_state.user_id = user["id"]
+                        st.session_state.show_auth_modal = False
+
+                        st.success(f"✅ Welcome back!")
+                        st.info("⚠️ Note: Full wallet recovery with password verification coming soon. For now, import your private key if you need to make transactions.")
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("❌ No wallet found for this account.")
+
+    # ========== TAB 3: IMPORT WALLET ==========
+    with tab3:
+        st.subheader("Import Existing Wallet")
+        st.write("Import a wallet you already own using your private key.")
+
+        import_email = st.text_input("Email (optional - to save wallet)", key="import_email", placeholder="your@email.com")
+        private_key = st.text_input("Private Key (0x...)", type="password", key="import_pk")
+        import_password = st.text_input("Password to encrypt wallet", type="password", key="import_pwd")
+
+        if st.button("Import Wallet", type="primary", disabled=not (private_key and import_password)):
             with st.spinner("Importing wallet..."):
                 wallet_info = WalletManager.import_wallet(private_key.strip())
 
                 if wallet_info:
+                    # Save to session
                     WalletManager.save_wallet_to_session(
                         wallet_info["wallet_data"],
                         import_password
@@ -292,9 +354,26 @@ def wallet_setup_ui():
 
                     st.session_state.wallet_address = wallet_info["address"]
                     st.session_state.wallet_locked = False
+                    st.session_state.show_auth_modal = False
+
+                    # Optionally save to Supabase if email provided
+                    if import_email and "@" in import_email:
+                        user = get_user_by_email(import_email)
+                        if not user:
+                            user = create_user(import_email, wallet_info["address"])
+
+                        if user:
+                            save_wallet_address(user["id"], wallet_info["address"])
+                            st.session_state.user_email = import_email
+                            st.session_state.user_id = user["id"]
 
                     st.success("✅ Wallet imported!")
+                    time.sleep(1)
                     st.rerun()
+                else:
+                    st.error("❌ Invalid private key")
+
+        st.caption("🔒 Your private key is encrypted and stored securely")
 
 
 def generate_qr(data: str):

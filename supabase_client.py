@@ -30,26 +30,35 @@ def get_supabase_client() -> Optional[Client]:
         return None
 
 
-def create_user(client: Client, email: str, auth_provider: str = "google") -> Optional[str]:
+def create_user(email: str, primary_wallet_address: str = None, auth_provider: str = "email") -> Optional[Dict[str, Any]]:
     """Create a new user in the database"""
     try:
+        client = get_supabase_client()
+        if not client:
+            return None
+
         result = client.table("users").insert({
             "email": email,
             "auth_provider": auth_provider,
+            "primary_wallet_address": primary_wallet_address,
             "created_at": datetime.utcnow().isoformat()
         }).execute()
 
         if result.data:
-            return result.data[0]["id"]
+            return result.data[0]
         return None
     except Exception as e:
         st.error(f"Failed to create user: {e}")
         return None
 
 
-def get_user_by_email(client: Client, email: str) -> Optional[Dict[str, Any]]:
+def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
     """Get user by email"""
     try:
+        client = get_supabase_client()
+        if not client:
+            return None
+
         result = client.table("users").select("*").eq("email", email).execute()
         if result.data and len(result.data) > 0:
             return result.data[0]
@@ -59,25 +68,37 @@ def get_user_by_email(client: Client, email: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def save_wallet_address(client: Client, user_id: str, chain: str, address: str, is_mock: bool = False) -> bool:
-    """Save a wallet address for a user"""
+def save_wallet_address(user_id: str, address: str, chain: str = "evm", encrypted_wallet_data: str = None) -> bool:
+    """Save a wallet address for a user with optional encrypted backup"""
     try:
-        client.table("wallets").insert({
+        client = get_supabase_client()
+        if not client:
+            return False
+
+        data = {
             "user_id": user_id,
             "chain": chain,
             "address": address,
-            "is_mock": is_mock,
             "created_at": datetime.utcnow().isoformat()
-        }).execute()
+        }
+
+        if encrypted_wallet_data:
+            data["wallet_data_encrypted"] = encrypted_wallet_data
+
+        client.table("wallets").insert(data).execute()
         return True
     except Exception as e:
         st.error(f"Failed to save wallet address: {e}")
         return False
 
 
-def get_user_wallets(client: Client, user_id: str) -> list:
+def get_user_wallets(user_id: str) -> list:
     """Get all wallet addresses for a user"""
     try:
+        client = get_supabase_client()
+        if not client:
+            return []
+
         result = client.table("wallets").select("*").eq("user_id", user_id).execute()
         return result.data if result.data else []
     except Exception as e:
