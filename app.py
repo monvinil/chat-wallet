@@ -584,6 +584,7 @@ def sidebar():
             st.info("👋 Welcome! Log in to access your wallet.")
             if st.button("🔑 Log In / Sign Up", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
+                st.rerun()
 
             st.divider()
             st.caption("**Preview Mode** - Explore the interface")
@@ -611,10 +612,12 @@ def sidebar():
             # Add USDC button
             if st.button("💰 Add USDC", use_container_width=True, type="primary"):
                 st.session_state.show_deposit_modal = True
+                st.rerun()
 
             # Send button
             if st.button("💸 Send", use_container_width=True):
                 st.session_state.show_send_modal = True
+                st.rerun()
 
             # Refresh balances
             if st.button("🔄 Refresh", use_container_width=True):
@@ -647,6 +650,7 @@ def sidebar():
             # Settings button
             if st.button("⚙️ Settings", use_container_width=True):
                 st.session_state.show_settings = True
+                st.rerun()
 
             # Lock wallet
             if st.button("🔒 Lock Wallet", use_container_width=True):
