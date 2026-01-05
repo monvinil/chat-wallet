@@ -29,6 +29,7 @@ from supabase_client import (
     get_user_wallets,
     log_transaction
 )
+from settings_ui import settings_page
 
 try:
     from cdp_langchain.agent_toolkits import CdpToolkit
@@ -544,6 +545,10 @@ def sidebar():
 
             st.divider()
 
+            # Settings button
+            if st.button("⚙️ Settings", use_container_width=True):
+                st.session_state.show_settings = True
+
             # Lock wallet
             if st.button("🔒 Lock Wallet", use_container_width=True):
                 WalletManager.lock_wallet()
@@ -696,6 +701,14 @@ def main():
     # Show send modal if requested (only if logged in)
     if st.session_state.get("show_send_modal") and st.session_state.wallet_address:
         send_modal()
+        return
+
+    # Show settings page if requested (only if logged in)
+    if st.session_state.get("show_settings") and st.session_state.wallet_address:
+        settings_page()
+        if st.button("← Back to Wallet"):
+            st.session_state.show_settings = False
+            st.rerun()
         return
 
     # Main layout - always show (preview or logged in)
