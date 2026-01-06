@@ -737,6 +737,37 @@ def sidebar():
                     st.rerun()
 
 
+def render_quick_actions():
+    """Render quick action chips above chat"""
+    # Check connection status
+    email_connected = st.session_state.get("gmail_connected", False)
+
+    col1, col2, col3 = st.columns([1, 1, 1])
+
+    with col1:
+        if email_connected:
+            if st.button("Email Connected", key="email_status", use_container_width=True):
+                st.session_state.show_settings = True
+                st.session_state.settings_tab = "accounts"
+                st.rerun()
+        else:
+            if st.button("Connect Email", key="connect_email_quick", use_container_width=True):
+                st.session_state.show_settings = True
+                st.session_state.settings_tab = "accounts"
+                st.rerun()
+
+    with col2:
+        if st.button("AI Provider", key="ai_provider_quick", use_container_width=True):
+            st.session_state.show_settings = True
+            st.session_state.settings_tab = "provider"
+            st.rerun()
+
+    with col3:
+        if st.button("Settings", key="settings_quick", use_container_width=True):
+            st.session_state.show_settings = True
+            st.rerun()
+
+
 def chat_interface():
     """Main chat interface"""
     st.title("Chat Wallet")
@@ -767,6 +798,11 @@ Sign in to get started.
         # Disabled chat input
         st.chat_input("Sign in to start...", disabled=True)
         return
+
+    # Quick action chips for logged-in users
+    render_quick_actions()
+
+    st.divider()
 
     # Normal logged-in chat interface
     # Show messages
@@ -831,7 +867,7 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # Professional VC/TradFi styling
+    # Professional dark theme styling
     st.markdown("""
     <style>
     /* Clean, professional typography */
@@ -841,115 +877,158 @@ def main():
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Refined header styling */
+    /* Dark theme header styling */
     h1 {
         font-weight: 600 !important;
         letter-spacing: -0.02em !important;
-        color: #1A1A2E !important;
+        color: #F9FAFB !important;
     }
 
     h2, h3 {
         font-weight: 500 !important;
-        color: #2D3748 !important;
+        color: #D1D5DB !important;
     }
 
-    /* Professional card styling */
+    /* Professional card styling with texture */
     [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        background: linear-gradient(145deg, #1F1F2E 0%, #16161F 100%);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
     [data-testid="stMetricValue"] {
-        font-weight: 600 !important;
-        color: #1A1A2E !important;
+        font-weight: 700 !important;
+        font-size: 1.75rem !important;
+        color: #FFFFFF !important;
     }
 
-    /* Cleaner buttons */
+    [data-testid="stMetricLabel"] {
+        color: #9CA3AF !important;
+        font-size: 0.875rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Textured buttons with depth */
     .stButton > button {
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         font-weight: 500 !important;
-        padding: 0.5rem 1rem !important;
-        transition: all 0.15s ease !important;
-        border: 1px solid transparent !important;
+        padding: 0.625rem 1.25rem !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%) !important;
+        color: #E5E7EB !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
     .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0,102,255,0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.12) !important;
+        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%) !important;
     }
 
     .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%) !important;
+        background: linear-gradient(145deg, #3B82F6 0%, #2563EB 100%) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 16px rgba(59,130,246,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
     }
 
-    /* Refined sidebar */
+    .stButton > button[kind="primary"]:hover {
+        background: linear-gradient(145deg, #4F8FFF 0%, #3B7BF6 100%) !important;
+        box-shadow: 0 8px 28px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    /* Refined dark sidebar */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
-        border-right: 1px solid #E2E8F0;
+        background: linear-gradient(180deg, #141419 0%, #0F0F14 100%);
+        border-right: 1px solid rgba(255,255,255,0.04);
     }
 
     [data-testid="stSidebar"] h1 {
         font-size: 1.25rem !important;
         margin-bottom: 1rem;
+        color: #F9FAFB !important;
     }
 
-    /* Professional input fields */
+    /* Dark input fields with glow */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea {
-        border-radius: 8px !important;
-        border: 1px solid #E2E8F0 !important;
-        padding: 12px !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: #1A1A24 !important;
+        padding: 14px !important;
         font-size: 14px !important;
+        color: #E5E7EB !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus {
-        border-color: #0066FF !important;
-        box-shadow: 0 0 0 3px rgba(0,102,255,0.1) !important;
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15), inset 0 2px 4px rgba(0,0,0,0.2) !important;
     }
 
-    /* Cleaner tabs */
+    .stTextInput > div > div > input::placeholder,
+    .stTextArea > div > div > textarea::placeholder {
+        color: #6B7280 !important;
+    }
+
+    /* Dark tabs with texture */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         background: transparent;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        padding-bottom: 8px;
     }
 
     .stTabs [data-baseweb="tab"] {
         border-radius: 8px;
-        padding: 8px 16px;
+        padding: 10px 18px;
         font-weight: 500;
+        background: transparent;
+        color: #9CA3AF;
     }
 
-    /* Chat message styling */
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%);
+        color: #FFFFFF;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Dark chat messages */
     [data-testid="stChatMessage"] {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 12px;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
     }
 
-    /* Code blocks */
+    /* Dark code blocks */
     code {
-        background: #F1F5F9 !important;
-        color: #1A1A2E !important;
-        padding: 2px 6px !important;
-        border-radius: 4px !important;
+        background: #252532 !important;
+        color: #A5B4FC !important;
+        padding: 3px 8px !important;
+        border-radius: 6px !important;
         font-size: 13px !important;
+        border: 1px solid rgba(255,255,255,0.06);
     }
 
-    /* Info/Warning/Error boxes */
+    /* Dark alert boxes */
     .stAlert {
-        border-radius: 8px !important;
-        border: none !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%) !important;
     }
 
-    /* Dividers */
+    /* Dark dividers */
     hr {
-        border-color: #E2E8F0 !important;
+        border-color: rgba(255,255,255,0.06) !important;
         margin: 1.5rem 0 !important;
     }
 
@@ -957,10 +1036,89 @@ def main():
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Professional expander */
+    /* Dark expander */
     .streamlit-expanderHeader {
         font-weight: 500 !important;
-        color: #4A5568 !important;
+        color: #9CA3AF !important;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
+        border-radius: 10px;
+        padding: 12px 16px !important;
+    }
+
+    details {
+        background: transparent !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        border-radius: 12px !important;
+    }
+
+    /* Quick action chips */
+    .quick-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        color: #E5E7EB;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 4px;
+    }
+
+    .quick-action:hover {
+        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%);
+        border-color: rgba(255,255,255,0.12);
+        transform: translateY(-1px);
+    }
+
+    .quick-action.active {
+        background: linear-gradient(145deg, #3B82F6 0%, #2563EB 100%);
+        border-color: rgba(255,255,255,0.15);
+        color: #FFFFFF;
+    }
+
+    /* Status indicator */
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-dot.connected {
+        background: #10B981;
+        box-shadow: 0 0 8px rgba(16,185,129,0.5);
+    }
+
+    .status-dot.disconnected {
+        background: #6B7280;
+    }
+
+    /* Section cards */
+    .section-card {
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    /* Number input styling */
+    .stNumberInput > div > div > input {
+        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: #1A1A24 !important;
+        color: #E5E7EB !important;
+    }
+
+    /* Select box styling */
+    .stSelectbox > div > div {
+        background: #1A1A24 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        border-radius: 10px !important;
     }
     </style>
     """, unsafe_allow_html=True)
