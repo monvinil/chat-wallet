@@ -34,7 +34,7 @@ class SessionManager:
         from supabase_client import get_supabase_client
 
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
             if not supabase:
                 return None
 
@@ -65,7 +65,7 @@ class SessionManager:
         from supabase_client import get_supabase_client
 
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
             if not supabase:
                 return None
 
@@ -93,7 +93,7 @@ class SessionManager:
         from supabase_client import get_supabase_client
 
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
             if not supabase:
                 return False
 
