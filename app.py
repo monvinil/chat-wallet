@@ -1298,10 +1298,17 @@ def main():
 
     # Initialize cookie manager (happens once, no forced rerun)
     if "_cookie_manager_init" not in st.session_state:
+        # Hide content during initialization to prevent flash
+        st.markdown("""
+        <style>
+        .stApp { opacity: 0 !important; }
+        </style>
+        """, unsafe_allow_html=True)
+
         st.session_state._cookie_manager_init = True
         SessionManager.get_cookie_manager()
         # Cookie manager needs one render cycle to be ready
-        return
+        st.rerun()
 
     # Restore session from cookie if not already done
     if not st.session_state.get("_app_initialized"):
