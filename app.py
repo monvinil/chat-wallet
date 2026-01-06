@@ -1056,21 +1056,6 @@ def main():
         100% { background-position: -200% 0; }
     }
 
-    /* Initial page load overlay - wallet icon pulse */
-    .stApp[data-testid="stAppViewContainer"]::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: #0F0F14;
-        z-index: 9999;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-    }
-
     /* Clean, professional typography */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 

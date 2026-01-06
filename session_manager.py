@@ -135,6 +135,12 @@ class SessionManager:
         if st.session_state.get("wallet_address") and st.session_state.get("user_id"):
             return True
 
+        # Skip if we already attempted restoration this session
+        if st.session_state.get("_session_restore_attempted"):
+            return False
+
+        st.session_state._session_restore_attempted = True
+
         # Check for session cookie
         session_token = SessionManager.get_session_cookie()
         if not session_token:
