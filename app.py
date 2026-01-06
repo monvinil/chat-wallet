@@ -1030,7 +1030,7 @@ def main():
     <style>
     /* Smooth fade-in to prevent flash */
     .stApp {
-        animation: fadeIn 0.3s ease-in;
+        animation: fadeIn 0.2s ease-out;
     }
 
     @keyframes fadeIn {
@@ -1038,17 +1038,14 @@ def main():
         to { opacity: 1; }
     }
 
-    /* Skeleton loader styling */
+    /* Hide skeleton loaders during initial load to prevent boxes from showing */
     .stSkeleton {
-        background: linear-gradient(90deg, #1A1A24 0%, #252532 50%, #1A1A24 100%) !important;
-        background-size: 200% 100% !important;
-        animation: skeleton-shimmer 1.5s ease-in-out infinite !important;
-        border-radius: 8px !important;
+        display: none !important;
     }
 
-    @keyframes skeleton-shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+    /* Hide Streamlit's default loading animation */
+    .stSpinner > div {
+        display: none !important;
     }
 
     /* Clean, professional typography */
