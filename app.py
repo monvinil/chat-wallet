@@ -882,6 +882,68 @@ def main():
     # Professional dark theme styling
     st.markdown("""
     <style>
+    /* Custom loading animation - replaces default Streamlit loader */
+    @keyframes pulse-ring {
+        0% { transform: scale(0.8); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.5; }
+        100% { transform: scale(0.8); opacity: 1; }
+    }
+
+    @keyframes rotate-gradient {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Style the Streamlit loading state */
+    [data-testid="stAppViewBlockContainer"] .stSpinner > div {
+        border: none !important;
+    }
+
+    .stSpinner > div > div {
+        width: 48px !important;
+        height: 48px !important;
+        border: 3px solid transparent !important;
+        border-top-color: #3B82F6 !important;
+        border-right-color: #8B5CF6 !important;
+        border-radius: 50% !important;
+        animation: rotate-gradient 0.8s linear infinite !important;
+    }
+
+    /* Loading text style */
+    .stSpinner > div > span {
+        color: #9CA3AF !important;
+        font-weight: 500 !important;
+        margin-top: 12px !important;
+    }
+
+    /* Hide default Streamlit skeleton loaders and replace */
+    .stSkeleton {
+        background: linear-gradient(90deg, #1A1A24 0%, #252532 50%, #1A1A24 100%) !important;
+        background-size: 200% 100% !important;
+        animation: skeleton-shimmer 1.5s ease-in-out infinite !important;
+        border-radius: 8px !important;
+    }
+
+    @keyframes skeleton-shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Initial page load overlay - wallet icon pulse */
+    .stApp[data-testid="stAppViewContainer"]::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #0F0F14;
+        z-index: 9999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
     /* Clean, professional typography */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
