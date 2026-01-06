@@ -5,7 +5,6 @@ Session Manager - Persistent sessions across page refreshes using cookies
 import streamlit as st
 import extra_streamlit_components as stx
 import secrets
-import time
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
@@ -15,12 +14,14 @@ class SessionManager:
 
     COOKIE_NAME = "chat_wallet_session"
     SESSION_EXPIRY_DAYS = 30
+    _cookie_manager = None
 
     @staticmethod
-    @st.cache_resource
     def get_cookie_manager():
-        """Get cached cookie manager instance"""
-        return stx.CookieManager()
+        """Get cookie manager instance (created once per session)"""
+        if "cookie_manager" not in st.session_state:
+            st.session_state.cookie_manager = stx.CookieManager(key="chat_wallet_cookies")
+        return st.session_state.cookie_manager
 
     @staticmethod
     def generate_session_token() -> str:
