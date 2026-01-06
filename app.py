@@ -33,6 +33,7 @@ from supabase_client import (
     get_encrypted_wallet
 )
 from settings_ui import settings_page
+from session_manager import SessionManager
 
 try:
     from cdp_langchain.agent_toolkits import CdpToolkit
@@ -297,6 +298,9 @@ def wallet_setup_ui():
                                 st.session_state.user_id = user["id"]
                                 st.session_state.show_auth_modal = False
 
+                                # Create persistent session (cookie)
+                                SessionManager.login(user["id"], email, wallet_info["address"])
+
                                 st.success("Account created successfully")
 
                                 # Show seed phrase
@@ -351,6 +355,9 @@ def wallet_setup_ui():
                             st.session_state.user_email = login_email
                             st.session_state.user_id = user["id"]
                             st.session_state.show_auth_modal = False
+
+                            # Create persistent session (cookie)
+                            SessionManager.login(user["id"], login_email, wallet_address)
 
                             # If no password hash stored (legacy), update it now
                             if not stored_hash:
@@ -710,9 +717,14 @@ def sidebar():
                 st.session_state.show_settings = True
                 st.rerun()
 
-            # Lock wallet
+            # Lock wallet (keep session)
             if st.button("Lock", use_container_width=True):
                 WalletManager.lock_wallet()
+                st.rerun()
+
+            # Logout (clear session)
+            if st.button("Logout", use_container_width=True):
+                SessionManager.logout()
                 st.rerun()
 
         else:
@@ -1124,6 +1136,9 @@ def main():
     """, unsafe_allow_html=True)
 
     init_state()
+
+    # Try to restore session from cookie (persistent login)
+    SessionManager.restore_session()
 
     # Handle OAuth callback
     query_params = st.query_params
