@@ -19,7 +19,8 @@ class SessionManager:
     @staticmethod
     def get_cookie_manager():
         """Get cookie manager instance (created once per session)"""
-        if "cookie_manager" not in st.session_state:
+        if "_cookie_manager_init" not in st.session_state:
+            st.session_state._cookie_manager_init = True
             st.session_state.cookie_manager = stx.CookieManager(key="chat_wallet_cookies")
         return st.session_state.cookie_manager
 
@@ -139,37 +140,45 @@ class SessionManager:
         if st.session_state.get("_session_restore_attempted"):
             return False
 
+        # Skip if cookie manager not ready yet (prevents multiple reruns)
+        if "_cookie_manager_init" not in st.session_state:
+            return False
+
         st.session_state._session_restore_attempted = True
 
-        # Check for session cookie
-        session_token = SessionManager.get_session_cookie()
-        if not session_token:
+        try:
+            # Check for session cookie
+            session_token = SessionManager.get_session_cookie()
+            if not session_token:
+                return False
+
+            # Validate session in database
+            session_data = SessionManager.get_session(session_token)
+            if not session_data:
+                SessionManager.clear_session_cookie()
+                return False
+
+            # Restore session state
+            st.session_state.user_id = session_data["user_id"]
+            st.session_state.user_email = session_data["email"]
+            st.session_state.wallet_address = session_data["wallet_address"]
+            st.session_state.session_token = session_token
+
+            # Try to restore encrypted wallet from cloud
+            from supabase_client import get_encrypted_wallet
+            encrypted_wallet = get_encrypted_wallet(session_data["user_id"])
+
+            if encrypted_wallet:
+                st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
+                st.session_state.wallet_salt = encrypted_wallet["salt"]
+                st.session_state.wallet_locked = True  # Will need password to unlock
+            else:
+                st.session_state.wallet_locked = True
+
+            return True
+        except Exception as e:
+            print(f"Session restore error: {e}")
             return False
-
-        # Validate session in database
-        session_data = SessionManager.get_session(session_token)
-        if not session_data:
-            SessionManager.clear_session_cookie()
-            return False
-
-        # Restore session state
-        st.session_state.user_id = session_data["user_id"]
-        st.session_state.user_email = session_data["email"]
-        st.session_state.wallet_address = session_data["wallet_address"]
-        st.session_state.session_token = session_token
-
-        # Try to restore encrypted wallet from cloud
-        from supabase_client import get_encrypted_wallet
-        encrypted_wallet = get_encrypted_wallet(session_data["user_id"])
-
-        if encrypted_wallet:
-            st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
-            st.session_state.wallet_salt = encrypted_wallet["salt"]
-            st.session_state.wallet_locked = True  # Will need password to unlock
-        else:
-            st.session_state.wallet_locked = True
-
-        return True
 
     @staticmethod
     def login(user_id: str, email: str, wallet_address: str) -> bool:

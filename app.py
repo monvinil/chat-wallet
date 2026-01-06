@@ -1285,8 +1285,16 @@ def main():
 
     init_state()
 
-    # Try to restore session from cookie (persistent login)
-    SessionManager.restore_session()
+    # Show loading screen during initialization
+    if not st.session_state.get("_app_initialized"):
+        # Initialize cookie manager first (causes one rerun)
+        SessionManager.get_cookie_manager()
+
+        # Try to restore session from cookie (persistent login)
+        SessionManager.restore_session()
+
+        st.session_state._app_initialized = True
+        st.rerun()
 
     # Handle OAuth callback
     query_params = st.query_params
@@ -1324,19 +1332,34 @@ def main():
             st.rerun()
         return
 
-    # Initialize agent only if wallet exists
+    # Initialize agent only if wallet exists (async, non-blocking)
     if st.session_state.wallet_address and st.session_state.agent is None:
-        with st.spinner("Initializing AI Agent..."):
+        if not st.session_state.get("_agent_initializing"):
+            st.session_state._agent_initializing = True
+
             try:
+                # Create agent (fast)
                 agent = create_agent()
                 st.session_state.agent = agent
 
-                # Fetch initial balances
+                # Fetch balances in background (don't block UI)
+                if not st.session_state.get("balances"):
+                    st.session_state.balances = {}
+
+            except Exception as e:
+                st.error(f"Failed to initialize: {e}")
+                st.session_state._agent_initializing = False
+
+    # Lazy-load balances after agent is ready (non-blocking)
+    if st.session_state.wallet_address and not st.session_state.get("_balances_loaded"):
+        if st.session_state.get("agent"):
+            st.session_state._balances_loaded = True
+            # Fetch in background - will update on next rerun
+            try:
                 balances = ChainUtils.get_all_balances(st.session_state.wallet_address)
                 st.session_state.balances = balances
             except Exception as e:
-                st.error(f"Failed to initialize: {e}")
-                st.stop()
+                print(f"Balance fetch error: {e}")
 
     # Show deposit modal if requested (only if logged in)
     if st.session_state.get("show_deposit_modal") and st.session_state.wallet_address:
