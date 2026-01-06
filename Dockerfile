@@ -19,11 +19,8 @@ COPY . .
 # Patch Streamlit's loading animation (optional, won't fail build)
 RUN python patch_streamlit.py || echo "Patch skipped"
 
-# Use Railway's PORT environment variable
-ENV PORT=8501
+# Expose port 8501
+EXPOSE 8501
 
-# Expose port
-EXPOSE $PORT
-
-# Run the app - use shell form to expand $PORT
-CMD streamlit run app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
+# Run the app with shell to expand PORT variable
+CMD ["/bin/sh", "-c", "streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.headless=true"]
