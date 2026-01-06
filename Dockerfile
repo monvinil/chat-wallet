@@ -24,4 +24,5 @@ EXPOSE 8501
 
 # Run the app with shell to expand PORT variable
 # Set STREAMLIT_SERVER_PORT to the actual PORT value to override any env var
-CMD ["/bin/sh", "-c", "export STREAMLIT_SERVER_PORT=${PORT:-8501} && streamlit run app.py --server.address=0.0.0.0 --server.headless=true"]
+# Add debugging and ensure proper startup
+CMD ["/bin/sh", "-c", "echo 'Starting Streamlit on port '${PORT:-8501} && export STREAMLIT_SERVER_PORT=${PORT:-8501} && streamlit run app.py --server.address=0.0.0.0 --server.headless=true --server.enableCORS=true --server.enableXsrfProtection=false"]
