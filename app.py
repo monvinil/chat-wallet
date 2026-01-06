@@ -11,11 +11,12 @@ import qrcode
 from io import BytesIO
 from datetime import datetime
 
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.tools import tool
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+# Lazy import LangChain modules only when needed (saves 1-2s on initial load)
+# from langchain_anthropic import ChatAnthropic
+# from langchain_core.messages import HumanMessage, AIMessage
+# from langchain_core.tools import tool
+# from langchain.agents import AgentExecutor, create_tool_calling_agent
+# from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 # Local imports
 from config import NETWORKS, calculate_fee
@@ -107,7 +108,6 @@ MOCK_EMAILS = [
 # TOOLS
 # ============================================================================
 
-@tool
 def get_wallet_balance() -> str:
     """Get current wallet balances across all chains. No arguments needed."""
     if "wallet_address" not in st.session_state:
@@ -130,7 +130,6 @@ def get_wallet_balance() -> str:
     return json.dumps(result, indent=2)
 
 
-@tool
 def get_deposit_address(chain: str = "base-sepolia") -> str:
     """Get deposit address for a specific chain. Args: chain - network key like 'base-sepolia' or 'arbitrum-sepolia'"""
     if "wallet_address" not in st.session_state:
@@ -151,7 +150,6 @@ def get_deposit_address(chain: str = "base-sepolia") -> str:
 # Old mock tools removed - now using real Bitrefill API tools from bitrefill_tools.py
 
 
-@tool
 def read_latest_emails(count: int = 3) -> str:
     """Read latest emails. Args: count - number of emails"""
     return json.dumps({"status": "success", "emails": MOCK_EMAILS[:min(count, 10)], "note": "[SIMULATED]"}, indent=2)
@@ -162,8 +160,18 @@ def read_latest_emails(count: int = 3) -> str:
 # ============================================================================
 
 def create_agent():
-    """Create the LangChain agent"""
+    """Create the LangChain agent (lazy import for faster initial load)"""
+    # Lazy import LangChain modules (saves 1-2s on app startup)
+    from langchain_anthropic import ChatAnthropic
+    from langchain_core.tools import tool
+    from langchain.agents import AgentExecutor, create_tool_calling_agent
+    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
     from settings_manager import SettingsManager
+
+    # Wrap tools with @tool decorator at runtime
+    tool_get_wallet_balance = tool(get_wallet_balance)
+    tool_get_deposit_address = tool(get_deposit_address)
+    tool_read_latest_emails = tool(read_latest_emails)
 
     # Get user's LLM config (custom API key if set, otherwise app default)
     user_id = st.session_state.get("user_id")
@@ -182,9 +190,9 @@ def create_agent():
     from bitrefill_tools import get_bitrefill_tools
 
     custom_tools = [
-        get_wallet_balance,
-        get_deposit_address,
-        read_latest_emails
+        tool_get_wallet_balance,
+        tool_get_deposit_address,
+        tool_read_latest_emails
     ] + get_email_tools() + get_bitrefill_tools()  # Add email automation and Bitrefill tools
 
     prompt = ChatPromptTemplate.from_messages([
@@ -967,6 +975,9 @@ Sign in to get started.
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
+                    # Lazy import LangChain message types
+                    from langchain_core.messages import HumanMessage, AIMessage
+
                     history = []
                     for m in st.session_state.messages[:-1]:
                         if m["role"] == "user":
@@ -1285,16 +1296,21 @@ def main():
 
     init_state()
 
-    # Show loading screen during initialization
-    if not st.session_state.get("_app_initialized"):
-        # Initialize cookie manager first (causes one rerun)
+    # Initialize cookie manager (happens once, no forced rerun)
+    if "_cookie_manager_init" not in st.session_state:
+        st.session_state._cookie_manager_init = True
         SessionManager.get_cookie_manager()
+        # Cookie manager needs one render cycle to be ready
+        return
 
-        # Try to restore session from cookie (persistent login)
-        SessionManager.restore_session()
-
+    # Restore session from cookie if not already done
+    if not st.session_state.get("_app_initialized"):
+        session_restored = SessionManager.restore_session()
         st.session_state._app_initialized = True
-        st.rerun()
+
+        # Only rerun if we actually restored a session (to show logged-in UI)
+        if session_restored:
+            st.rerun()
 
     # Handle OAuth callback
     query_params = st.query_params

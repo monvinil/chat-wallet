@@ -84,14 +84,33 @@ class ChainUtils:
 
     @staticmethod
     def get_all_balances(address: str) -> Dict[str, Dict[str, float]]:
-        """Get balances across all supported chains"""
+        """Get balances across all supported chains (parallelized for speed)"""
+        import concurrent.futures
+
         balances = {}
 
+        # Prepare list of EVM networks to fetch
+        evm_networks = [(key, info) for key, info in NETWORKS.items() if info["type"] == "evm"]
+
+        # Fetch all EVM balances in parallel (4x faster)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            future_to_network = {
+                executor.submit(ChainUtils.get_evm_balance, network_key, address): network_key
+                for network_key, network_info in evm_networks
+            }
+
+            for future in concurrent.futures.as_completed(future_to_network, timeout=10):
+                network_key = future_to_network[future]
+                try:
+                    balances[network_key] = future.result(timeout=5)
+                except Exception as e:
+                    print(f"Balance fetch error for {network_key}: {e}")
+                    # Return zero balances on error instead of crashing
+                    balances[network_key] = {"eth": 0.0, "usdc": 0.0}
+
+        # Handle Solana (mock for now)
         for network_key, network_info in NETWORKS.items():
-            if network_info["type"] == "evm":
-                balances[network_key] = ChainUtils.get_evm_balance(network_key, address)
-            elif network_info["type"] == "solana":
-                # For now, mock Solana balances
+            if network_info["type"] == "solana":
                 balances[network_key] = {"sol": 0.0, "usdc": 0.0}
 
         return balances
