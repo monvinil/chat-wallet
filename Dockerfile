@@ -16,14 +16,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Patch Streamlit's loading animation
-RUN python patch_streamlit.py
+# Patch Streamlit's loading animation (optional, won't fail build)
+RUN python patch_streamlit.py || echo "Patch skipped"
+
+# Use Railway's PORT environment variable
+ENV PORT=8501
 
 # Expose port
-EXPOSE 8501
+EXPOSE $PORT
 
-# Health check
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
-
-# Run the app
-ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Run the app - use shell form to expand $PORT
+CMD streamlit run app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
