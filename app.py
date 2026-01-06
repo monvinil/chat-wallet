@@ -1028,6 +1028,16 @@ def main():
     # Professional dark theme styling
     st.markdown("""
     <style>
+    /* Smooth fade-in to prevent flash */
+    .stApp {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
     /* Skeleton loader styling */
     .stSkeleton {
         background: linear-gradient(90deg, #1A1A24 0%, #252532 50%, #1A1A24 100%) !important;
@@ -1298,17 +1308,11 @@ def main():
 
     # Initialize cookie manager (happens once, no forced rerun)
     if "_cookie_manager_init" not in st.session_state:
-        # Hide content during initialization to prevent flash
-        st.markdown("""
-        <style>
-        .stApp { opacity: 0 !important; }
-        </style>
-        """, unsafe_allow_html=True)
-
         st.session_state._cookie_manager_init = True
         SessionManager.get_cookie_manager()
         # Cookie manager needs one render cycle to be ready
-        st.rerun()
+        # Use stop() instead of rerun to prevent flash
+        st.stop()
 
     # Restore session from cookie if not already done
     if not st.session_state.get("_app_initialized"):
