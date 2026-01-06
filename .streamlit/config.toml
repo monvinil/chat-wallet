@@ -1,0 +1,15 @@
+[theme]
+# Professional VC/TradFi-friendly palette
+primaryColor = "#0066FF"          # Trust blue - action buttons, links
+backgroundColor = "#FAFBFC"       # Light gray background
+secondaryBackgroundColor = "#FFFFFF"  # Pure white for cards
+textColor = "#1A1A2E"             # Dark navy text
+font = "sans serif"
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false

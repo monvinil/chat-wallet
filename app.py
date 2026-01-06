@@ -220,35 +220,35 @@ def init_state():
 
 def wallet_setup_ui():
     """Show wallet setup screen with email/password account"""
-    st.title("🔐 Welcome to Chat Wallet")
-    st.markdown("### Non-Custodial • Multi-Chain • AI-Powered")
+    st.title("Chat Wallet")
+    st.markdown("##### Self-custody wallet with AI-powered transactions")
 
-    st.info("👉 **Your keys, your crypto.** We encrypt your wallet with your password and back it up securely.")
+    st.info("**You control your keys.** Your wallet is encrypted client-side and backed up securely to the cloud.")
 
     tab1, tab2, tab3 = st.tabs(["Sign Up", "Log In", "Import Wallet"])
 
     # ========== TAB 1: SIGN UP ==========
     with tab1:
         st.subheader("Create Account")
-        st.write("We'll create a wallet and encrypt it with your password. Access from any device!")
+        st.caption("Create a new wallet. Access it from any device with your credentials.")
 
         email = st.text_input("Email", key="signup_email", placeholder="your@email.com")
         password = st.text_input("Password (min 8 characters)", type="password", key="signup_pwd")
         password_confirm = st.text_input("Confirm Password", type="password", key="signup_pwd_confirm")
 
-        if st.button("Create Account & Wallet", type="primary", disabled=not (email and password)):
+        if st.button("Create Account", type="primary", disabled=not (email and password)):
             if password != password_confirm:
-                st.error("❌ Passwords don't match")
+                st.error("Passwords do not match")
             elif len(password) < 8:
-                st.error("❌ Password must be at least 8 characters")
+                st.error("Password must be at least 8 characters")
             elif "@" not in email:
-                st.error("❌ Invalid email address")
+                st.error("Please enter a valid email address")
             else:
                 with st.spinner("Creating your account..."):
                     # Check if user exists
                     existing_user = get_user_by_email(email)
                     if existing_user:
-                        st.error("❌ Account already exists. Please log in.")
+                        st.error("Account already exists. Please log in.")
                     else:
                         # Create wallet
                         wallet_info = WalletManager.create_new_wallet()
@@ -297,32 +297,31 @@ def wallet_setup_ui():
                                 st.session_state.user_id = user["id"]
                                 st.session_state.show_auth_modal = False
 
-                                st.success("✅ Account created!")
+                                st.success("Account created successfully")
 
                                 # Show seed phrase
                                 if wallet_info.get("mnemonic"):
-                                    st.warning("🔐 **SAVE YOUR SEED PHRASE!**")
+                                    st.warning("**Important: Save your recovery phrase**")
                                     st.code(wallet_info["mnemonic"], language=None)
                                     st.caption("""
-                                    **Write this down and store it safely!**
-                                    - This 12-word phrase can recover your wallet
-                                    - Never share it with anyone
-                                    - Store it offline (paper, steel backup)
+                                    Write this 12-word phrase down and store it securely.
+                                    This is the only way to recover your wallet if you lose access.
+                                    Never share it with anyone.
                                     """)
 
                                 st.balloons()
                                 time.sleep(3)
                                 st.rerun()
                             else:
-                                st.error("❌ Failed to create database user.")
-                                st.info("💡 Possible causes:\n- Supabase credentials not configured\n- Email already exists\n- Database migrations not run")
+                                st.error("Failed to create user account.")
+                                st.info("Possible causes: Supabase credentials not configured, email already exists, or database migrations not run.")
 
-        st.caption("✨ Your wallet will be accessible from any browser with your email & password")
+        st.caption("Your wallet syncs across all your devices automatically.")
 
     # ========== TAB 2: LOG IN ==========
     with tab2:
         st.subheader("Log In")
-        st.write("Access your existing wallet from any device.")
+        st.caption("Access your existing wallet from any device.")
 
         login_email = st.text_input("Email", key="login_email", placeholder="your@email.com")
         login_password = st.text_input("Password", type="password", key="login_pwd")
@@ -333,13 +332,13 @@ def wallet_setup_ui():
                 user = get_user_by_email(login_email)
 
                 if not user:
-                    st.error("❌ Account not found. Please sign up first.")
+                    st.error("Account not found. Please sign up first.")
                 else:
                     # Verify password
                     stored_hash = get_user_password_hash(user["id"])
 
                     if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
-                        st.error("❌ Incorrect password. Please try again.")
+                        st.error("Incorrect password. Please try again.")
                     else:
                         # Password verified (or no hash stored - legacy account)
                         # Get user's wallet
@@ -368,38 +367,38 @@ def wallet_setup_ui():
                                 # Decrypt with password
                                 if WalletManager.unlock_wallet_with_password(login_password):
                                     st.session_state.wallet_locked = False
-                                    st.success("✅ Welcome back! Wallet restored from cloud.")
+                                    st.success("Welcome back. Wallet restored from cloud.")
                                 else:
                                     st.session_state.wallet_locked = True
-                                    st.success("✅ Welcome back!")
-                                    st.warning("⚠️ Could not decrypt wallet. Try unlocking with your password.")
+                                    st.success("Welcome back.")
+                                    st.warning("Could not decrypt wallet. Try unlocking with your password.")
                             else:
                                 # No cloud backup - need manual import (legacy account)
                                 st.session_state.wallet_locked = True
-                                st.success("✅ Welcome back!")
-                                st.info("💡 To access your funds, import your wallet using your seed phrase or private key.")
+                                st.success("Welcome back.")
+                                st.info("To access your funds, import your wallet using your seed phrase or private key.")
 
                             time.sleep(1)
                             st.rerun()
                         else:
-                            st.error("❌ No wallet found for this account.")
+                            st.error("No wallet found for this account.")
 
     # ========== TAB 3: IMPORT WALLET ==========
     with tab3:
-        st.subheader("Import Existing Wallet")
-        st.write("Import a wallet using your 12-word seed phrase or private key.")
+        st.subheader("Import Wallet")
+        st.caption("Import an existing wallet using your recovery phrase or private key.")
 
-        import_email = st.text_input("Email (optional - to save wallet)", key="import_email", placeholder="your@email.com")
+        import_email = st.text_input("Email (optional)", key="import_email", placeholder="your@email.com")
         recovery_input = st.text_area(
-            "Seed Phrase (12 words) or Private Key (0x...)",
+            "Recovery Phrase or Private Key",
             key="import_recovery",
-            placeholder="word1 word2 word3... OR 0x123...",
+            placeholder="Enter 12-word phrase or 0x...",
             help="Enter either your 12-word seed phrase or your private key",
             height=100
         )
-        import_password = st.text_input("Password to encrypt wallet", type="password", key="import_pwd")
+        import_password = st.text_input("Encryption Password", type="password", key="import_pwd")
 
-        st.caption("⚠️ Your seed phrase/key will be encrypted and stored securely")
+        st.caption("Your credentials are encrypted locally before storage.")
 
         if st.button("Import Wallet", type="primary", disabled=not (recovery_input and import_password)):
             with st.spinner("Importing wallet..."):
@@ -427,13 +426,13 @@ def wallet_setup_ui():
                             st.session_state.user_email = import_email
                             st.session_state.user_id = user["id"]
 
-                    st.success("✅ Wallet imported!")
+                    st.success("Wallet imported successfully.")
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("❌ Invalid private key")
+                    st.error("Invalid recovery phrase or private key.")
 
-        st.caption("🔒 Your private key is encrypted and stored securely")
+        st.caption("Private keys are encrypted with AES-256 before storage.")
 
 
 def generate_qr(data: str):
@@ -450,7 +449,7 @@ def generate_qr(data: str):
 
 def deposit_modal():
     """Show deposit address modal"""
-    st.subheader("💰 Add USDC")
+    st.subheader("Deposit")
 
     # Chain selector
     chain_options = {
@@ -475,24 +474,24 @@ def deposit_modal():
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("📋 Copy Address", use_container_width=True):
-            st.toast("Address copied!")
+        if st.button("Copy Address", use_container_width=True):
+            st.toast("Address copied")
 
     with col2:
         explorer_url = ChainUtils.get_explorer_url(selected_chain, address)
-        st.link_button("🔍 View on Explorer", explorer_url, use_container_width=True)
+        st.link_button("View on Explorer", explorer_url, use_container_width=True)
 
     # QR Code
-    st.markdown("**Scan QR Code:**")
+    st.markdown("**QR Code**")
     qr_img = generate_qr(address)
     st.image(qr_img, width=200)
 
     # Instructions
-    with st.expander("📖 How to get testnet funds"):
+    with st.expander("Getting testnet funds"):
         if "sepolia" in selected_chain or "amoy" in selected_chain:
             st.markdown("""
-            **For testnet USDC:**
-            1. Get testnet ETH from a faucet
+            **Testnet USDC:**
+            1. Obtain testnet ETH from a faucet
             2. Use a testnet USDC faucet or bridge
 
             **Faucets:**
@@ -500,7 +499,7 @@ def deposit_modal():
             - [Alchemy Faucet](https://sepoliafaucet.com/)
             """)
         else:
-            st.warning("⚠️ This is MAINNET. Only send real funds if you know what you're doing.")
+            st.warning("This is mainnet. Only deposit real funds if intended.")
 
 
 def send_modal():
@@ -508,8 +507,8 @@ def send_modal():
     from transaction_relayer import TransactionRelayer
     from meta_tx import MetaTransaction
 
-    st.subheader("💸 Send USDC (Gasless!)")
-    st.caption("You only sign a message - no gas needed! We handle the rest.")
+    st.subheader("Send USDC")
+    st.caption("Gasless transaction - we cover the network fees.")
 
     # Network selector
     network_options = {
@@ -532,10 +531,10 @@ def send_modal():
             total = amount + gas_cost + app_fee
 
             st.info(f"""
-            **💰 Fee Breakdown:**
-            - Transfer Amount: ${amount:.2f}
-            - Gas Fee: ${gas_cost:.3f} (we pay!)
-            - App Fee: ${app_fee:.3f}
+            **Fee Summary**
+            - Amount: ${amount:.2f}
+            - Network Fee: ${gas_cost:.3f} (covered)
+            - Service Fee: ${app_fee:.3f}
             - **Total: ${total:.2f}**
             """)
         except Exception as e:
@@ -567,12 +566,12 @@ def send_modal():
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("❌ Cancel", use_container_width=True):
+        if st.button("Cancel", use_container_width=True):
             st.session_state.show_send_modal = False
             st.rerun()
 
     with col2:
-        if st.button("✅ Sign & Send", type="primary", use_container_width=True, disabled=not can_send):
+        if st.button("Confirm & Send", type="primary", use_container_width=True, disabled=not can_send):
             with st.spinner("Processing transaction..."):
                 try:
                     # Get wallet data
@@ -612,44 +611,44 @@ def send_modal():
 
                     if result["success"]:
                         st.success(f"""
-                        ✅ **Transaction Sent!**
+                        **Transaction Complete**
 
-                        - TX Hash: `{result['tx_hash'][:20]}...`
-                        - Amount: ${result['amount']:.2f}
-                        - Gas Paid: ${result['gas_cost']:.3f}
-                        - Total: ${result['total_cost']:.2f}
+                        Hash: `{result['tx_hash'][:20]}...`
+                        Amount: ${result['amount']:.2f}
+                        Network Fee: ${result['gas_cost']:.3f}
+                        Total: ${result['total_cost']:.2f}
                         """)
 
-                        st.link_button("🔍 View on Explorer", result["explorer_url"], use_container_width=True)
+                        st.link_button("View on Explorer", result["explorer_url"], use_container_width=True)
 
                         # Close modal after success
                         time.sleep(2)
                         st.session_state.show_send_modal = False
                         st.rerun()
                     else:
-                        st.error(f"❌ Transaction Failed: {result['error']}")
+                        st.error(f"Transaction failed: {result['error']}")
 
                 except Exception as e:
-                    st.error(f"❌ Error: {str(e)}")
+                    st.error(f"Error: {str(e)}")
 
 
 def sidebar():
     """Render sidebar"""
     with st.sidebar:
-        st.title("🔐 Wallet")
+        st.title("Wallet")
 
         # Show login button if no wallet
         if not st.session_state.wallet_address:
-            st.info("👋 Welcome! Log in to access your wallet.")
-            if st.button("🔑 Log In / Sign Up", use_container_width=True, type="primary"):
+            st.info("Sign in to access your wallet")
+            if st.button("Sign In", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
                 st.rerun()
 
             st.divider()
-            st.caption("**Preview Mode** - Explore the interface")
-            st.metric("Total USDC", "$0.00", help="Log in to see your balance")
+            st.caption("**Preview Mode**")
+            st.metric("Total Balance", "$0.00", help="Sign in to view balance")
 
-            with st.expander("📊 Balance by Chain"):
+            with st.expander("Balance by Network"):
                 st.caption("Base Sepolia: $0.00")
                 st.caption("Base Mainnet: $0.00")
                 st.caption("Arbitrum Sepolia: $0.00")
@@ -657,9 +656,9 @@ def sidebar():
             st.divider()
 
             # Preview buttons (disabled)
-            st.button("💰 Add USDC", use_container_width=True, disabled=True, help="Log in to add funds")
-            st.button("💸 Send", use_container_width=True, disabled=True, help="Log in to send")
-            st.button("🔄 Refresh", use_container_width=True, disabled=True, help="Log in to refresh")
+            st.button("Deposit", use_container_width=True, disabled=True, help="Sign in to deposit")
+            st.button("Send", use_container_width=True, disabled=True, help="Sign in to send")
+            st.button("Refresh", use_container_width=True, disabled=True, help="Sign in to refresh")
 
             return
 
@@ -669,21 +668,21 @@ def sidebar():
             st.code(ChainUtils.format_address(address, 8))
 
             # Add USDC button
-            if st.button("💰 Add USDC", use_container_width=True, type="primary"):
+            if st.button("Deposit", use_container_width=True, type="primary"):
                 st.session_state.show_deposit_modal = True
                 st.rerun()
 
             # Send button
-            if st.button("💸 Send", use_container_width=True):
+            if st.button("Send", use_container_width=True):
                 st.session_state.show_send_modal = True
                 st.rerun()
 
             # Refresh balances
-            if st.button("🔄 Refresh", use_container_width=True):
-                with st.spinner("Fetching balances..."):
+            if st.button("Refresh", use_container_width=True):
+                with st.spinner("Updating..."):
                     balances = ChainUtils.get_all_balances(st.session_state.wallet_address)
                     st.session_state.balances = balances
-                    st.toast("Balances updated!")
+                    st.toast("Balances updated")
 
             st.divider()
 
@@ -692,82 +691,81 @@ def sidebar():
                 total_usdc = ChainUtils.calculate_total_usdc(st.session_state.balances)
 
                 # Total balance
-                st.metric("Total USDC", f"${total_usdc:.2f}")
+                st.metric("Total Balance", f"${total_usdc:.2f}")
 
                 # Expandable breakdown
-                with st.expander("📊 Balance by Chain"):
+                with st.expander("Balance by Network"):
                     for network_key, chain_balances in st.session_state.balances.items():
                         network_name = NETWORKS[network_key]["name"]
                         usdc = chain_balances.get("usdc", 0.0)
 
                         if usdc > 0:
                             st.markdown(f"**{network_name}**")
-                            st.markdown(f"└─ USDC: ${usdc:.2f}")
+                            st.markdown(f"USDC: ${usdc:.2f}")
 
             st.divider()
 
             # Settings button
-            if st.button("⚙️ Settings", use_container_width=True):
+            if st.button("Settings", use_container_width=True):
                 st.session_state.show_settings = True
                 st.rerun()
 
             # Lock wallet
-            if st.button("🔒 Lock Wallet", use_container_width=True):
+            if st.button("Lock", use_container_width=True):
                 WalletManager.lock_wallet()
                 st.rerun()
 
         else:
             # Wallet is locked or doesn't exist
             if "wallet_encrypted" in st.session_state:
-                st.info("🔒 Wallet Locked")
-                unlock_password = st.text_input("Enter password to unlock", type="password", key="unlock_pwd")
-                if st.button("🔓 Unlock", use_container_width=True, type="primary"):
+                st.info("Wallet locked")
+                unlock_password = st.text_input("Password", type="password", key="unlock_pwd")
+                if st.button("Unlock", use_container_width=True, type="primary"):
                     if unlock_password:
                         # Re-derive encryption key from password and verify
                         if WalletManager.unlock_wallet_with_password(unlock_password):
-                            st.success("Wallet unlocked!")
+                            st.success("Wallet unlocked")
                             st.rerun()
                         else:
                             st.error("Incorrect password")
             elif st.session_state.get("wallet_address"):
                 # Logged in but no wallet data in session - need to import
-                st.info("🔑 Import your wallet to access it")
+                st.info("Import your wallet to continue")
                 st.caption(f"Address: {ChainUtils.format_address(st.session_state.wallet_address)}")
-                if st.button("📥 Import Wallet", use_container_width=True, type="primary"):
+                if st.button("Import Wallet", use_container_width=True, type="primary"):
                     st.session_state.show_auth_modal = True
                     st.rerun()
 
 
 def chat_interface():
     """Main chat interface"""
-    st.title("💬 Chat-First Crypto Wallet")
-    st.caption("Powered by Claude 3.5 Sonnet")
+    st.title("Chat Wallet")
+    st.caption("AI-powered self-custody wallet")
 
     # Preview mode if not logged in
     if not st.session_state.wallet_address:
         # Show demo conversation
         with st.chat_message("assistant"):
-            st.markdown("""👋 **Welcome to Chat Wallet!**
+            st.markdown("""**Welcome to Chat Wallet**
 
-I'm your AI-powered crypto assistant. I can help you with:
+I'm your AI assistant for managing digital assets. I can help you:
 
-- 💰 Check balances across multiple chains
-- 💸 Send USDC with gasless transactions
-- 📥 Get deposit addresses with QR codes
-- 🔄 Swap tokens and manage assets
-- 🎁 Buy gift cards with crypto
+- Check balances across multiple networks
+- Send USDC with gasless transactions
+- Generate deposit addresses and QR codes
+- Purchase gift cards with crypto
+- Automate common wallet tasks
 
-**Example questions:**
+**Example queries:**
 - "What's my balance?"
-- "Send $10 USDC to 0x123..."
-- "Show me my Base Sepolia address"
-- "How do I add funds?"
+- "Send $10 USDC to 0x..."
+- "Show deposit address for Base"
 
-**🔑 Log in to start chatting with your real wallet!**
+Sign in to get started.
 """)
 
         # Disabled chat input
-        st.chat_input("Log in to chat with your wallet...", disabled=True)
+        st.chat_input("Sign in to start...", disabled=True)
         return
 
     # Normal logged-in chat interface
@@ -808,17 +806,17 @@ I'm your AI-powered crypto assistant. I can help you with:
 
     # Welcome message for logged in users
     if not st.session_state.messages:
-        welcome = f"""👋 **Welcome to your Chat Wallet!**
+        welcome = f"""**Welcome back**
 
-Your address: `{ChainUtils.format_address(st.session_state.wallet_address)}`
+Your wallet: `{ChainUtils.format_address(st.session_state.wallet_address)}`
 
 I can help you with:
-- 💰 Check balances across chains
-- 💸 Prepare transactions (you approve each one)
-- 📥 Get deposit addresses
-- 🎁 Buy gift cards (simulated)
+- Check balances across networks
+- Prepare and execute transactions
+- Generate deposit addresses
+- Purchase gift cards
 
-**Try asking:** "What's my balance?" or "Show me deposit address for Base"
+Try: "What's my balance?" or "Show deposit address for Base"
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
         st.rerun()
@@ -827,11 +825,145 @@ I can help you with:
 def main():
     """Main app entry point"""
     st.set_page_config(
-        page_title="Chat Wallet - Non-Custodial",
-        page_icon="🔐",
+        page_title="Chat Wallet",
+        page_icon="◈",
         layout="wide",
         initial_sidebar_state="expanded"
     )
+
+    # Professional VC/TradFi styling
+    st.markdown("""
+    <style>
+    /* Clean, professional typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Refined header styling */
+    h1 {
+        font-weight: 600 !important;
+        letter-spacing: -0.02em !important;
+        color: #1A1A2E !important;
+    }
+
+    h2, h3 {
+        font-weight: 500 !important;
+        color: #2D3748 !important;
+    }
+
+    /* Professional card styling */
+    [data-testid="stMetric"] {
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    [data-testid="stMetricValue"] {
+        font-weight: 600 !important;
+        color: #1A1A2E !important;
+    }
+
+    /* Cleaner buttons */
+    .stButton > button {
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        padding: 0.5rem 1rem !important;
+        transition: all 0.15s ease !important;
+        border: 1px solid transparent !important;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,102,255,0.15);
+    }
+
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%) !important;
+    }
+
+    /* Refined sidebar */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+        border-right: 1px solid #E2E8F0;
+    }
+
+    [data-testid="stSidebar"] h1 {
+        font-size: 1.25rem !important;
+        margin-bottom: 1rem;
+    }
+
+    /* Professional input fields */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        border-radius: 8px !important;
+        border: 1px solid #E2E8F0 !important;
+        padding: 12px !important;
+        font-size: 14px !important;
+    }
+
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: #0066FF !important;
+        box-shadow: 0 0 0 3px rgba(0,102,255,0.1) !important;
+    }
+
+    /* Cleaner tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: transparent;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+    }
+
+    /* Chat message styling */
+    [data-testid="stChatMessage"] {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+
+    /* Code blocks */
+    code {
+        background: #F1F5F9 !important;
+        color: #1A1A2E !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 13px !important;
+    }
+
+    /* Info/Warning/Error boxes */
+    .stAlert {
+        border-radius: 8px !important;
+        border: none !important;
+    }
+
+    /* Dividers */
+    hr {
+        border-color: #E2E8F0 !important;
+        margin: 1.5rem 0 !important;
+    }
+
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+
+    /* Professional expander */
+    .streamlit-expanderHeader {
+        font-weight: 500 !important;
+        color: #4A5568 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     init_state()
 
@@ -852,10 +984,10 @@ def main():
             success = GmailOAuth.handle_oauth_callback(code, redirect_uri, user_id)
 
         if success:
-            st.success("✅ Gmail connected successfully!")
+            st.success("Gmail connected successfully")
             st.balloons()
         else:
-            st.error("❌ Failed to connect Gmail")
+            st.error("Failed to connect Gmail")
 
         # Clear query params and redirect back to settings
         st.query_params.clear()
@@ -866,7 +998,7 @@ def main():
     # Show auth modal if requested
     if st.session_state.get("show_auth_modal"):
         wallet_setup_ui()
-        if st.button("← Back to Preview"):
+        if st.button("Back", use_container_width=False):
             st.session_state.show_auth_modal = False
             st.rerun()
         return
@@ -888,7 +1020,7 @@ def main():
     # Show deposit modal if requested (only if logged in)
     if st.session_state.get("show_deposit_modal") and st.session_state.wallet_address:
         deposit_modal()
-        if st.button("Close"):
+        if st.button("Back"):
             st.session_state.show_deposit_modal = False
             st.rerun()
         return
@@ -901,7 +1033,7 @@ def main():
     # Show settings page if requested (only if logged in)
     if st.session_state.get("show_settings") and st.session_state.wallet_address:
         settings_page()
-        if st.button("← Back to Wallet"):
+        if st.button("Back"):
             st.session_state.show_settings = False
             st.rerun()
         return
