@@ -969,6 +969,22 @@ Sign in to get started.
         st.chat_input("Sign in to start...", disabled=True)
         return
 
+    # Check if user needs to configure API key (logged in but no agent)
+    from settings_manager import SettingsManager
+    user_id = st.session_state.get("user_id")
+    llm_config = SettingsManager.get_llm_config(user_id)
+
+    if not llm_config.get("api_key"):
+        st.info("""**🔑 API Key Required**
+
+To use the AI chat feature, please configure your API key in **Settings** (⚙️ in sidebar).
+
+Choose between:
+- **Anthropic** (Claude) - Get key at [console.anthropic.com](https://console.anthropic.com)
+- **OpenAI** (GPT-4) - Get key at [platform.openai.com](https://platform.openai.com)
+
+Your API key is encrypted and stored securely. You only pay for what you use.""", icon="ℹ️")
+
     # Quick action chips for logged-in users
     render_quick_actions()
 

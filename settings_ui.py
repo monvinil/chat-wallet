@@ -97,19 +97,26 @@ def settings_page():
 
         st.divider()
 
-        # API Key input
-        show_api_key = st.checkbox("Use custom API key", value=bool(existing_settings and existing_settings.get("llm_api_key_encrypted")))
+        # API Key input - always shown, required for production
+        st.markdown("**API Key** (required)")
 
-        api_key = None
-        if show_api_key:
-            api_key = st.text_input(
-                "API Key",
-                type="password",
-                placeholder=f"sk-ant-..." if provider == "anthropic" else "sk-...",
-            )
-            st.caption(f"[Get API key]({'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'})")
-        else:
-            st.warning("⚠️ Custom API key required for production use")
+        # Show if key is already configured
+        has_existing_key = bool(existing_settings and existing_settings.get("llm_api_key_encrypted"))
+        if has_existing_key:
+            st.success("✓ API key configured", icon="🔑")
+            st.caption("Enter a new key below to update it")
+
+        api_key = st.text_input(
+            "API Key",
+            type="password",
+            placeholder=f"sk-ant-..." if provider == "anthropic" else "sk-...",
+            label_visibility="collapsed",
+            help=f"Your API key from {provider.capitalize()}"
+        )
+        st.caption(f"Get your API key: [{'console.anthropic.com' if provider == 'anthropic' else 'platform.openai.com'}]({'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'})")
+
+        if not has_existing_key and not api_key:
+            st.info("💡 Chat features require an API key. Keys are encrypted and you only pay for what you use.", icon="ℹ️")
 
         # Save button
         if st.button("Save", type="primary", key="save_ai"):
