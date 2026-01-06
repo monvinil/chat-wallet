@@ -19,9 +19,9 @@ class SessionManager:
     @staticmethod
     def get_cookie_manager():
         """Get cookie manager instance (created once per session)"""
-        if "_cookie_manager_init" not in st.session_state:
-            st.session_state._cookie_manager_init = True
+        if "cookie_manager" not in st.session_state:
             st.session_state.cookie_manager = stx.CookieManager(key="chat_wallet_cookies")
+            st.session_state._cookie_manager_init = True
         return st.session_state.cookie_manager
 
     @staticmethod
