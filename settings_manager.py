@@ -122,12 +122,13 @@ class SettingsManager:
     def get_llm_config(user_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Get LLM configuration for user
-        Falls back to default if user hasn't configured custom LLM
+        Falls back to env var only for development (production requires user API key)
         """
+        # Default config - only uses env var if set (for development)
         default_config = {
             "provider": "anthropic",
             "model": "claude-sonnet-4-20250514",
-            "api_key": os.getenv("ANTHROPIC_API_KEY"),
+            "api_key": os.getenv("ANTHROPIC_API_KEY"),  # Will be None in production
             "using_default": True
         }
 

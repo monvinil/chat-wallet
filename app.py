@@ -162,7 +162,6 @@ def read_latest_emails(count: int = 3) -> str:
 def create_agent():
     """Create the LangChain agent (lazy import for faster initial load)"""
     # Lazy import LangChain modules (saves 1-2s on app startup)
-    from langchain_anthropic import ChatAnthropic
     from langchain_core.tools import tool
     from langchain.agents import AgentExecutor, create_tool_calling_agent
     from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -177,13 +176,29 @@ def create_agent():
     user_id = st.session_state.get("user_id")
     llm_config = SettingsManager.get_llm_config(user_id)
 
-    # Use the configured API key (falls back to ANTHROPIC_API_KEY env var)
-    llm = ChatAnthropic(
-        model=llm_config.get("model", "claude-sonnet-4-20250514"),
-        api_key=llm_config.get("api_key"),
-        temperature=0.3,
-        max_tokens=4096
-    )
+    # Validate API key exists
+    if not llm_config.get("api_key"):
+        raise ValueError("API key not configured. Please add your API key in Settings.")
+
+    # Create LLM based on provider
+    provider = llm_config.get("provider", "anthropic")
+
+    if provider == "openai":
+        from langchain_openai import ChatOpenAI
+        llm = ChatOpenAI(
+            model=llm_config.get("model", "gpt-4"),
+            api_key=llm_config.get("api_key"),
+            temperature=0.3,
+            max_tokens=4096
+        )
+    else:  # Default to Anthropic
+        from langchain_anthropic import ChatAnthropic
+        llm = ChatAnthropic(
+            model=llm_config.get("model", "claude-sonnet-4-20250514"),
+            api_key=llm_config.get("api_key"),
+            temperature=0.3,
+            max_tokens=4096
+        )
 
     # Import email and Bitrefill tools
     from email_tools import get_email_tools
@@ -993,7 +1008,27 @@ Sign in to get started.
                     response = result.get("output", "Sorry, I couldn't process that.")
 
                 except Exception as e:
-                    response = f"Error: {e}"
+                    error_msg = str(e)
+
+                    # Provide helpful guidance for API key errors
+                    if "API key" in error_msg or "credit" in error_msg.lower() or "authentication" in error_msg.lower():
+                        response = f"""**API Key Required**
+
+The AI chat feature requires your own API key to work.
+
+**To configure:**
+1. Go to **Settings** (⚙️ in sidebar)
+2. Choose your AI provider (Anthropic or OpenAI)
+3. Enter your API key
+4. Save settings
+
+Get an API key:
+- Anthropic: https://console.anthropic.com
+- OpenAI: https://platform.openai.com
+
+Error details: `{error_msg}`"""
+                    else:
+                        response = f"Error: {error_msg}"
 
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
@@ -1371,7 +1406,11 @@ def main():
                     st.session_state.balances = {}
 
             except Exception as e:
-                st.error(f"Failed to initialize: {e}")
+                error_msg = str(e)
+                if "API key" in error_msg:
+                    st.warning("⚠️ **AI Chat Requires API Key**\n\nPlease configure your Anthropic or OpenAI API key in **Settings** (⚙️) to use the chat feature.")
+                else:
+                    st.error(f"Failed to initialize: {error_msg}")
                 st.session_state._agent_initializing = False
 
     # Lazy-load balances after agent is ready (non-blocking)

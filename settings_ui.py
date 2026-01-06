@@ -109,7 +109,7 @@ def settings_page():
             )
             st.caption(f"[Get API key]({'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'})")
         else:
-            st.caption("Using default API key (no charge)")
+            st.warning("⚠️ Custom API key required for production use")
 
         # Save button
         if st.button("Save", type="primary", key="save_ai"):
