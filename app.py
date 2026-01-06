@@ -313,8 +313,8 @@ def wallet_setup_ui():
                                     Never share it with anyone.
                                     """)
 
-                                st.balloons()
-                                time.sleep(3)
+                                show_success_animation()
+                                time.sleep(2)
                                 st.rerun()
                             else:
                                 st.error("Failed to create user account.")
@@ -440,6 +440,133 @@ def wallet_setup_ui():
                     st.error("Invalid recovery phrase or private key.")
 
         st.caption("Private keys are encrypted with AES-256 before storage.")
+
+
+def show_success_animation():
+    """Show a professional success animation instead of balloons"""
+    st.markdown("""
+    <style>
+    @keyframes success-checkmark {
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes success-ring {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes confetti-fall {
+        0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    .success-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 15, 20, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fade-in 0.3s ease;
+    }
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .success-content {
+        text-align: center;
+    }
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #10B981 0%, #059669 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        animation: success-checkmark 0.5s ease-out;
+        box-shadow: 0 0 40px rgba(16, 185, 129, 0.4);
+    }
+
+    .success-icon svg {
+        width: 40px;
+        height: 40px;
+        stroke: white;
+        stroke-width: 3;
+        fill: none;
+    }
+
+    .success-ring {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        border: 3px solid rgba(16, 185, 129, 0.3);
+        border-radius: 50%;
+        animation: success-ring 0.6s ease-out;
+    }
+
+    .confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        top: -10px;
+        animation: confetti-fall 3s ease-out forwards;
+    }
+
+    .confetti:nth-child(1) { left: 10%; background: #3B82F6; animation-delay: 0s; }
+    .confetti:nth-child(2) { left: 20%; background: #8B5CF6; animation-delay: 0.1s; }
+    .confetti:nth-child(3) { left: 30%; background: #10B981; animation-delay: 0.2s; }
+    .confetti:nth-child(4) { left: 40%; background: #F59E0B; animation-delay: 0.15s; }
+    .confetti:nth-child(5) { left: 50%; background: #3B82F6; animation-delay: 0.25s; }
+    .confetti:nth-child(6) { left: 60%; background: #EC4899; animation-delay: 0.1s; }
+    .confetti:nth-child(7) { left: 70%; background: #8B5CF6; animation-delay: 0.3s; }
+    .confetti:nth-child(8) { left: 80%; background: #10B981; animation-delay: 0.05s; }
+    .confetti:nth-child(9) { left: 90%; background: #3B82F6; animation-delay: 0.2s; }
+    </style>
+
+    <div class="success-overlay" id="successOverlay">
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="success-content">
+            <div style="position: relative; display: inline-block;">
+                <div class="success-ring"></div>
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        setTimeout(function() {
+            var overlay = document.getElementById('successOverlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                overlay.style.transition = 'opacity 0.5s ease';
+                setTimeout(function() { overlay.remove(); }, 500);
+            }
+        }, 2000);
+    </script>
+    """, unsafe_allow_html=True)
 
 
 def generate_qr(data: str):
@@ -1220,7 +1347,7 @@ def main():
 
         if success:
             st.success("Gmail connected successfully")
-            st.balloons()
+            show_success_animation()
         else:
             st.error("Failed to connect Gmail")
 

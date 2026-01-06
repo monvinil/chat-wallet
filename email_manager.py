@@ -333,8 +333,8 @@ def show_email_connection_ui(user_id: str):
                         success = EmailManager.save_email_credentials(user_id, email_address, password)
 
                     if success:
-                        st.success("✅ Email connected successfully!")
-                        st.balloons()
+                        st.success("Email connected successfully")
+                        st.toast("Email ready for AI automation")
                         st.rerun()
 
             # Instructions for app passwords
