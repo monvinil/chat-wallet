@@ -1,20 +1,28 @@
 #!/usr/bin/env python3
 """Patch Streamlit's loading screen with custom branded animation"""
 
-import streamlit
-import os
+import sys
 
-# Find Streamlit's static directory
-st_dir = os.path.dirname(streamlit.__file__)
-static_dir = os.path.join(st_dir, 'static')
-index_path = os.path.join(static_dir, 'index.html')
+try:
+    import streamlit
+    import os
 
-# Read the original index.html
-with open(index_path, 'r') as f:
-    content = f.read()
+    # Find Streamlit's static directory
+    st_dir = os.path.dirname(streamlit.__file__)
+    static_dir = os.path.join(st_dir, 'static')
+    index_path = os.path.join(static_dir, 'index.html')
 
-# Custom loading animation CSS
-custom_css = '''
+    if not os.path.exists(index_path):
+        print(f'Warning: Streamlit index.html not found at {index_path}')
+        print('Skipping custom loading screen patch')
+        sys.exit(0)
+
+    # Read the original index.html
+    with open(index_path, 'r') as f:
+        content = f.read()
+
+    # Custom loading animation CSS
+    custom_css = '''
 <style id="chat-wallet-loader">
   body { background: #0F0F14 !important; }
 
@@ -58,11 +66,16 @@ custom_css = '''
 </style>
 '''
 
-# Inject custom CSS before </head>
-if 'chat-wallet-loader' not in content:
-    content = content.replace('</head>', custom_css + '</head>')
-    with open(index_path, 'w') as f:
-        f.write(content)
-    print('✓ Streamlit loading screen customized')
-else:
-    print('✓ Custom loading screen already applied')
+    # Inject custom CSS before </head>
+    if 'chat-wallet-loader' not in content:
+        content = content.replace('</head>', custom_css + '</head>')
+        with open(index_path, 'w') as f:
+            f.write(content)
+        print('✓ Streamlit loading screen customized')
+    else:
+        print('✓ Custom loading screen already applied')
+
+except Exception as e:
+    print(f'Warning: Could not patch Streamlit loading screen: {e}')
+    print('App will still work with default loading screen')
+    sys.exit(0)

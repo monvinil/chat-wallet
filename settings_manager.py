@@ -57,7 +57,9 @@ class SettingsManager:
     def get_user_settings(user_id: str) -> Optional[Dict[str, Any]]:
         """Get user settings from database"""
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return None
             result = supabase.table("user_settings").select("*").eq("user_id", user_id).execute()
 
             if result.data and len(result.data) > 0:
@@ -88,7 +90,9 @@ class SettingsManager:
     ) -> bool:
         """Save or update user settings"""
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return False
 
             # Encrypt API key if provided
             encrypted_key = None
@@ -153,7 +157,9 @@ class SettingsManager:
     ) -> bool:
         """Save OAuth connection tokens (encrypted)"""
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return False
 
             data = {
                 "user_id": user_id,
@@ -176,7 +182,9 @@ class SettingsManager:
     def get_oauth_connection(user_id: str, provider: str) -> Optional[Dict[str, Any]]:
         """Get OAuth connection for a provider"""
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return None
             result = supabase.table("user_oauth_connections")\
                 .select("*")\
                 .eq("user_id", user_id)\
@@ -202,7 +210,9 @@ class SettingsManager:
     def list_connected_accounts(user_id: str) -> List[Dict[str, Any]]:
         """List all connected OAuth accounts for user"""
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return []
             result = supabase.table("user_oauth_connections")\
                 .select("provider, provider_user_id, scopes, is_active, last_used_at, created_at")\
                 .eq("user_id", user_id)\
@@ -217,7 +227,9 @@ class SettingsManager:
     def disconnect_account(user_id: str, provider: str) -> bool:
         """Disconnect an OAuth account"""
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return False
             result = supabase.table("user_oauth_connections")\
                 .update({"is_active": False})\
                 .eq("user_id", user_id)\
@@ -239,7 +251,9 @@ class SettingsManager:
     ) -> Optional[str]:
         """Create an approval request for a task"""
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return None
 
             data = {
                 "user_id": user_id,
@@ -263,7 +277,9 @@ class SettingsManager:
     def approve_task(approval_id: str) -> bool:
         """Approve a pending task"""
         try:
-            supabase = get_supabase_client()
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return False
 
             result = supabase.table("approval_history")\
                 .update({

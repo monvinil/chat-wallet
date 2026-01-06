@@ -163,8 +163,16 @@ def read_latest_emails(count: int = 3) -> str:
 
 def create_agent():
     """Create the LangChain agent"""
+    from settings_manager import SettingsManager
+
+    # Get user's LLM config (custom API key if set, otherwise app default)
+    user_id = st.session_state.get("user_id")
+    llm_config = SettingsManager.get_llm_config(user_id)
+
+    # Use the configured API key (falls back to ANTHROPIC_API_KEY env var)
     llm = ChatAnthropic(
-        model="claude-sonnet-4-20250514",
+        model=llm_config.get("model", "claude-sonnet-4-20250514"),
+        api_key=llm_config.get("api_key"),
         temperature=0.3,
         max_tokens=4096
     )
@@ -1009,41 +1017,7 @@ def main():
     # Professional dark theme styling
     st.markdown("""
     <style>
-    /* Custom loading animation - replaces default Streamlit loader */
-    @keyframes pulse-ring {
-        0% { transform: scale(0.8); opacity: 1; }
-        50% { transform: scale(1.2); opacity: 0.5; }
-        100% { transform: scale(0.8); opacity: 1; }
-    }
-
-    @keyframes rotate-gradient {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Style the Streamlit loading state */
-    [data-testid="stAppViewBlockContainer"] .stSpinner > div {
-        border: none !important;
-    }
-
-    .stSpinner > div > div {
-        width: 48px !important;
-        height: 48px !important;
-        border: 3px solid transparent !important;
-        border-top-color: #3B82F6 !important;
-        border-right-color: #8B5CF6 !important;
-        border-radius: 50% !important;
-        animation: rotate-gradient 0.8s linear infinite !important;
-    }
-
-    /* Loading text style */
-    .stSpinner > div > span {
-        color: #9CA3AF !important;
-        font-weight: 500 !important;
-        margin-top: 12px !important;
-    }
-
-    /* Hide default Streamlit skeleton loaders and replace */
+    /* Skeleton loader styling */
     .stSkeleton {
         background: linear-gradient(90deg, #1A1A24 0%, #252532 50%, #1A1A24 100%) !important;
         background-size: 200% 100% !important;
