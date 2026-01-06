@@ -23,4 +23,5 @@ RUN python patch_streamlit.py || echo "Patch skipped"
 EXPOSE 8501
 
 # Run the app with shell to expand PORT variable
-CMD ["/bin/sh", "-c", "streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.headless=true"]
+# Set STREAMLIT_SERVER_PORT to the actual PORT value to override any env var
+CMD ["/bin/sh", "-c", "export STREAMLIT_SERVER_PORT=${PORT:-8501} && streamlit run app.py --server.address=0.0.0.0 --server.headless=true"]
