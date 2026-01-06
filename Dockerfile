@@ -22,5 +22,6 @@ EXPOSE 8501
 # Health check to verify app is responding
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-# Run the app - use simple ENTRYPOINT like the working version
-ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Railway auto-detects Streamlit and injects broken STREAMLIT_SERVER_PORT
+# Use wrapper script to unset it before running
+ENTRYPOINT ["/bin/sh", "-c", "unset STREAMLIT_SERVER_PORT && exec streamlit run app.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true --server.enableCORS=true --server.enableXsrfProtection=false"]
