@@ -264,12 +264,33 @@ def wallet_setup_ui():
         st.subheader("Create Account")
         st.caption("Create a new wallet. Access it from any device with your credentials.")
 
-        email = st.text_input("Email", key="signup_email", placeholder="your@email.com")
-        password = st.text_input("Password (min 8 characters)", type="password", key="signup_pwd")
-        password_confirm = st.text_input("Confirm Password", type="password", key="signup_pwd_confirm")
+        # Use form to prevent sidebar closing and enable password autofill
+        with st.form(key="signup_form", clear_on_submit=False):
+            email = st.text_input(
+                "Email",
+                key="signup_email",
+                placeholder="your@email.com",
+                autocomplete="username"
+            )
+            password = st.text_input(
+                "Password (min 8 characters)",
+                type="password",
+                key="signup_pwd",
+                autocomplete="new-password"
+            )
+            password_confirm = st.text_input(
+                "Confirm Password",
+                type="password",
+                key="signup_pwd_confirm",
+                autocomplete="new-password"
+            )
 
-        if st.button("Create Account", type="primary", disabled=not (email and password)):
-            if password != password_confirm:
+            submit_signup = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+
+        if submit_signup:
+            if not email or not password:
+                st.error("Please enter both email and password")
+            elif password != password_confirm:
                 st.error("Passwords do not match")
             elif len(password) < 8:
                 st.error("Password must be at least 8 characters")
@@ -358,68 +379,85 @@ def wallet_setup_ui():
         st.subheader("Log In")
         st.caption("Access your existing wallet from any device.")
 
-        login_email = st.text_input("Email", key="login_email", placeholder="your@email.com")
-        login_password = st.text_input("Password", type="password", key="login_pwd")
+        # Use form to prevent sidebar closing and enable password autofill
+        with st.form(key="login_form", clear_on_submit=False):
+            login_email = st.text_input(
+                "Email",
+                key="login_email",
+                placeholder="your@email.com",
+                autocomplete="username"
+            )
+            login_password = st.text_input(
+                "Password",
+                type="password",
+                key="login_pwd",
+                autocomplete="current-password"
+            )
 
-        if st.button("Log In", type="primary", disabled=not (login_email and login_password)):
-            with st.spinner("Logging in..."):
-                # Get user from database
-                user = get_user_by_email(login_email)
+            submit_login = st.form_submit_button("Log In", type="primary", use_container_width=True)
 
-                if not user:
-                    st.error("Account not found. Please sign up first.")
-                else:
-                    # Verify password
-                    stored_hash = get_user_password_hash(user["id"])
+        if submit_login:
+            if not login_email or not login_password:
+                st.error("Please enter both email and password")
+            else:
+                with st.spinner("Logging in..."):
+                    # Get user from database
+                    user = get_user_by_email(login_email)
 
-                    if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
-                        st.error("Incorrect password. Please try again.")
+                    if not user:
+                        st.error("Account not found. Please sign up first.")
                     else:
-                        # Password verified (or no hash stored - legacy account)
-                        # Get user's wallet
-                        wallets = get_user_wallets(user["id"])
+                        # Verify password
+                        stored_hash = get_user_password_hash(user["id"])
 
-                        if wallets and len(wallets) > 0:
-                            wallet_address = wallets[0]["wallet_address"]
+                        if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
+                            st.error("Incorrect password. Please try again.")
+                        else:
+                            # Password verified (or no hash stored - legacy account)
+                            # Get user's wallet
+                            wallets = get_user_wallets(user["id"])
 
-                            st.session_state.wallet_address = wallet_address
-                            st.session_state.user_email = login_email
-                            st.session_state.user_id = user["id"]
-                            st.session_state.show_auth_modal = False
+                            if wallets and len(wallets) > 0:
+                                wallet_address = wallets[0]["wallet_address"]
 
-                            # Create persistent session (cookie)
-                            SessionManager.login(user["id"], login_email, wallet_address)
+                                st.session_state.wallet_address = wallet_address
+                                st.session_state.user_email = login_email
+                                st.session_state.user_id = user["id"]
+                                st.session_state.show_auth_modal = False
 
-                            # If no password hash stored (legacy), update it now
-                            if not stored_hash:
-                                new_hash = WalletManager.hash_password(login_password)
-                                update_user_password_hash(user["id"], new_hash)
+                                # Create persistent session (cookie)
+                                SessionManager.login(user["id"], login_email, wallet_address)
 
-                            # Try to restore encrypted wallet from cloud backup
-                            encrypted_wallet = get_encrypted_wallet(user["id"])
-                            if encrypted_wallet:
-                                # Restore wallet to session
-                                st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
-                                st.session_state.wallet_salt = encrypted_wallet["salt"]
+                                # If no password hash stored (legacy), update it now
+                                if not stored_hash:
+                                    new_hash = WalletManager.hash_password(login_password)
+                                    update_user_password_hash(user["id"], new_hash)
 
-                                # Decrypt with password
-                                if WalletManager.unlock_wallet_with_password(login_password):
-                                    st.session_state.wallet_locked = False
-                                    st.success("Welcome back. Wallet restored from cloud.")
+                                # Try to restore encrypted wallet from cloud backup
+                                encrypted_wallet = get_encrypted_wallet(user["id"])
+                                if encrypted_wallet:
+                                    # Restore wallet to session
+                                    st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
+                                    st.session_state.wallet_salt = encrypted_wallet["salt"]
+
+                                    # Decrypt with password
+                                    if WalletManager.unlock_wallet_with_password(login_password):
+                                        st.session_state.wallet_locked = False
+                                        st.success("Welcome back. Wallet restored from cloud.")
+                                    else:
+                                        st.session_state.wallet_locked = True
+                                        st.success("Welcome back.")
+                                        st.warning("Could not decrypt wallet. Try unlocking with your password.")
                                 else:
+                                    # No cloud backup - need manual import (legacy account)
                                     st.session_state.wallet_locked = True
                                     st.success("Welcome back.")
-                                    st.warning("Could not decrypt wallet. Try unlocking with your password.")
-                            else:
-                                # No cloud backup - need manual import (legacy account)
-                                st.session_state.wallet_locked = True
-                                st.success("Welcome back.")
-                                st.info("To access your funds, import your wallet using your seed phrase or private key.")
+                                    st.info("To access your funds, import your wallet using your seed phrase or private key.")
 
-                            time.sleep(1)
-                            st.rerun()
-                        else:
-                            st.error("No wallet found for this account.")
+                                time.sleep(1)
+                                st.rerun()
+                            else:
+                                st.error("No wallet found for this account.")
 
     # ========== TAB 3: IMPORT WALLET ==========
     with tab3:
