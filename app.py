@@ -972,28 +972,13 @@ Ready to try it? Just sign in to get started.
         st.chat_input("Ask me anything...", disabled=True, key="preview_input")
         return
 
-    # Check if user needs to configure API key (logged in but no agent)
-    from settings_manager import SettingsManager
-    user_id = st.session_state.get("user_id")
-    llm_config = SettingsManager.get_llm_config(user_id)
+    # Show onboarding flow if user hasn't completed setup
+    from onboarding import show_onboarding
+    if not show_onboarding():
+        # User is still in onboarding, don't show chat
+        return
 
-    if not llm_config.get("api_key"):
-        st.info("""**One quick thing before we chat** 👋
-
-To talk with me, you'll need to connect your own AI (it's like bringing your own brain for me to use).
-
-**How it works:**
-1. Click **Settings** (⚙️) in the sidebar
-2. Choose your AI provider:
-   - **Anthropic (Claude)** - Great at conversations
-   - **OpenAI (GPT-4)** - You might already have this
-3. Paste your API key
-
-Don't have one? Get it free at [console.anthropic.com](https://console.anthropic.com) or [platform.openai.com](https://platform.openai.com)
-
-*Your key stays private and encrypted. You only pay for messages you send.*""", icon="💡")
-
-    # Quick action chips for logged-in users
+    # Quick action chips for logged-in users (only after onboarding complete)
     render_quick_actions()
 
     st.divider()
@@ -1057,42 +1042,21 @@ Error details: `{error_msg}`"""
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # Welcome message for logged in users
+    # Welcome message for logged in users (only shown after onboarding complete)
     if not st.session_state.messages:
-        # Check if this is their first time (no API key yet means brand new user)
-        from settings_manager import SettingsManager
-        user_id = st.session_state.get("user_id")
-        llm_config = SettingsManager.get_llm_config(user_id)
-        is_first_time = not llm_config.get("api_key")
-
-        if is_first_time:
-            welcome = """**Welcome! 🎉**
-
-Great to meet you! I'm your AI assistant with one special ability: I can handle money.
-
-**Here's what just happened:**
-I created a secure wallet just for you. Think of it like a digital bank account that only you control.
-
-**What can we do together?**
-- *"What's my balance?"* - I'll check your wallet
-- *"Show me my deposit address"* - So you can add funds
-- *"Send $10 to [address]"* - I'll move money for you
-- *"Buy a gift card"* - I can purchase things with your crypto
-
-**One quick setup step:**
-To chat with me, you'll need to add your own AI API key in Settings (⚙️). This keeps your conversations private and you only pay for what you use.
-
-What would you like to know first?
-"""
-        else:
-            # Returning user - warm but brief
-            welcome = f"""**Welcome back!** 👋
+        welcome = f"""**Welcome!** 👋
 
 Your wallet is ready: `{ChainUtils.format_address(st.session_state.wallet_address)}`
 
-What can I help you with today?
-"""
+**I can help you:**
+- Check balances across networks
+- Send money to addresses
+- Generate deposit addresses & QR codes
+- Buy gift cards with crypto
+- Automate payments from emails
 
+What would you like to do?
+"""
         st.session_state.messages.append({"role": "assistant", "content": welcome})
         st.rerun()
 
