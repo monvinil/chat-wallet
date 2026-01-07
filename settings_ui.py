@@ -51,72 +51,93 @@ def settings_page():
     # TAB 1: AI Model Configuration
     # ============================================================================
     with tab1:
-        st.subheader("AI Provider")
+        st.subheader("Connect Your AI")
+        st.caption("Choose which AI brain powers your conversations")
 
-        # Current model display
+        # Current model display with friendly messaging
         llm_config = SettingsManager.get_llm_config(user_id)
 
         if llm_config["using_default"]:
-            st.info(f"Using default: {llm_config['model']}")
+            st.warning("⚠️ No AI connected yet - add your API key below to start chatting", icon="🤖")
         else:
-            st.success(f"Using: {llm_config['provider'].title()} - {llm_config['model']}")
+            st.success(f"✓ Connected: {llm_config['provider'].title()} - {llm_config['model']}", icon="🤖")
 
-        # LLM Provider selection
+        st.divider()
+
+        # LLM Provider selection with friendly descriptions
+        st.markdown("**Which AI do you want to use?**")
         provider = st.selectbox(
-            "Provider",
+            "AI Provider",
             ["anthropic", "openai"],
             format_func=lambda x: {
-                "anthropic": "Anthropic (Claude)",
-                "openai": "OpenAI (GPT)"
+                "anthropic": "🧠 Anthropic (Claude) - Conversational & helpful",
+                "openai": "🤖 OpenAI (GPT) - You might already have this"
             }[x],
             index=0 if not existing_settings else
-                  ["anthropic", "openai"].index(existing_settings.get("llm_provider", "anthropic"))
+                  ["anthropic", "openai"].index(existing_settings.get("llm_provider", "anthropic")),
+            label_visibility="collapsed"
         )
 
         # Model selection based on provider
+        st.markdown("**Which version?**")
         if provider == "anthropic":
             model_options = {
-                "claude-opus-4-20250514": "Opus 4 (Most capable)",
-                "claude-sonnet-4-20250514": "Sonnet 4 (Recommended)",
-                "claude-haiku-4-20250514": "Haiku 4 (Fast)"
+                "claude-opus-4-20250514": "💎 Opus - Most capable (best for complex tasks)",
+                "claude-sonnet-4-20250514": "⚡ Sonnet - Balanced (recommended)",
+                "claude-haiku-4-20250514": "🚀 Haiku - Fastest (cheapest)"
             }
         else:
             model_options = {
-                "gpt-4-turbo": "GPT-4 Turbo",
-                "gpt-4": "GPT-4",
-                "gpt-3.5-turbo": "GPT-3.5 Turbo"
+                "gpt-4-turbo": "⚡ GPT-4 Turbo - Fast and capable",
+                "gpt-4": "💎 GPT-4 - Most capable",
+                "gpt-3.5-turbo": "🚀 GPT-3.5 - Fast and cheap"
             }
 
         default_model = existing_settings.get("llm_model") if existing_settings else list(model_options.keys())[1]
         selected_model = st.selectbox(
-            "Model",
+            "AI Model",
             list(model_options.keys()),
             format_func=lambda x: model_options[x],
-            index=list(model_options.keys()).index(default_model) if default_model in model_options else 1
+            index=list(model_options.keys()).index(default_model) if default_model in model_options else 1,
+            label_visibility="collapsed"
         )
 
         st.divider()
 
         # API Key input - always shown, required for production
-        st.markdown("**API Key** (required)")
+        st.markdown("**🔑 Your API Key**")
+        st.caption("This is like a password that lets you use the AI")
 
         # Show if key is already configured
         has_existing_key = bool(existing_settings and existing_settings.get("llm_api_key_encrypted"))
         if has_existing_key:
-            st.success("✓ API key configured", icon="🔑")
-            st.caption("Enter a new key below to update it")
+            st.success("✓ You're all set! Key is saved securely", icon="🔒")
+            st.caption("Paste a new key below to change it")
 
         api_key = st.text_input(
             "API Key",
             type="password",
             placeholder=f"sk-ant-..." if provider == "anthropic" else "sk-...",
             label_visibility="collapsed",
-            help=f"Your API key from {provider.capitalize()}"
+            help="Paste your API key here - it will be encrypted"
         )
-        st.caption(f"Get your API key: [{'console.anthropic.com' if provider == 'anthropic' else 'platform.openai.com'}]({'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'})")
+
+        # Helpful links and guidance
+        if not has_existing_key:
+            st.markdown(f"""
+**Don't have an API key yet?**
+1. Go to [{provider.capitalize()} {'Console' if provider == 'anthropic' else 'Platform'}]({'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'})
+2. Sign up (it's free to start)
+3. Create an API key
+4. Copy and paste it above
+
+*New users typically get free credits to try it out!*
+""")
+        else:
+            st.caption(f"Need a new key? Get it at [{'console.anthropic.com' if provider == 'anthropic' else 'platform.openai.com'}]({'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'})")
 
         if not has_existing_key and not api_key:
-            st.info("💡 Chat features require an API key. Keys are encrypted and you only pay for what you use.", icon="ℹ️")
+            st.info("💡 Your key is encrypted and never shared. You only pay for the messages you send (usually pennies).", icon="🔒")
 
         # Save button
         if st.button("Save", type="primary", key="save_ai"):

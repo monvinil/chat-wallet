@@ -945,28 +945,31 @@ def chat_interface():
 
     # Preview mode if not logged in
     if not st.session_state.wallet_address:
-        # Show demo conversation
+        # Show warm, conversational demo
         with st.chat_message("assistant"):
-            st.markdown("""**Welcome to Chat Wallet**
+            st.markdown("""Hey there! 👋
 
-I'm your AI assistant for managing digital assets. I can help you:
+I'm your AI assistant, but with a superpower: **I can actually handle money for you.**
 
-- Check balances across multiple networks
-- Send USDC with gasless transactions
-- Generate deposit addresses and QR codes
-- Purchase gift cards with crypto
-- Automate common wallet tasks
+Think of me like ChatGPT, but I can:
+- Hold and send real money (crypto like USDC)
+- Pay your bills by reading emails
+- Buy gift cards when you ask
+- Send money to friends instantly
 
-**Example queries:**
-- "What's my balance?"
-- "Send $10 USDC to 0x..."
-- "Show deposit address for Base"
+**Try asking me things like:**
+- *"What's in my wallet?"*
+- *"Send $20 to my friend"*
+- *"Buy me a $50 Amazon gift card"*
+- *"Pay my AWS bill that just came in"*
 
-Sign in to get started.
+I'll keep everything secure in your own wallet. You're always in control.
+
+Ready to try it? Just sign in to get started.
 """)
 
         # Disabled chat input
-        st.chat_input("Sign in to start...", disabled=True)
+        st.chat_input("Ask me anything...", disabled=True, key="preview_input")
         return
 
     # Check if user needs to configure API key (logged in but no agent)
@@ -975,15 +978,20 @@ Sign in to get started.
     llm_config = SettingsManager.get_llm_config(user_id)
 
     if not llm_config.get("api_key"):
-        st.info("""**🔑 API Key Required**
+        st.info("""**One quick thing before we chat** 👋
 
-To use the AI chat feature, please configure your API key in **Settings** (⚙️ in sidebar).
+To talk with me, you'll need to connect your own AI (it's like bringing your own brain for me to use).
 
-Choose between:
-- **Anthropic** (Claude) - Get key at [console.anthropic.com](https://console.anthropic.com)
-- **OpenAI** (GPT-4) - Get key at [platform.openai.com](https://platform.openai.com)
+**How it works:**
+1. Click **Settings** (⚙️) in the sidebar
+2. Choose your AI provider:
+   - **Anthropic (Claude)** - Great at conversations
+   - **OpenAI (GPT-4)** - You might already have this
+3. Paste your API key
 
-Your API key is encrypted and stored securely. You only pay for what you use.""", icon="ℹ️")
+Don't have one? Get it free at [console.anthropic.com](https://console.anthropic.com) or [platform.openai.com](https://platform.openai.com)
+
+*Your key stays private and encrypted. You only pay for messages you send.*""", icon="💡")
 
     # Quick action chips for logged-in users
     render_quick_actions()
@@ -1051,18 +1059,40 @@ Error details: `{error_msg}`"""
 
     # Welcome message for logged in users
     if not st.session_state.messages:
-        welcome = f"""**Welcome back**
+        # Check if this is their first time (no API key yet means brand new user)
+        from settings_manager import SettingsManager
+        user_id = st.session_state.get("user_id")
+        llm_config = SettingsManager.get_llm_config(user_id)
+        is_first_time = not llm_config.get("api_key")
 
-Your wallet: `{ChainUtils.format_address(st.session_state.wallet_address)}`
+        if is_first_time:
+            welcome = """**Welcome! 🎉**
 
-I can help you with:
-- Check balances across networks
-- Prepare and execute transactions
-- Generate deposit addresses
-- Purchase gift cards
+Great to meet you! I'm your AI assistant with one special ability: I can handle money.
 
-Try: "What's my balance?" or "Show deposit address for Base"
+**Here's what just happened:**
+I created a secure wallet just for you. Think of it like a digital bank account that only you control.
+
+**What can we do together?**
+- *"What's my balance?"* - I'll check your wallet
+- *"Show me my deposit address"* - So you can add funds
+- *"Send $10 to [address]"* - I'll move money for you
+- *"Buy a gift card"* - I can purchase things with your crypto
+
+**One quick setup step:**
+To chat with me, you'll need to add your own AI API key in Settings (⚙️). This keeps your conversations private and you only pay for what you use.
+
+What would you like to know first?
 """
+        else:
+            # Returning user - warm but brief
+            welcome = f"""**Welcome back!** 👋
+
+Your wallet is ready: `{ChainUtils.format_address(st.session_state.wallet_address)}`
+
+What can I help you with today?
+"""
+
         st.session_state.messages.append({"role": "assistant", "content": welcome})
         st.rerun()
 
