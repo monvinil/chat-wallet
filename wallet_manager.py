@@ -5,15 +5,12 @@ Handles wallet creation, import, and encrypted storage
 
 import os
 import json
-import hashlib
-import base64
-import secrets
 import streamlit as st
 from typing import Optional, Dict, Any
-from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.backends import default_backend
+
+# Import centralized encryption utilities
+from utils.encryption import PasswordEncryption
+from utils.logger import logger
 
 try:
     from cdp import Wallet
@@ -22,65 +19,42 @@ except ImportError:
     CDP_AVAILABLE = False
 
 
-# Password hashing constants
-PASSWORD_HASH_ITERATIONS = 100000
-PASSWORD_HASH_SALT_LENGTH = 32
-
-
 class WalletManager:
     """Manages non-custodial wallet operations"""
 
     @staticmethod
-    def _derive_key(password: str, salt: bytes) -> bytes:
-        """Derive encryption key from password"""
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=100000,
-            backend=default_backend()
-        )
-        key = kdf.derive(password.encode())
-        return key
-
-    @staticmethod
     def encrypt_wallet_data(wallet_data: str, password: str) -> Dict[str, str]:
-        """Encrypt wallet private key with password"""
-        # Generate a random salt
-        salt = os.urandom(16)
+        """
+        Encrypt wallet private key with password
 
-        # Derive key from password
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=100000,
-            backend=default_backend()
-        )
-        key = kdf.derive(password.encode())
+        Args:
+            wallet_data: Plain text wallet data (private key or seed)
+            password: User password
 
-        # Convert to Fernet key format (base64 encoded)
-        import base64
-        fernet_key = base64.urlsafe_b64encode(key)
-
-        # Encrypt the wallet data
-        f = Fernet(fernet_key)
-        encrypted_data = f.encrypt(wallet_data.encode())
-
-        return {
-            "encrypted_data": encrypted_data.hex(),
-            "salt": salt.hex(),
-            "key": fernet_key.decode()  # Store this for decryption
-        }
+        Returns:
+            Dictionary with encrypted_data, salt, and key
+        """
+        return PasswordEncryption.encrypt(wallet_data, password)
 
     @staticmethod
     def decrypt_wallet_data(encrypted_data: str, key: str) -> Optional[str]:
-        """Decrypt wallet data"""
+        """
+        Decrypt wallet data using stored key
+
+        Args:
+            encrypted_data: Encrypted wallet data (hex string)
+            key: Fernet key used for encryption
+
+        Returns:
+            Decrypted wallet data, or None if decryption fails
+        """
         try:
+            from cryptography.fernet import Fernet
             f = Fernet(key.encode())
             decrypted = f.decrypt(bytes.fromhex(encrypted_data))
             return decrypted.decode()
         except Exception as e:
+            logger.error(f"Failed to decrypt wallet: {e}")
             st.error(f"Failed to decrypt wallet: {e}")
             return None
 
@@ -246,44 +220,33 @@ class WalletManager:
     @staticmethod
     def hash_password(password: str) -> str:
         """
-        Hash password using PBKDF2-SHA256 for secure storage.
-        Returns: base64 encoded string containing salt + hash
+        Hash password for secure storage (separate from encryption)
+
+        Args:
+            password: User password
+
+        Returns:
+            SHA-256 hash (hex string)
         """
-        salt = secrets.token_bytes(PASSWORD_HASH_SALT_LENGTH)
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=PASSWORD_HASH_ITERATIONS,
-            backend=default_backend()
-        )
-        password_hash = kdf.derive(password.encode())
-        # Store salt + hash together
-        combined = salt + password_hash
-        return base64.b64encode(combined).decode('utf-8')
+        return PasswordEncryption.hash_password(password)
 
     @staticmethod
     def verify_password(password: str, stored_hash: str) -> bool:
         """
-        Verify password against stored hash.
-        Returns: True if password matches, False otherwise
+        Verify password against stored hash
+
+        Args:
+            password: User-provided password
+            stored_hash: Stored password hash (SHA-256 hex)
+
+        Returns:
+            True if password matches, False otherwise
         """
         try:
-            combined = base64.b64decode(stored_hash.encode('utf-8'))
-            salt = combined[:PASSWORD_HASH_SALT_LENGTH]
-            stored_password_hash = combined[PASSWORD_HASH_SALT_LENGTH:]
-
-            kdf = PBKDF2HMAC(
-                algorithm=hashes.SHA256(),
-                length=32,
-                salt=salt,
-                iterations=PASSWORD_HASH_ITERATIONS,
-                backend=default_backend()
-            )
-            # This will raise an exception if password doesn't match
-            kdf.verify(password.encode(), stored_password_hash)
-            return True
-        except Exception:
+            password_hash = PasswordEncryption.hash_password(password)
+            return password_hash == stored_hash
+        except Exception as e:
+            logger.error(f"Password verification error: {e}")
             return False
 
     @staticmethod

@@ -4,58 +4,51 @@ Settings Manager - Handle user settings, LLM config, and OAuth connections
 
 import os
 from typing import Dict, Any, Optional, List
-from cryptography.fernet import Fernet
 from supabase_client import get_supabase_client
 import streamlit as st
+
+# Import centralized utilities
+from utils.encryption import SettingsEncryption
+from utils.logger import logger
 
 
 class SettingsManager:
     """Manage user settings and encrypted credentials"""
 
-    # Encryption key - MUST be set in environment for production
-    # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-    _ENCRYPTION_KEY = None
-    _encryption_warning_shown = False
-
-    @classmethod
-    def _get_encryption_key(cls) -> bytes:
-        """Get encryption key from environment (required for production)"""
-        if cls._ENCRYPTION_KEY is None:
-            key_str = os.getenv("SETTINGS_ENCRYPTION_KEY")
-            if key_str:
-                cls._ENCRYPTION_KEY = key_str.encode() if isinstance(key_str, str) else key_str
-            else:
-                # Development fallback - warn but don't crash
-                if not cls._encryption_warning_shown:
-                    st.warning("⚠️ SETTINGS_ENCRYPTION_KEY not set. Using temporary key - encrypted data will be lost on restart!")
-                    cls._encryption_warning_shown = True
-                # Generate a session-stable key using a fixed seed for development
-                cls._ENCRYPTION_KEY = Fernet.generate_key()
-        return cls._ENCRYPTION_KEY
-
-    @staticmethod
-    def _get_cipher():
-        """Get Fernet cipher for encryption/decryption"""
-        return Fernet(SettingsManager._get_encryption_key())
-
     @staticmethod
     def _encrypt(data: str) -> str:
-        """Encrypt sensitive data"""
-        cipher = SettingsManager._get_cipher()
-        return cipher.encrypt(data.encode()).decode()
+        """
+        Encrypt sensitive data (API keys, OAuth tokens)
+
+        Args:
+            data: Plain text data
+
+        Returns:
+            Encrypted data (base64 string)
+        """
+        return SettingsEncryption.encrypt(data)
 
     @staticmethod
-    def _decrypt(encrypted_data: str) -> str:
-        """Decrypt sensitive data"""
-        try:
-            cipher = SettingsManager._get_cipher()
-            return cipher.decrypt(encrypted_data.encode()).decode()
-        except Exception:
-            return None
+    def _decrypt(encrypted_data: str) -> str | None:
+        """
+        Decrypt sensitive data
+
+        Args:
+            encrypted_data: Encrypted data (base64 string)
+
+        Returns:
+            Decrypted plain text, or None if decryption fails
+        """
+        return SettingsEncryption.decrypt(encrypted_data)
 
     @staticmethod
     def get_user_settings(user_id: str) -> Optional[Dict[str, Any]]:
         """Get user settings from database"""
+        # Handle guest users - they store settings in session state, not database
+        if user_id and user_id.startswith("guest_"):
+            guest_settings = st.session_state.get(f"guest_settings_{user_id}", {})
+            return guest_settings if guest_settings else None
+
         try:
             supabase = get_supabase_client(use_service_key=True)
             if not supabase:
@@ -74,6 +67,7 @@ class SettingsManager:
                 return settings
             return None
         except Exception as e:
+            logger.error(f"Error fetching settings for user {user_id}: {e}")
             st.error(f"Error fetching settings: {e}")
             return None
 
@@ -89,6 +83,21 @@ class SettingsManager:
         allow_account_access: bool = False
     ) -> bool:
         """Save or update user settings"""
+        # Handle guest users - store in session state only
+        if user_id and user_id.startswith("guest_"):
+            guest_settings = {
+                "user_id": user_id,
+                "llm_provider": llm_provider,
+                "llm_model": llm_model,
+                "llm_api_key": llm_api_key,  # No encryption needed for session-only storage
+                "daily_spend_limit": daily_spend_limit,
+                "require_approval_above": require_approval_above,
+                "allow_recurring_payments": allow_recurring_payments,
+                "allow_account_access": allow_account_access
+            }
+            st.session_state[f"guest_settings_{user_id}"] = guest_settings
+            return True
+
         try:
             supabase = get_supabase_client(use_service_key=True)
             if not supabase:
@@ -295,3 +304,28 @@ class SettingsManager:
         except Exception as e:
             st.error(f"Error approving task: {e}")
             return False
+
+    @staticmethod
+    def update_llm_settings(
+        user_id: str,
+        provider: str,
+        api_key: str,
+        model: str
+    ) -> bool:
+        """
+        Convenience method to update only LLM settings without affecting other settings
+        Preserves existing settings for spend limits, approvals, etc.
+        """
+        # Get existing settings to preserve them
+        existing = SettingsManager.get_user_settings(user_id)
+
+        return SettingsManager.save_user_settings(
+            user_id=user_id,
+            llm_provider=provider,
+            llm_model=model,
+            llm_api_key=api_key,
+            daily_spend_limit=existing.get("daily_spend_limit", 100.00) if existing else 100.00,
+            require_approval_above=existing.get("require_approval_above", 50.00) if existing else 50.00,
+            allow_recurring_payments=existing.get("allow_recurring_payments", False) if existing else False,
+            allow_account_access=existing.get("allow_account_access", False) if existing else False
+        )
