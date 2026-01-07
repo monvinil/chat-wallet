@@ -62,11 +62,17 @@ SYSTEM_PROMPT = """You are a professional wallet assistant that helps users mana
    - Search 1000+ gift cards (Amazon, Uber, Netflix, Starbucks, etc.)
    - Purchase with USDC
    - Codes delivered to user's email
-6. **Email automation** (if user connected email):
+6. **Direct crypto purchases** from merchants:
+   - Domains: Porkbun, Namecheap (BTC, ETH, USDC)
+   - VPN: Mullvad (anonymous, no email), Proton (BTC only)
+   - Travel: Travala (hotels, flights with 90+ cryptos)
+   - Use search_crypto_merchants to find merchants
+   - Use buy_domain_with_crypto, subscribe_vpn_with_crypto for purchases
+7. **Email automation** (if user connected email):
    - Read verification codes from emails
    - Search recent emails (last 24 hours)
    - Detect bills from emails automatically
-7. Execute multi-step tasks - bill payments, gift cards, service signups
+8. Execute multi-step tasks - bill payments, gift cards, service signups
 
 **Email Automation Workflow:**
 When user asks to sign up for a service (e.g., Porkbun, Amazon):
@@ -243,16 +249,17 @@ def create_agent():
             max_tokens=4096
         )
 
-    # Import email and Bitrefill tools
+    # Import email, Bitrefill, and merchant tools
     from email_tools import get_email_tools
     from bitrefill_tools import get_bitrefill_tools
+    from merchant_tools import get_merchant_tools
 
     custom_tools = [
         tool_get_wallet_balance,
         tool_get_deposit_address,
         tool_preview_transaction,
         tool_read_latest_emails
-    ] + get_email_tools() + get_bitrefill_tools()  # Add email automation and Bitrefill tools
+    ] + get_email_tools() + get_bitrefill_tools() + get_merchant_tools()  # Add email, Bitrefill, and crypto merchant tools
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
@@ -1029,12 +1036,13 @@ def chat_interface():
 - Check your balance across multiple networks
 - Send USDC to any address instantly
 - Buy gift cards (Amazon, Uber, Airbnb, etc.)
+- Purchase directly with crypto (domains, VPN, travel)
 - Automate bill payments from your email
 - Get deposit addresses and QR codes
 
 **How it works:**
 1. Sign up and connect your AI provider (Anthropic or OpenAI)
-2. Ask in plain English: *"What's my balance?"* or *"Send $20 to 0x123..."*
+2. Ask in plain English: *"What's my balance?"* or *"Register example.com"*
 3. Transactions execute on-chain with your approval
 
 Your wallet is self-custodial. You control the private keys. Your AI API key powers the chat.
@@ -1125,6 +1133,8 @@ Error details: `{error_msg}`"""
 - *"Send $X to [address]"* - Transfer funds instantly
 - *"Show my deposit address"* - Get QR code to receive money
 - *"Buy a $50 Amazon gift card"* - Purchase with USDC
+- *"Register example.com domain"* - Buy domains with crypto (Porkbun, Namecheap)
+- *"Get Mullvad VPN for 1 month"* - Subscribe to VPN anonymously
 - *"Check my email for bills"* - Find recent invoices to pay
 
 Ask me anything or try one of the commands above.
