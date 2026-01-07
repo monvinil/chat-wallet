@@ -235,10 +235,18 @@ def create_agent():
     if provider == "openai":
         from langchain_openai import ChatOpenAI
         llm = ChatOpenAI(
-            model=llm_config.get("model", "gpt-4"),
+            model=llm_config.get("model", "gpt-4o"),
             api_key=llm_config.get("api_key"),
             temperature=0.3,
             max_tokens=4096
+        )
+    elif provider == "google":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        llm = ChatGoogleGenerativeAI(
+            model=llm_config.get("model", "gemini-2.0-flash-exp"),
+            google_api_key=llm_config.get("api_key"),
+            temperature=0.3,
+            max_output_tokens=4096
         )
     else:  # Default to Anthropic
         from langchain_anthropic import ChatAnthropic

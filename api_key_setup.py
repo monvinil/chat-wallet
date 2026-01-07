@@ -98,20 +98,78 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
 """)
 
     # Provider selection tabs
-    tab1, tab2 = st.tabs(["🟣 Anthropic (Recommended)", "🟢 OpenAI"])
+    tab1, tab2, tab3 = st.tabs(["🆓 Google Gemini (FREE)", "🟣 Anthropic", "🟢 OpenAI"])
 
     with tab1:
+        st.markdown("""
+#### Google Gemini 2.0 Flash ⭐ FREE TIER
+
+**Why choose Gemini:**
+- ✅ **Completely FREE** - 60 requests/minute, 1500 requests/day
+- ✅ **No credit card required** - Just need a Google account
+- ✅ **Fast and capable** - Latest Gemini 2.0 Flash model
+- ✅ **Perfect for getting started** - No billing setup needed
+
+**Pricing:**
+- FREE Tier: 60 RPM, 1500 RPD (enough for ~100+ conversations/day)
+- Paid Tier: Only if you need higher limits ($0.10 per 1M tokens)
+
+**Get your FREE API key:**
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Sign in with your Google account
+3. Click "Get API Key" → Create in new project
+4. Copy your key (starts with "AIza...")
+5. That's it! No credit card needed.
+""")
+
+        gemini_key = st.text_input(
+            "Google API Key",
+            type="password",
+            placeholder="AIza...",
+            key="gemini_key_input",
+            help="Starts with AIza - Get it FREE at aistudio.google.com/apikey"
+        )
+
+        if st.button("🔗 Get FREE API Key", key="get_gemini_key", type="primary", use_container_width=True):
+            st.link_button(
+                "Open Google AI Studio →",
+                "https://aistudio.google.com/apikey",
+                use_container_width=True
+            )
+
+        if st.button("✅ Save & Start Chatting", key="save_gemini", type="primary", use_container_width=True):
+            if gemini_key:
+                # Save to settings without validation (free tier, no validation needed)
+                user_id = st.session_state.get("user_id")
+                SettingsManager.update_llm_settings(
+                    user_id,
+                    provider="google",
+                    api_key=gemini_key,
+                    model="gemini-2.0-flash-exp"
+                )
+
+                # Set success flag for persistent message
+                st.session_state.api_key_configured = True
+                st.session_state._api_key_just_saved = True
+
+                st.success("✅ API key saved! You're ready to chat for FREE.")
+                st.info("Click outside this dialog or press ESC to continue.")
+            else:
+                st.warning("Please enter an API key")
+
+    with tab2:
         st.markdown("""
 #### Anthropic Claude
 
 **Why choose Anthropic:**
-- Most cost-effective ($0.01-0.03/conversation)
+- High quality reasoning and analysis
 - Best for financial tasks and structured data
 - Lower latency for chat
 
 **Pricing:**
 - Haiku: $0.25 per 1M input tokens (~$0.01 per conversation)
 - Sonnet: $3 per 1M input tokens (~$0.03 per conversation)
+- Requires purchasing API credits
 
 **Get your API key:**
 1. Go to [console.anthropic.com](https://console.anthropic.com)
@@ -131,10 +189,6 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            if st.button("📋 Copy Example", key="copy_anthropic_example"):
-                st.code("sk-ant-api03-...")
-
-        with col2:
             if st.button("🔗 Get API Key", key="get_anthropic_key", type="secondary"):
                 st.link_button(
                     "Open Anthropic Console →",
@@ -142,9 +196,7 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
                     use_container_width=True
                 )
 
-        col1, col2 = st.columns([1, 1])
-
-        with col1:
+        with col2:
             if st.button("💾 Save Without Validation", key="save_anthropic_skip", use_container_width=True):
                 if anthropic_key:
                     # Save to settings without validation
@@ -153,10 +205,9 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
                         user_id,
                         provider="anthropic",
                         api_key=anthropic_key,
-                        model="claude-sonnet-4-20250514"  # Latest Sonnet
+                        model="claude-sonnet-4-20250514"
                     )
 
-                    # Set success flag for persistent message
                     st.session_state.api_key_configured = True
                     st.session_state._api_key_just_saved = True
 
@@ -165,53 +216,47 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
                 else:
                     st.warning("Please enter an API key")
 
-        with col2:
-            if st.button("✅ Validate & Save", key="save_anthropic", type="primary", use_container_width=True):
-                if anthropic_key:
-                    with st.spinner("Validating API key..."):
-                        is_valid, message = validate_anthropic_key(anthropic_key)
+        if st.button("✅ Validate & Save", key="save_anthropic", type="primary", use_container_width=True):
+            if anthropic_key:
+                with st.spinner("Validating API key..."):
+                    is_valid, message = validate_anthropic_key(anthropic_key)
 
-                        if is_valid:
-                            # Save to settings
-                            user_id = st.session_state.get("user_id")
-                            SettingsManager.update_llm_settings(
-                                user_id,
-                                provider="anthropic",
-                                api_key=anthropic_key,
-                                model="claude-sonnet-4-20250514"  # Latest Sonnet
-                            )
+                    if is_valid:
+                        user_id = st.session_state.get("user_id")
+                        SettingsManager.update_llm_settings(
+                            user_id,
+                            provider="anthropic",
+                            api_key=anthropic_key,
+                            model="claude-sonnet-4-20250514"
+                        )
 
-                            # Set success flag for persistent message
-                            st.session_state.api_key_configured = True
-                            st.session_state._api_key_just_saved = True
+                        st.session_state.api_key_configured = True
+                        st.session_state._api_key_just_saved = True
 
-                            st.success("✅ API key saved! You're ready to chat.")
-                            st.info("Click outside this dialog or press ESC to continue.")
-                        elif "credit" in message.lower():
-                            # Credit issue - save anyway with warning
-                            st.warning(message)
-                            st.info("💡 **Tip:** You can still save the key and it may work if you have an active subscription.")
+                        st.success("✅ API key saved! You're ready to chat.")
+                        st.info("Click outside this dialog or press ESC to continue.")
+                    elif "credit" in message.lower():
+                        st.warning(message)
+                        st.info("💡 **Tip:** You can still save the key and it may work if you have an active subscription.")
 
-                            # Save to settings
-                            user_id = st.session_state.get("user_id")
-                            SettingsManager.update_llm_settings(
-                                user_id,
-                                provider="anthropic",
-                                api_key=anthropic_key,
-                                model="claude-sonnet-4-20250514"  # Latest Sonnet
-                            )
+                        user_id = st.session_state.get("user_id")
+                        SettingsManager.update_llm_settings(
+                            user_id,
+                            provider="anthropic",
+                            api_key=anthropic_key,
+                            model="claude-sonnet-4-20250514"
+                        )
 
-                            # Set success flag
-                            st.session_state.api_key_configured = True
-                            st.session_state._api_key_just_saved = True
+                        st.session_state.api_key_configured = True
+                        st.session_state._api_key_just_saved = True
 
-                            st.success("✅ API key saved! Try chatting to test it.")
-                        else:
-                            st.error(message)
-                else:
-                    st.warning("Please enter an API key")
+                        st.success("✅ API key saved! Try chatting to test it.")
+                    else:
+                        st.error(message)
+            else:
+                st.warning("Please enter an API key")
 
-    with tab2:
+    with tab3:
         st.markdown("""
 #### OpenAI GPT
 
@@ -375,8 +420,15 @@ def render_api_status_indicator():
 
     if has_key:
         # Show small status indicator
-        provider_name = "Anthropic" if provider == "anthropic" else "OpenAI"
-        emoji = "🟣" if provider == "anthropic" else "🟢"
+        if provider == "google":
+            provider_name = "Google Gemini"
+            emoji = "🆓"
+        elif provider == "anthropic":
+            provider_name = "Anthropic"
+            emoji = "🟣"
+        else:
+            provider_name = "OpenAI"
+            emoji = "🟢"
 
         st.caption(f"{emoji} Connected: {provider_name}")
     else:
