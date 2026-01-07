@@ -1090,6 +1090,12 @@ Your wallet is self-custodial. You control the private keys. Your AI API key pow
         show_api_key_banner()
         return
 
+    # If API key was just configured, force agent re-initialization
+    if has_api_key and st.session_state.get("_api_key_just_saved"):
+        st.session_state.agent = None  # Force recreation
+        st.session_state._agent_initializing = False
+        st.session_state._api_key_just_saved = False  # Clear flag
+
     # Quick action chips for logged-in users (only after onboarding complete)
     render_quick_actions()
 
@@ -1111,22 +1117,28 @@ Your wallet is self-custodial. You control the private keys. Your AI API key pow
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    # Lazy import LangChain message types
-                    from langchain_core.messages import HumanMessage, AIMessage
+                    # Safety check: ensure agent is initialized
+                    if not st.session_state.get("agent"):
+                        response = """**Agent not initialized yet**
 
-                    history = []
-                    for m in st.session_state.messages[:-1]:
-                        if m["role"] == "user":
-                            history.append(HumanMessage(content=m["content"]))
-                        else:
-                            history.append(AIMessage(content=m["content"]))
+Please refresh the page (F5) or try again in a moment. The AI agent is still loading."""
+                    else:
+                        # Lazy import LangChain message types
+                        from langchain_core.messages import HumanMessage, AIMessage
 
-                    result = st.session_state.agent.invoke({
-                        "input": prompt,
-                        "chat_history": history
-                    })
+                        history = []
+                        for m in st.session_state.messages[:-1]:
+                            if m["role"] == "user":
+                                history.append(HumanMessage(content=m["content"]))
+                            else:
+                                history.append(AIMessage(content=m["content"]))
 
-                    response = result.get("output", "Sorry, I couldn't process that.")
+                        result = st.session_state.agent.invoke({
+                            "input": prompt,
+                            "chat_history": history
+                        })
+
+                        response = result.get("output", "Sorry, I couldn't process that.")
 
                 except Exception as e:
                     error_msg = str(e)
