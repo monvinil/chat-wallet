@@ -1019,26 +1019,21 @@ def sidebar():
 
 def render_quick_actions():
     """Render quick action chips above chat"""
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("💰 Check Balance", key="quick_balance", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "What's my balance?"})
+        if st.button("💸 Send Money", key="quick_send", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "I want to send money"})
             st.rerun()
 
     with col2:
-        if st.button("📥 Deposit", key="quick_deposit", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Show my deposit address"})
+        if st.button("🎁 Buy Gift Card", key="quick_giftcard", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "Show me popular gift cards"})
             st.rerun()
 
     with col3:
-        if st.button("🎁 Gift Cards", key="quick_giftcard", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "What gift cards can I buy?"})
-            st.rerun()
-
-    with col4:
-        if st.button("⚙️ Settings", key="settings_quick", use_container_width=True):
-            st.session_state.show_settings = True
+        if st.button("💳 Pay Bill", key="quick_bill", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
             st.rerun()
 
 

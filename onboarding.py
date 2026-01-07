@@ -132,17 +132,27 @@ Your AI provider is connected and ready. You can now:
 
         return True  # Onboarding complete
 
-    # Show connection prompt
-    st.info("""
-**Why do I need this?**
+    # Show connection prompt with big CTA
+    st.warning("""
+### 🔑 One More Step: Connect Your AI
 
-Chat Wallet uses **your own AI provider** to power the assistant:
+Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the assistant.
+
+**Why?**
 - ✅ You own your data (we never see conversations)
 - ✅ Pay only for usage (~$0.01-0.05 per conversation)
 - ✅ No monthly subscriptions
+
+**Takes 2 minutes:** Get API key → Paste → Done
 """)
 
-    if st.button("🔗 Connect AI Provider", type="primary", use_container_width=True):
+    # Auto-show modal on first visit to this step
+    if not st.session_state.get("_api_setup_modal_shown_once"):
+        st.session_state._api_setup_modal_shown_once = True
+        show_api_key_setup_modal()
+
+    # Big prominent button
+    if st.button("🔗 Connect AI Provider", type="primary", use_container_width=True, key="connect_ai_main"):
         show_api_key_setup_modal()
 
     # Skip button for testing
