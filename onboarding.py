@@ -93,16 +93,41 @@ Your chat assistant needs an AI provider to understand commands and execute tran
         provider_name = "Anthropic" if provider == "anthropic" else "OpenAI"
         emoji = "🟣" if provider == "anthropic" else "🟢"
 
+        # Show persistent success state
         st.success(f"{emoji} **Connected:** {provider_name}")
-        st.balloons()
+
+        # Only show balloons once (not on every rerun)
+        if not st.session_state.get("_api_setup_celebration_shown"):
+            st.balloons()
+            st.session_state._api_setup_celebration_shown = True
+
+        st.info("""
+✅ **Setup Complete!**
+
+Your AI provider is connected and ready. You can now:
+- Check balances across networks
+- Send USDC transactions
+- Buy gift cards with crypto
+- Automate payments
+        """)
 
         col1, col2 = st.columns([1, 1])
         with col1:
             if st.button("Change Provider", use_container_width=True):
+                # Clear celebration flag so balloons show again after change
+                st.session_state._api_setup_celebration_shown = False
                 show_api_key_setup_modal()
         with col2:
             if st.button("Continue to Chat →", type="primary", use_container_width=True):
                 st.session_state.onboarding_complete = True
+                # Show success animation only if just signed up
+                if st.session_state.get("just_signed_up"):
+                    st.session_state.just_signed_up = False  # Clear flag
+                    # Import and show animation
+                    import time
+                    from app import show_success_animation
+                    show_success_animation()
+                    time.sleep(2)
                 st.rerun()
 
         return True  # Onboarding complete

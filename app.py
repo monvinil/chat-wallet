@@ -406,19 +406,29 @@ def wallet_setup_ui():
 
                                 st.success("Account created successfully")
 
-                                # Show seed phrase
+                                # Show seed phrase in expander (no animation overlap)
                                 if wallet_info.get("mnemonic"):
-                                    st.warning("**Important: Save your recovery phrase**")
-                                    st.code(wallet_info["mnemonic"], language=None)
-                                    st.caption("""
-                                    Write this 12-word phrase down and store it securely.
-                                    This is the only way to recover your wallet if you lose access.
-                                    Never share it with anyone.
-                                    """)
+                                    with st.expander("🔐 **CRITICAL: Save Your Recovery Phrase**", expanded=True):
+                                        st.warning("⚠️ Write this down and store it securely. This is the ONLY way to recover your wallet.")
+                                        st.code(wallet_info["mnemonic"], language=None)
 
-                                show_success_animation()
-                                time.sleep(2)
-                                st.rerun()
+                                        acknowledged = st.checkbox("✓ I have safely stored my recovery phrase")
+
+                                        if acknowledged:
+                                            if st.button("Continue to Setup →", type="primary", use_container_width=True):
+                                                # Initialize onboarding for new user
+                                                st.session_state.onboarding_step = 1
+                                                st.session_state.onboarding_complete = False
+                                                st.session_state.just_signed_up = True
+                                                st.rerun()
+                                        else:
+                                            st.info("👆 Please confirm you've saved your recovery phrase to continue")
+                                else:
+                                    # No seed phrase (shouldn't happen, but handle gracefully)
+                                    st.session_state.onboarding_step = 1
+                                    st.session_state.onboarding_complete = False
+                                    time.sleep(1)
+                                    st.rerun()
                             else:
                                 st.error("Failed to create user account.")
                                 st.info("Possible causes: Supabase credentials not configured, email already exists, or database migrations not run.")
@@ -505,7 +515,18 @@ def wallet_setup_ui():
                                     st.success("Welcome back.")
                                     st.info("To access your funds, import your wallet using your seed phrase or private key.")
 
-                                time.sleep(1)
+                                # Check if onboarding was completed
+                                from settings_manager import SettingsManager
+                                user_settings = SettingsManager.get_llm_config(user["id"])
+                                has_api_key = bool(user_settings.get("api_key"))
+
+                                if not has_api_key:
+                                    # Resume onboarding at API setup step
+                                    st.session_state.onboarding_step = 2
+                                    st.session_state.onboarding_complete = False
+                                    st.info("👋 Let's finish setting up your AI provider to unlock chat features.")
+
+                                # No animation delay - just rerun
                                 st.rerun()
                             else:
                                 st.error("No wallet found for this account.")

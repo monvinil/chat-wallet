@@ -153,12 +153,15 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
                             model="claude-sonnet-4-20250514"  # Latest Sonnet
                         )
 
-                        st.success("✅ API key saved! You're ready to chat.")
-                        st.balloons()
-
-                        # Close modal and refresh
+                        # Set success flag for persistent message
                         st.session_state.api_key_configured = True
-                        st.rerun()
+                        st.session_state._api_key_just_saved = True
+
+                        st.success("✅ API key saved! You're ready to chat.")
+                        st.info("Click outside this dialog or press ESC to continue.")
+
+                        # Don't auto-close - let user read the message
+                        # They can close manually or it will close when they interact
                     else:
                         st.error(message)
             else:
@@ -221,12 +224,14 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
                             model="gpt-4o"
                         )
 
-                        st.success("✅ API key saved! You're ready to chat.")
-                        st.balloons()
-
-                        # Close modal and refresh
+                        # Set success flag for persistent message
                         st.session_state.api_key_configured = True
-                        st.rerun()
+                        st.session_state._api_key_just_saved = True
+
+                        st.success("✅ API key saved! You're ready to chat.")
+                        st.info("Click outside this dialog or press ESC to continue.")
+
+                        # Don't auto-close - let user read the message
                     else:
                         st.error(message)
             else:
