@@ -1050,29 +1050,43 @@ def chat_interface():
     st.title("Chat Wallet")
     st.caption("Manage your wallet through conversation")
 
-    # Preview mode if not logged in
+    # Quick Start mode - create guest wallet if no wallet exists
     if not st.session_state.wallet_address:
-        # Show clear, conversion-focused intro
+        from quick_start import create_guest_wallet
+
+        # Show conversion-focused intro with quick start button
         with st.chat_message("assistant"):
             st.markdown("""**Chat Wallet** lets you manage money through conversation.
 
 **What you can do:**
-- Check your balance across multiple networks
-- Send USDC to any address instantly
-- Buy gift cards (Amazon, Uber, Airbnb, etc.)
-- Purchase directly with crypto (domains, VPN, travel)
-- Automate bill payments from your email
-- Get deposit addresses and QR codes
+- Check balance across multiple networks
+- Send USDC instantly
+- Buy gift cards (Amazon, Uber, Airbnb)
+- Purchase with crypto (domains, VPN, travel)
+- Automate bill payments
 
-**How it works:**
-1. Sign up and connect your AI provider (Anthropic or OpenAI)
-2. Ask in plain English: *"What's my balance?"* or *"Register example.com"*
-3. Transactions execute on-chain with your approval
+**Start in 30 seconds:**
+1. Click "Quick Start" below (creates temporary wallet)
+2. Get FREE Google Gemini key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+3. Paste key and start chatting
 
-Your wallet is self-custodial. You control the private keys. Your AI API key powers the chat.
-
-**Ready to start?** Sign up above to create your wallet.
+Your wallet is self-custodial. You control the keys. Optionally create an account later to save it.
 """)
+
+            _, col_center, _ = st.columns([1, 2, 1])
+            with col_center:
+                if st.button("🚀 Quick Start (30 seconds)", type="primary", use_container_width=True, key="quick_start_btn"):
+                    with st.spinner("Creating your wallet..."):
+                        if create_guest_wallet():
+                            st.session_state.quick_start_active = True
+                            st.success("✅ Wallet created! Now get your FREE API key...")
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.error("Failed to create wallet. Please try again.")
+
+            st.divider()
+            st.caption("**Or** [Create Account](#) to save your wallet across devices (optional)")
 
         # Disabled chat input
         st.chat_input("Ask me anything...", disabled=True, key="preview_input")

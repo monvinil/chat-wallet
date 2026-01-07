@@ -51,6 +51,12 @@ def show_onboarding():
 
 def show_step_1_welcome():
     """Step 1: Welcome and explain what just happened"""
+    # Check if quick start mode - skip to AI setup
+    if st.session_state.get("quick_start_active"):
+        st.session_state.onboarding_step = 2
+        st.rerun()
+        return
+
     st.markdown("""
 ## Setup Complete: Wallet Created
 
@@ -59,21 +65,19 @@ def show_step_1_welcome():
 ✅ Multi-chain support enabled (Base, Arbitrum, Polygon, Solana)
 ✅ Encrypted and backed up to cloud
 
-**Next: Connect your AI provider**
+**Next: Get your FREE AI key (takes 30 seconds)**
 
-Chat Wallet uses your own Anthropic or OpenAI API key to power the assistant. This means:
-- You own your conversations (we never see them)
-- You pay only for what you use (~$0.01-0.05 per conversation)
-- You can switch providers anytime
+Chat Wallet needs a Google Gemini API key to power the chat assistant:
+- ✅ Completely **FREE** (no credit card needed)
+- ✅ Just sign in with Google
+- ✅ 1500 requests/day included free
 
-Think of it as: **Your wallet** (✅ created) + **Your AI** (→ next step) = Chat Wallet
+Or use Anthropic/OpenAI if you prefer (requires purchasing credits).
 """)
 
-    col1, col2 = st.columns([3, 1])
-    with col2:
-        if st.button("Continue →", type="primary", use_container_width=True):
-            st.session_state.onboarding_step = 2
-            st.rerun()
+    if st.button("Get FREE Gemini Key →", type="primary", use_container_width=True):
+        st.session_state.onboarding_step = 2
+        st.rerun()
 
 
 def show_step_2_connect_ai(user_id: str):
@@ -90,8 +94,16 @@ Your chat assistant needs an AI provider to understand commands and execute tran
     has_key, provider = check_api_key_status()
 
     if has_key:
-        provider_name = "Anthropic" if provider == "anthropic" else "OpenAI"
-        emoji = "🟣" if provider == "anthropic" else "🟢"
+        # Update provider display
+        if provider == "google":
+            provider_name = "Google Gemini"
+            emoji = "🆓"
+        elif provider == "anthropic":
+            provider_name = "Anthropic"
+            emoji = "🟣"
+        else:
+            provider_name = "OpenAI"
+            emoji = "🟢"
 
         # Show persistent success state
         st.success(f"{emoji} **Connected:** {provider_name}")
@@ -133,17 +145,16 @@ Your AI provider is connected and ready. You can now:
         return True  # Onboarding complete
 
     # Show connection prompt with big CTA
-    st.warning("""
-### 🔑 One More Step: Connect Your AI
+    st.info("""
+### 🆓 Final Step: Get Your FREE AI Key (30 seconds)
 
-Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the assistant.
+**Recommended: Google Gemini (Completely FREE)**
+- No credit card required
+- 1500 requests/day included free
+- Just sign in with Google
+- Get key at: [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 
-**Why?**
-- ✅ You own your data (we never see conversations)
-- ✅ Pay only for usage (~$0.01-0.05 per conversation)
-- ✅ No monthly subscriptions
-
-**Takes 2 minutes:** Get API key → Paste → Done
+**Or choose:** Anthropic Claude or OpenAI GPT (requires purchasing API credits)
 """)
 
     # Auto-show modal on first visit to this step
