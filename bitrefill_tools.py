@@ -191,11 +191,63 @@ def check_gift_card_order(order_id: str) -> str:
         return f"Error checking order status: {e}"
 
 
+@tool
+def pay_bill_with_giftcard(vendor: str, amount: float) -> str:
+    """
+    Smart bill payment - automatically selects the right gift card and provides redemption instructions.
+
+    Use this when user wants to pay a bill (AWS, Netflix, Spotify, Uber, etc.)
+
+    Args:
+        vendor: Bill vendor name (e.g., "aws", "netflix", "spotify", "uber")
+        amount: Bill amount in USD
+
+    Returns:
+        Purchase confirmation with step-by-step redemption instructions
+    """
+    try:
+        from bill_payment_helper import (
+            BILL_TO_GIFTCARD_MAP,
+            suggest_gift_card_amount,
+            format_bill_payment_response
+        )
+
+        vendor_lower = vendor.lower()
+
+        # Check if vendor is supported
+        if vendor_lower not in BILL_TO_GIFTCARD_MAP:
+            return f"Gift card payment not available for {vendor}. Try searching for '{vendor}' gift cards manually."
+
+        vendor_info = BILL_TO_GIFTCARD_MAP[vendor_lower]
+
+        if not vendor_info.get("card"):
+            return f"Unfortunately, {vendor} doesn't accept gift cards. {vendor_info.get('note', '')}"
+
+        # Suggest best gift card amount
+        card_amount, explanation = suggest_gift_card_amount(amount)
+
+        # Build confirmation message
+        card_name = vendor_info["card"]
+        result = f"**Bill Payment Preview:**\n\n"
+        result += f"Vendor: {vendor.title()}\n"
+        result += f"Bill Amount: ${amount:.2f}\n"
+        result += f"Suggested Card: ${card_amount:.2f} {card_name.title()} gift card\n"
+        result += f"Why: {explanation}\n\n"
+        result += f"Note: {vendor_info['note']}\n\n"
+        result += f"Ready to purchase? Say 'yes' to proceed."
+
+        return result
+
+    except Exception as e:
+        return f"Error processing bill payment: {e}"
+
+
 def get_bitrefill_tools():
     """Get list of Bitrefill tools for AI agent"""
     return [
         search_gift_cards,
         get_gift_card_details,
         buy_gift_card,
-        check_gift_card_order
+        check_gift_card_order,
+        pay_bill_with_giftcard
     ]
