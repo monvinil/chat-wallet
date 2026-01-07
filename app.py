@@ -47,21 +47,21 @@ except ImportError:
 # CONFIG
 # ============================================================================
 
-SYSTEM_PROMPT = """You are a helpful crypto wallet assistant. You help users manage their non-custodial wallet across multiple chains.
+SYSTEM_PROMPT = """You are a professional wallet assistant that helps users manage their self-custodial wallet across multiple blockchain networks.
 
 **Your capabilities:**
-1. Check wallet balances across Base Sepolia, Base Mainnet, Arbitrum, Polygon, Solana
-2. Help prepare transactions (user must approve each one)
-3. Provide deposit addresses for receiving funds
-4. **Buy gift cards with crypto** via Bitrefill API:
-   - Search for Amazon, Uber, Netflix, Starbucks, and 1000+ other gift cards
-   - Purchase gift cards with USDC/crypto
-   - Send gift card codes to user's email automatically
-5. **Email automation** - If user connected email:
-   - Read verification codes from emails (for signups/2FA)
+1. Check balances - Always present in dollars first (e.g., "$50.00 USDC total")
+2. Send transactions - Always preview first using preview_transaction tool, then execute after user approval
+3. Generate deposit addresses and QR codes for receiving funds
+4. **Buy gift cards** via Bitrefill API:
+   - Search 1000+ gift cards (Amazon, Uber, Netflix, Starbucks, etc.)
+   - Purchase with USDC
+   - Codes delivered to user's email
+5. **Email automation** (if user connected email):
+   - Read verification codes from emails
    - Search recent emails (last 24 hours)
-   - Help with automated signups on external services
-6. Autonomous tasks - buy domains, purchase gift cards, sign up for services
+   - Assist with automated signups
+6. Execute multi-step tasks - domain purchases, gift cards, service signups
 
 **Email Automation Workflow:**
 When user asks to sign up for a service (e.g., Porkbun, Amazon):
@@ -72,22 +72,24 @@ When user asks to sign up for a service (e.g., Porkbun, Amazon):
 5. Use get_verification_code tool to retrieve code from email
 6. Complete signup with the code
 
-**Important:**
-- User controls their own private keys (non-custodial)
-- Always show fees upfront before transactions
+**Communication guidelines:**
+- Present balances in dollars first: "$50.00 USDC" not "50 USDC tokens"
+- When user asks to send money, use preview_transaction first to show: amount, fee, total, and time
+- After showing preview, ask: "Ready to send?" or "Should I proceed?" using context from conversation
+- Confirm completed actions with specifics: "Sent $20.00 to 0x1234...5678 on Base (fee: $0.02)"
+- Be direct and professional, not overly conversational
+
+**Important rules:**
+- User controls private keys (self-custodial)
 - User must approve every transaction
-- Never promise anything without user confirmation
-- For email automation: Only access recent emails (last 24 hours)
-- Always ask permission before signing up for external services
+- Never execute without explicit permission
+- Email access: Only last 24 hours
+- Ask before signing up for external services
 
-Network Support:
-- Base Sepolia (testnet) ✅ Real
-- Base Mainnet ✅ Real
-- Arbitrum Sepolia (testnet) ✅ Real
-- Polygon Amoy (testnet) ✅ Real
-- Solana Devnet (testnet) 🔜 Coming soon
+**Supported networks:**
+Base, Arbitrum, Polygon (mainnet and testnets), Solana (coming soon)
 
-Fee Structure: $0.005 + 0.2% (max $3)
+**Fees:** $0.005 + 0.2% (max $3)
 """
 
 # Mock data
@@ -117,15 +119,22 @@ def get_wallet_balance() -> str:
     balances = ChainUtils.get_all_balances(address)
     total_usdc = ChainUtils.calculate_total_usdc(balances)
 
+    # Build a clean, dollar-first response
     result = {
+        "total_balance": f"${total_usdc:.2f} USDC",
         "address": ChainUtils.format_address(address),
-        "total_usdc": total_usdc,
-        "balances_by_chain": {}
+        "breakdown_by_network": {}
     }
 
     for network_key, chain_balances in balances.items():
         network_name = NETWORKS[network_key]["name"]
-        result["balances_by_chain"][network_name] = chain_balances
+        usdc = chain_balances.get("usdc", 0.0)
+        native = chain_balances.get("eth", chain_balances.get("sol", 0.0))
+
+        result["breakdown_by_network"][network_name] = {
+            "usdc": f"${usdc:.2f}",
+            "native_token": f"{native:.4f}" if native > 0 else "0"
+        }
 
     return json.dumps(result, indent=2)
 
@@ -150,6 +159,34 @@ def get_deposit_address(chain: str = "base-sepolia") -> str:
 # Old mock tools removed - now using real Bitrefill API tools from bitrefill_tools.py
 
 
+def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-sepolia") -> str:
+    """
+    Preview a transaction before execution. Shows exact amounts, fees, and timing.
+    Args: to_address, amount_usd, chain (network key)
+    """
+    if "wallet_address" not in st.session_state:
+        return json.dumps({"error": "No wallet connected"})
+
+    network = NETWORKS.get(chain, NETWORKS["base-sepolia"])
+    fee = calculate_fee(amount_usd)
+    total = amount_usd + fee
+
+    preview = {
+        "action": "Send USDC",
+        "amount": f"${amount_usd:.2f}",
+        "to": ChainUtils.format_address(to_address),
+        "to_full_address": to_address,
+        "network": network["name"],
+        "fee": f"${fee:.3f}",
+        "total_cost": f"${total:.2f}",
+        "estimated_time": "~3-5 seconds",
+        "from": ChainUtils.format_address(st.session_state.wallet_address),
+        "note": "User must confirm before execution"
+    }
+
+    return json.dumps(preview, indent=2)
+
+
 def read_latest_emails(count: int = 3) -> str:
     """Read latest emails. Args: count - number of emails"""
     return json.dumps({"status": "success", "emails": MOCK_EMAILS[:min(count, 10)], "note": "[SIMULATED]"}, indent=2)
@@ -170,6 +207,7 @@ def create_agent():
     # Wrap tools with @tool decorator at runtime
     tool_get_wallet_balance = tool(get_wallet_balance)
     tool_get_deposit_address = tool(get_deposit_address)
+    tool_preview_transaction = tool(preview_transaction)
     tool_read_latest_emails = tool(read_latest_emails)
 
     # Get user's LLM config (custom API key if set, otherwise app default)
@@ -207,6 +245,7 @@ def create_agent():
     custom_tools = [
         tool_get_wallet_balance,
         tool_get_deposit_address,
+        tool_preview_transaction,
         tool_read_latest_emails
     ] + get_email_tools() + get_bitrefill_tools()  # Add email automation and Bitrefill tools
 
@@ -947,31 +986,25 @@ def sidebar():
 
 def render_quick_actions():
     """Render quick action chips above chat"""
-    # Check connection status
-    email_connected = st.session_state.get("gmail_connected", False)
-
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        if email_connected:
-            if st.button("Email Connected", key="email_status", use_container_width=True):
-                st.session_state.show_settings = True
-                st.session_state.settings_tab = "accounts"
-                st.rerun()
-        else:
-            if st.button("Connect Email", key="connect_email_quick", use_container_width=True):
-                st.session_state.show_settings = True
-                st.session_state.settings_tab = "accounts"
-                st.rerun()
+        if st.button("💰 Check Balance", key="quick_balance", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "What's my balance?"})
+            st.rerun()
 
     with col2:
-        if st.button("AI Provider", key="ai_provider_quick", use_container_width=True):
-            st.session_state.show_settings = True
-            st.session_state.settings_tab = "provider"
+        if st.button("📥 Deposit", key="quick_deposit", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "Show my deposit address"})
             st.rerun()
 
     with col3:
-        if st.button("Settings", key="settings_quick", use_container_width=True):
+        if st.button("🎁 Gift Cards", key="quick_giftcard", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "What gift cards can I buy?"})
+            st.rerun()
+
+    with col4:
+        if st.button("⚙️ Settings", key="settings_quick", use_container_width=True):
             st.session_state.show_settings = True
             st.rerun()
 
@@ -979,31 +1012,29 @@ def render_quick_actions():
 def chat_interface():
     """Main chat interface"""
     st.title("Chat Wallet")
-    st.caption("AI-powered self-custody wallet")
+    st.caption("Manage your wallet through conversation")
 
     # Preview mode if not logged in
     if not st.session_state.wallet_address:
-        # Show warm, conversational demo
+        # Show clear, conversion-focused intro
         with st.chat_message("assistant"):
-            st.markdown("""Hey there! 👋
+            st.markdown("""**Chat Wallet** lets you manage money through conversation.
 
-I'm your AI assistant, but with a superpower: **I can actually handle money for you.**
+**What you can do:**
+- Check your balance across multiple networks
+- Send USDC to any address instantly
+- Buy gift cards (Amazon, Uber, Airbnb, etc.)
+- Automate bill payments from your email
+- Get deposit addresses and QR codes
 
-Think of me like ChatGPT, but I can:
-- Hold and send real money (crypto like USDC)
-- Pay your bills by reading emails
-- Buy gift cards when you ask
-- Send money to friends instantly
+**How it works:**
+1. Sign up and connect your AI provider (Anthropic or OpenAI)
+2. Ask in plain English: *"What's my balance?"* or *"Send $20 to 0x123..."*
+3. Transactions execute on-chain with your approval
 
-**Try asking me things like:**
-- *"What's in my wallet?"*
-- *"Send $20 to my friend"*
-- *"Buy me a $50 Amazon gift card"*
-- *"Pay my AWS bill that just came in"*
+Your wallet is self-custodial. You control the private keys. Your AI API key powers the chat.
 
-I'll keep everything secure in your own wallet. You're always in control.
-
-Ready to try it? Just sign in to get started.
+**Ready to start?** Sign up above to create your wallet.
 """)
 
         # Disabled chat input
@@ -1082,18 +1113,16 @@ Error details: `{error_msg}`"""
 
     # Welcome message for logged in users (only shown after onboarding complete)
     if not st.session_state.messages:
-        welcome = f"""**Welcome!** 👋
+        welcome = f"""**Wallet ready:** `{ChainUtils.format_address(st.session_state.wallet_address)}`
 
-Your wallet is ready: `{ChainUtils.format_address(st.session_state.wallet_address)}`
+**Available commands:**
+- *"What's my balance?"* - View USDC across all networks
+- *"Send $X to [address]"* - Transfer funds instantly
+- *"Show my deposit address"* - Get QR code to receive money
+- *"Buy a $50 Amazon gift card"* - Purchase with USDC
+- *"Check my email for bills"* - Find recent invoices to pay
 
-**I can help you:**
-- Check balances across networks
-- Send money to addresses
-- Generate deposit addresses & QR codes
-- Buy gift cards with crypto
-- Automate payments from emails
-
-What would you like to do?
+Ask me anything or try one of the commands above.
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
         st.rerun()

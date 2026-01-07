@@ -52,25 +52,21 @@ def show_onboarding():
 def show_step_1_welcome():
     """Step 1: Welcome and explain what just happened"""
     st.markdown("""
-## Welcome to Chat Wallet! 🎉
+## Setup Complete: Wallet Created
 
-**You're almost ready.** Here's what we've set up:
+**Your wallet is ready:**
+✅ Secure address generated (only you control the private keys)
+✅ Multi-chain support enabled (Base, Arbitrum, Polygon, Solana)
+✅ Encrypted and backed up to cloud
 
-✅ **Created your wallet** - A secure crypto wallet that only you control
-✅ **Generated your address** - Where you can receive money
-✅ **Encrypted everything** - Your keys are stored securely
+**Next: Connect your AI provider**
 
-### What's Next?
+Chat Wallet uses your own Anthropic or OpenAI API key to power the assistant. This means:
+- You own your conversations (we never see them)
+- You pay only for what you use (~$0.01-0.05 per conversation)
+- You can switch providers anytime
 
-To actually chat with your AI assistant, you need to connect an AI provider. Think of it like this:
-
-- **Your wallet** = Where your money lives (✅ Done)
-- **The AI** = The brain that helps you use it (⬅️ Next step)
-
-The AI runs on your own API key, so:
-- Your conversations stay private
-- You only pay for what you use (usually pennies)
-- You can use Anthropic (Claude) or OpenAI (GPT-4)
+Think of it as: **Your wallet** (✅ created) + **Your AI** (→ next step) = Chat Wallet
 """)
 
     col1, col2 = st.columns([3, 1])
@@ -83,9 +79,9 @@ The AI runs on your own API key, so:
 def show_step_2_connect_ai(user_id: str):
     """Step 2: Connect AI provider - returns True if complete"""
     st.markdown("""
-## Connect Your AI Brain 🧠
+## Connect AI Provider
 
-Choose which AI will power your assistant:
+Select which AI model will handle your chat commands:
 """)
 
     # Get existing settings
@@ -123,18 +119,19 @@ Choose which AI will power your assistant:
     # Show selected provider details
     if provider == "anthropic":
         st.markdown("""
-**Anthropic (Claude)** - Recommended for most users
+**Anthropic (Claude)** - Recommended
 
-- Great at conversations and following instructions
-- Strong reasoning and helpful personality
-- New users get $5 free credit
+**Why Claude:**
+- Excellent at understanding financial instructions
+- Strong reasoning for complex transactions
+- ~$0.01-0.05 per conversation
 
 **Get your API key:**
-1. Go to [console.anthropic.com](https://console.anthropic.com)
-2. Sign up (free to start)
-3. Navigate to API Keys
-4. Click "Create Key"
-5. Copy and paste below
+1. Visit [console.anthropic.com](https://console.anthropic.com)
+2. Sign up (free tier available)
+3. Go to API Keys section
+4. Create new key
+5. Paste below
 """)
         model_options = {
             "claude-sonnet-4-20250514": "Sonnet - Balanced (recommended)",
@@ -145,18 +142,19 @@ Choose which AI will power your assistant:
 
     else:  # OpenAI
         st.markdown("""
-**OpenAI (GPT-4)** - Good if you already have an account
+**OpenAI (GPT-4)** - Alternative option
 
-- Widely used and well-known
-- Good general performance
-- Many users already have API access
+**Why GPT-4:**
+- Reliable performance for financial tasks
+- Well-tested API
+- ~$0.02-0.08 per conversation
 
 **Get your API key:**
-1. Go to [platform.openai.com](https://platform.openai.com)
+1. Visit [platform.openai.com](https://platform.openai.com)
 2. Sign up or log in
-3. Navigate to API Keys
+3. Go to API Keys section
 4. Create new secret key
-5. Copy and paste below
+5. Paste below
 """)
         model_options = {
             "gpt-4": "GPT-4 - Most capable",
@@ -185,7 +183,7 @@ Choose which AI will power your assistant:
         key="onboarding_api_key"
     )
 
-    st.caption("🔒 Your key is encrypted and stored securely. You can change it anytime in Settings.")
+    st.caption("🔒 Your API key is encrypted before storage. Change it anytime in Settings.")
 
     # Save button
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -212,7 +210,7 @@ Choose which AI will power your assistant:
             )
 
             if success:
-                st.success("✅ AI connected! Loading your assistant...")
+                st.success("✅ Setup complete. Opening chat...")
                 st.session_state.onboarding_step = None  # Clear onboarding
                 st.session_state.onboarding_provider = None
                 st.balloons()

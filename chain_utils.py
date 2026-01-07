@@ -3,6 +3,7 @@ Multi-chain utilities for balance fetching and transaction handling
 """
 
 import streamlit as st
+import time
 from typing import Dict, Optional
 from decimal import Decimal
 from web3 import Web3
@@ -31,6 +32,19 @@ class ChainUtils:
     """Utilities for interacting with multiple chains"""
 
     @staticmethod
+    def _retry_rpc_call(func, max_retries: int = 3, backoff_factor: float = 1.5):
+        """Retry RPC calls with exponential backoff for reliability"""
+        for attempt in range(max_retries):
+            try:
+                return func()
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise e
+                wait_time = backoff_factor ** attempt
+                time.sleep(wait_time)
+        return None
+
+    @staticmethod
     def get_evm_balance(network_key: str, address: str) -> Dict[str, float]:
         """Get ETH and USDC balance for an EVM address"""
         network = NETWORKS.get(network_key)
@@ -39,26 +53,35 @@ class ChainUtils:
             return {"eth": 0.0, "usdc": 0.0}
 
         try:
-            # Connect to RPC
+            # Connect to RPC with retry logic
             w3 = Web3(Web3.HTTPProvider(network["rpc_url"]))
 
-            if not w3.is_connected():
-                st.warning(f"Cannot connect to {network['name']}")
-                return {"eth": 0.0, "usdc": 0.0}
+            def check_connection():
+                if not w3.is_connected():
+                    raise ConnectionError(f"Cannot connect to {network['name']}")
+                return True
 
-            # Get ETH balance
-            eth_balance_wei = w3.eth.get_balance(address)
+            ChainUtils._retry_rpc_call(check_connection)
+
+            # Get ETH balance with retry
+            def get_eth_balance():
+                return w3.eth.get_balance(address)
+
+            eth_balance_wei = ChainUtils._retry_rpc_call(get_eth_balance)
             eth_balance = float(w3.from_wei(eth_balance_wei, 'ether'))
 
-            # Get USDC balance
+            # Get USDC balance with retry
             usdc_contract = w3.eth.contract(
                 address=w3.to_checksum_address(network["usdc_address"]),
                 abi=USDC_ABI
             )
 
-            usdc_balance_raw = usdc_contract.functions.balanceOf(
-                w3.to_checksum_address(address)
-            ).call()
+            def get_usdc_balance():
+                return usdc_contract.functions.balanceOf(
+                    w3.to_checksum_address(address)
+                ).call()
+
+            usdc_balance_raw = ChainUtils._retry_rpc_call(get_usdc_balance)
 
             # USDC has 6 decimals
             usdc_balance = float(usdc_balance_raw) / 1e6
@@ -69,7 +92,8 @@ class ChainUtils:
             }
 
         except Exception as e:
-            st.warning(f"Error fetching {network['name']} balance: {e}")
+            # Silently return zeros instead of showing warnings (already retried 3x)
+            print(f"Error fetching {network['name']} balance after retries: {e}")
             return {"eth": 0.0, "usdc": 0.0}
 
     @staticmethod
