@@ -225,9 +225,9 @@ def create_agent():
     user_id = st.session_state.get("user_id")
     llm_config = SettingsManager.get_llm_config(user_id)
 
-    # Validate API key exists
+    # Validate API key exists (should be caught by banner, but safety check)
     if not llm_config.get("api_key"):
-        raise ValueError("API key not configured. Please add your API key in Settings.")
+        return None  # Banner will handle this
 
     # Create LLM based on provider
     provider = llm_config.get("provider", "anthropic")
@@ -1060,6 +1060,15 @@ Your wallet is self-custodial. You control the private keys. Your AI API key pow
         # User is still in onboarding, don't show chat
         return
 
+    # Check if API key is configured (show banner if missing)
+    from api_key_setup import show_api_key_banner, check_api_key_status
+    has_api_key, _ = check_api_key_status()
+
+    if not has_api_key:
+        # Show prominent banner instead of showing error in chat
+        show_api_key_banner()
+        return
+
     # Quick action chips for logged-in users (only after onboarding complete)
     render_quick_actions()
 
@@ -1491,18 +1500,18 @@ def main():
             try:
                 # Create agent (fast)
                 agent = create_agent()
-                st.session_state.agent = agent
 
-                # Fetch balances in background (don't block UI)
-                if not st.session_state.get("balances"):
-                    st.session_state.balances = {}
+                # If None returned (missing API key), banner will handle it
+                if agent:
+                    st.session_state.agent = agent
+
+                    # Fetch balances in background (don't block UI)
+                    if not st.session_state.get("balances"):
+                        st.session_state.balances = {}
 
             except Exception as e:
-                error_msg = str(e)
-                if "API key" in error_msg:
-                    st.warning("⚠️ **AI Chat Requires API Key**\n\nPlease configure your Anthropic or OpenAI API key in **Settings** (⚙️) to use the chat feature.")
-                else:
-                    st.error(f"Failed to initialize: {error_msg}")
+                # Log error but don't show to user (banner handles API key issues)
+                print(f"Agent initialization error: {e}")
                 st.session_state._agent_initializing = False
 
     # Lazy-load balances after agent is ready (non-blocking)

@@ -247,11 +247,111 @@ def book_travel_with_crypto(
         return f"Error searching travel options: {e}"
 
 
+@tool
+def pay_any_merchant_with_crypto(
+    merchant_name: str,
+    amount_usd: float,
+    description: str,
+    crypto: str = "USDC"
+) -> str:
+    """
+    Universal merchant payment - works with ANY merchant accepting crypto.
+
+    Use this when user wants to pay a merchant not in our registry.
+    Works by detecting merchant's payment processor or suggesting alternatives.
+
+    Args:
+        merchant_name: Name of merchant (e.g., "DoorDash", "Chipotle")
+        amount_usd: Amount in USD
+        description: What they're buying
+        crypto: Cryptocurrency to pay with (default USDC)
+
+    Returns:
+        Payment method and next steps
+    """
+    try:
+        from universal_crypto_payment import find_payment_method, create_merchant_payment
+
+        # Find how to pay this merchant
+        payment_info = find_payment_method(merchant_name)
+
+        if payment_info.get("payment_method") == "giftcard":
+            # Redirect to gift card flow
+            card_name = payment_info.get("giftcard_id", merchant_name.lower())
+            return f"""**{merchant_name}** accepts payment via gift cards.
+
+**Best approach:**
+Use the `search_gift_cards` tool to find {merchant_name} gift cards on Bitrefill.
+
+Example: Search for "{card_name}" gift card, buy with USDC, use code at checkout.
+
+{payment_info.get('note', '')}"""
+
+        elif payment_info.get("payment_method") == "giftcard_search":
+            # Unknown merchant - suggest gift card search
+            return f"""**{merchant_name}** - Payment method unknown.
+
+**Suggested approaches:**
+1. Search for "{merchant_name}" gift cards using `search_gift_cards` tool
+2. If merchant has a website, check if they accept crypto directly
+3. Check if merchant uses CoinGate, NOWPayments, or BTCPay Server
+
+Would you like me to search for gift cards?"""
+
+        elif payment_info.get("accepts_crypto"):
+            processor = payment_info.get("payment_processor")
+
+            if processor == "custom":
+                # Has custom adapter
+                return f"""**{merchant_name}** accepts crypto directly!
+
+Accepted: {', '.join(payment_info.get('accepted_cryptos', []))}
+
+Use the merchant-specific tool for {merchant_name} to complete purchase.
+
+{payment_info.get('note', '')}"""
+
+            else:
+                # Uses payment processor (CoinGate, NOWPayments, etc.)
+                payment = create_merchant_payment(
+                    merchant_name,
+                    amount_usd,
+                    description,
+                    payment_processor=processor,
+                    crypto=crypto
+                )
+
+                if payment.get("success"):
+                    result = f"""**{merchant_name} Payment Created**
+
+Amount: {payment['amount']}
+Method: {payment['payment_method']}
+Description: {payment['description']}
+
+**Next Steps:**
+"""
+                    for step in payment['next_steps']:
+                        result += f"{step}\n"
+
+                    result += f"\n**Payment Link:** {payment['payment_url']}\n\n"
+                    result += f"Note: {payment['note']}"
+
+                    return result
+                else:
+                    return f"Error creating payment: {payment.get('error')}"
+
+        return f"Unable to determine payment method for {merchant_name}. Try searching for gift cards instead."
+
+    except Exception as e:
+        return f"Error processing merchant payment: {e}"
+
+
 def get_merchant_tools():
     """Get list of merchant tools for AI agent"""
     return [
         search_crypto_merchants,
         buy_domain_with_crypto,
         subscribe_vpn_with_crypto,
-        book_travel_with_crypto
+        book_travel_with_crypto,
+        pay_any_merchant_with_crypto
     ]

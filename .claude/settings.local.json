@@ -7,7 +7,21 @@
       "Bash(pip install:*)",
       "Bash(source:*)",
       "Bash(streamlit run:*)",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "Bash(ls:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python3 -m pytest:*)",
+      "Bash(pip3 install:*)",
+      "Bash(pip show:*)",
+      "Bash(python:*)",
+      "Bash(python3 -m py_compile:*)",
+      "Bash(cat:*)",
+      "Bash(chmod:*)",
+      "Bash(git log:*)",
+      "Bash(git rm:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(./venv/bin/python:*)"
     ]
   }
 }

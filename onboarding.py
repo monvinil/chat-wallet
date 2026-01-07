@@ -1,5 +1,5 @@
 """
-Onboarding flow for new users - step-by-step setup wizard
+Simplified onboarding flow - uses modal for API key setup
 """
 
 import streamlit as st
@@ -8,7 +8,7 @@ from settings_manager import SettingsManager
 
 def show_onboarding():
     """
-    Multi-step onboarding wizard that users must complete before using chat.
+    Multi-step onboarding wizard.
     Returns True if onboarding is complete, False if still in progress.
     """
     user_id = st.session_state.get("user_id")
@@ -77,148 +77,53 @@ Think of it as: **Your wallet** (✅ created) + **Your AI** (→ next step) = Ch
 
 
 def show_step_2_connect_ai(user_id: str):
-    """Step 2: Connect AI provider - returns True if complete"""
+    """Step 2: Connect AI provider via modal dialog"""
+    from api_key_setup import show_api_key_setup_modal, check_api_key_status
+
     st.markdown("""
 ## Connect AI Provider
 
-Select which AI model will handle your chat commands:
+Your chat assistant needs an AI provider to understand commands and execute transactions.
 """)
 
-    # Get existing settings
-    existing_settings = SettingsManager.get_user_settings(user_id)
+    # Check if already configured (modal was just completed)
+    has_key, provider = check_api_key_status()
 
-    # Provider selection
-    col1, col2 = st.columns(2)
+    if has_key:
+        provider_name = "Anthropic" if provider == "anthropic" else "OpenAI"
+        emoji = "🟣" if provider == "anthropic" else "🟢"
 
-    with col1:
-        anthropic_selected = st.button(
-            "🧠 Anthropic (Claude)",
-            use_container_width=True,
-            type="primary" if not existing_settings or existing_settings.get("llm_provider") == "anthropic" else "secondary"
-        )
+        st.success(f"{emoji} **Connected:** {provider_name}")
+        st.balloons()
 
-    with col2:
-        openai_selected = st.button(
-            "🤖 OpenAI (GPT-4)",
-            use_container_width=True,
-            type="primary" if existing_settings and existing_settings.get("llm_provider") == "openai" else "secondary"
-        )
-
-    # Determine provider
-    if anthropic_selected:
-        provider = "anthropic"
-        st.session_state.onboarding_provider = provider
-    elif openai_selected:
-        provider = "openai"
-        st.session_state.onboarding_provider = provider
-    else:
-        provider = st.session_state.get("onboarding_provider", "anthropic")
-
-    st.divider()
-
-    # Show selected provider details
-    if provider == "anthropic":
-        st.markdown("""
-**Anthropic (Claude)** - Recommended
-
-**Why Claude:**
-- Excellent at understanding financial instructions
-- Strong reasoning for complex transactions
-- ~$0.01-0.05 per conversation
-
-**Get your API key:**
-1. Visit [console.anthropic.com](https://console.anthropic.com)
-2. Sign up (free tier available)
-3. Go to API Keys section
-4. Create new key
-5. Paste below
-""")
-        model_options = {
-            "claude-sonnet-4-20250514": "Sonnet - Balanced (recommended)",
-            "claude-opus-4-20250514": "Opus - Most capable",
-            "claude-haiku-4-20250514": "Haiku - Fastest & cheapest"
-        }
-        default_model = "claude-sonnet-4-20250514"
-
-    else:  # OpenAI
-        st.markdown("""
-**OpenAI (GPT-4)** - Alternative option
-
-**Why GPT-4:**
-- Reliable performance for financial tasks
-- Well-tested API
-- ~$0.02-0.08 per conversation
-
-**Get your API key:**
-1. Visit [platform.openai.com](https://platform.openai.com)
-2. Sign up or log in
-3. Go to API Keys section
-4. Create new secret key
-5. Paste below
-""")
-        model_options = {
-            "gpt-4": "GPT-4 - Most capable",
-            "gpt-4-turbo": "GPT-4 Turbo - Faster",
-            "gpt-3.5-turbo": "GPT-3.5 - Cheapest"
-        }
-        default_model = "gpt-4"
-
-    # Model selection
-    st.markdown("**Choose model:**")
-    selected_model = st.selectbox(
-        "Model",
-        list(model_options.keys()),
-        format_func=lambda x: model_options[x],
-        index=list(model_options.keys()).index(default_model),
-        label_visibility="collapsed"
-    )
-
-    # API Key input
-    st.markdown("**Paste your API key:**")
-    api_key = st.text_input(
-        "API Key",
-        type="password",
-        placeholder=f"sk-ant-..." if provider == "anthropic" else "sk-...",
-        label_visibility="collapsed",
-        key="onboarding_api_key"
-    )
-
-    st.caption("🔒 Your API key is encrypted before storage. Change it anytime in Settings.")
-
-    # Save button
-    col1, col2, col3 = st.columns([1, 2, 1])
-
-    with col1:
-        if st.button("← Back"):
-            st.session_state.onboarding_step = 1
-            st.rerun()
-
-    with col3:
-        save_disabled = not api_key or len(api_key) < 10
-        if st.button(
-            "Complete Setup ✓",
-            type="primary",
-            disabled=save_disabled,
-            use_container_width=True
-        ):
-            # Save settings
-            success = SettingsManager.save_user_settings(
-                user_id=user_id,
-                llm_provider=provider,
-                llm_model=selected_model,
-                llm_api_key=api_key
-            )
-
-            if success:
-                st.success("✅ Setup complete. Opening chat...")
-                st.session_state.onboarding_step = None  # Clear onboarding
-                st.session_state.onboarding_provider = None
-                st.balloons()
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("Change Provider", use_container_width=True):
+                show_api_key_setup_modal()
+        with col2:
+            if st.button("Continue to Chat →", type="primary", use_container_width=True):
+                st.session_state.onboarding_complete = True
                 st.rerun()
-            else:
-                st.error("Failed to save settings. Please try again.")
 
-        if save_disabled and api_key:
-            st.caption("⚠️ API key seems too short")
+        return True  # Onboarding complete
+
+    # Show connection prompt
+    st.info("""
+**Why do I need this?**
+
+Chat Wallet uses **your own AI provider** to power the assistant:
+- ✅ You own your data (we never see conversations)
+- ✅ Pay only for usage (~$0.01-0.05 per conversation)
+- ✅ No monthly subscriptions
+""")
+
+    if st.button("🔗 Connect AI Provider", type="primary", use_container_width=True):
+        show_api_key_setup_modal()
+
+    # Skip button for testing
+    st.markdown("---")
+    if st.button("⏭️ Skip for now (testing only)", use_container_width=True):
+        st.session_state.onboarding_complete = True
+        st.rerun()
 
     return False  # Still in onboarding
