@@ -132,19 +132,17 @@ class SessionManager:
     @staticmethod
     def restore_session() -> bool:
         """Try to restore session from cookie on page load"""
-        # Skip if already logged in
+        # Skip if already logged in (with both user_id AND wallet_address set)
+        # This prevents unnecessary restoration attempts after successful login
         if st.session_state.get("wallet_address") and st.session_state.get("user_id"):
             return True
-
-        # Skip if we already attempted restoration this session
-        if st.session_state.get("_session_restore_attempted"):
-            return False
 
         # Skip if cookie manager not ready yet (prevents multiple reruns)
         if "_cookie_manager_init" not in st.session_state:
             return False
 
-        st.session_state._session_restore_attempted = True
+        # IMPORTANT: Don't use _session_restore_attempted flag - it prevents restoration on refresh
+        # On page refresh, st.session_state is cleared, so we NEED to restore from cookie every time
 
         try:
             # Check for session cookie

@@ -90,6 +90,10 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
 - ✅ **No monthly subscriptions** - just API usage costs
 - ✅ **Switch providers anytime**
 
+**Important:** API keys are separate from claude.ai or ChatGPT subscriptions. You need to purchase API credits separately:
+- Anthropic: Add credits at [console.anthropic.com/settings/billing](https://console.anthropic.com/settings/billing) (start with $5-10)
+- OpenAI: Add credits at [platform.openai.com/settings/organization/billing](https://platform.openai.com/settings/organization/billing)
+
 ---
 """)
 
@@ -138,34 +142,74 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
                     use_container_width=True
                 )
 
-        if st.button("✅ Validate & Save", key="save_anthropic", type="primary", use_container_width=True):
-            if anthropic_key:
-                with st.spinner("Validating API key..."):
-                    is_valid, message = validate_anthropic_key(anthropic_key)
+        col1, col2 = st.columns([1, 1])
 
-                    if is_valid:
-                        # Save to settings
-                        user_id = st.session_state.get("user_id")
-                        SettingsManager.update_llm_settings(
-                            user_id,
-                            provider="anthropic",
-                            api_key=anthropic_key,
-                            model="claude-sonnet-4-20250514"  # Latest Sonnet
-                        )
+        with col1:
+            if st.button("💾 Save Without Validation", key="save_anthropic_skip", use_container_width=True):
+                if anthropic_key:
+                    # Save to settings without validation
+                    user_id = st.session_state.get("user_id")
+                    SettingsManager.update_llm_settings(
+                        user_id,
+                        provider="anthropic",
+                        api_key=anthropic_key,
+                        model="claude-sonnet-4-20250514"  # Latest Sonnet
+                    )
 
-                        # Set success flag for persistent message
-                        st.session_state.api_key_configured = True
-                        st.session_state._api_key_just_saved = True
+                    # Set success flag for persistent message
+                    st.session_state.api_key_configured = True
+                    st.session_state._api_key_just_saved = True
 
-                        st.success("✅ API key saved! You're ready to chat.")
-                        st.info("Click outside this dialog or press ESC to continue.")
+                    st.success("✅ API key saved! Try chatting to test it.")
+                    st.info("Click outside this dialog or press ESC to continue.")
+                else:
+                    st.warning("Please enter an API key")
 
-                        # Don't auto-close - let user read the message
-                        # They can close manually or it will close when they interact
-                    else:
-                        st.error(message)
-            else:
-                st.warning("Please enter an API key")
+        with col2:
+            if st.button("✅ Validate & Save", key="save_anthropic", type="primary", use_container_width=True):
+                if anthropic_key:
+                    with st.spinner("Validating API key..."):
+                        is_valid, message = validate_anthropic_key(anthropic_key)
+
+                        if is_valid:
+                            # Save to settings
+                            user_id = st.session_state.get("user_id")
+                            SettingsManager.update_llm_settings(
+                                user_id,
+                                provider="anthropic",
+                                api_key=anthropic_key,
+                                model="claude-sonnet-4-20250514"  # Latest Sonnet
+                            )
+
+                            # Set success flag for persistent message
+                            st.session_state.api_key_configured = True
+                            st.session_state._api_key_just_saved = True
+
+                            st.success("✅ API key saved! You're ready to chat.")
+                            st.info("Click outside this dialog or press ESC to continue.")
+                        elif "credit" in message.lower():
+                            # Credit issue - save anyway with warning
+                            st.warning(message)
+                            st.info("💡 **Tip:** You can still save the key and it may work if you have an active subscription.")
+
+                            # Save to settings
+                            user_id = st.session_state.get("user_id")
+                            SettingsManager.update_llm_settings(
+                                user_id,
+                                provider="anthropic",
+                                api_key=anthropic_key,
+                                model="claude-sonnet-4-20250514"  # Latest Sonnet
+                            )
+
+                            # Set success flag
+                            st.session_state.api_key_configured = True
+                            st.session_state._api_key_just_saved = True
+
+                            st.success("✅ API key saved! Try chatting to test it.")
+                        else:
+                            st.error(message)
+                else:
+                    st.warning("Please enter an API key")
 
     with tab2:
         st.markdown("""
@@ -209,33 +253,74 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
                     use_container_width=True
                 )
 
-        if st.button("✅ Validate & Save", key="save_openai", type="primary", use_container_width=True):
-            if openai_key:
-                with st.spinner("Validating API key..."):
-                    is_valid, message = validate_openai_key(openai_key)
+        col1, col2 = st.columns([1, 1])
 
-                    if is_valid:
-                        # Save to settings
-                        user_id = st.session_state.get("user_id")
-                        SettingsManager.update_llm_settings(
-                            user_id,
-                            provider="openai",
-                            api_key=openai_key,
-                            model="gpt-4o"
-                        )
+        with col1:
+            if st.button("💾 Save Without Validation", key="save_openai_skip", use_container_width=True):
+                if openai_key:
+                    # Save to settings without validation
+                    user_id = st.session_state.get("user_id")
+                    SettingsManager.update_llm_settings(
+                        user_id,
+                        provider="openai",
+                        api_key=openai_key,
+                        model="gpt-4o"
+                    )
 
-                        # Set success flag for persistent message
-                        st.session_state.api_key_configured = True
-                        st.session_state._api_key_just_saved = True
+                    # Set success flag for persistent message
+                    st.session_state.api_key_configured = True
+                    st.session_state._api_key_just_saved = True
 
-                        st.success("✅ API key saved! You're ready to chat.")
-                        st.info("Click outside this dialog or press ESC to continue.")
+                    st.success("✅ API key saved! Try chatting to test it.")
+                    st.info("Click outside this dialog or press ESC to continue.")
+                else:
+                    st.warning("Please enter an API key")
 
-                        # Don't auto-close - let user read the message
-                    else:
-                        st.error(message)
-            else:
-                st.warning("Please enter an API key")
+        with col2:
+            if st.button("✅ Validate & Save", key="save_openai", type="primary", use_container_width=True):
+                if openai_key:
+                    with st.spinner("Validating API key..."):
+                        is_valid, message = validate_openai_key(openai_key)
+
+                        if is_valid:
+                            # Save to settings
+                            user_id = st.session_state.get("user_id")
+                            SettingsManager.update_llm_settings(
+                                user_id,
+                                provider="openai",
+                                api_key=openai_key,
+                                model="gpt-4o"
+                            )
+
+                            # Set success flag for persistent message
+                            st.session_state.api_key_configured = True
+                            st.session_state._api_key_just_saved = True
+
+                            st.success("✅ API key saved! You're ready to chat.")
+                            st.info("Click outside this dialog or press ESC to continue.")
+                        elif "quota" in message.lower() or "billing" in message.lower():
+                            # Billing issue - save anyway with warning
+                            st.warning(message)
+                            st.info("💡 **Tip:** You can still save the key and it may work if you have an active subscription.")
+
+                            # Save to settings
+                            user_id = st.session_state.get("user_id")
+                            SettingsManager.update_llm_settings(
+                                user_id,
+                                provider="openai",
+                                api_key=openai_key,
+                                model="gpt-4o"
+                            )
+
+                            # Set success flag
+                            st.session_state.api_key_configured = True
+                            st.session_state._api_key_just_saved = True
+
+                            st.success("✅ API key saved! Try chatting to test it.")
+                        else:
+                            st.error(message)
+                else:
+                    st.warning("Please enter an API key")
 
     # Skip option (for testing)
     st.markdown("---")
