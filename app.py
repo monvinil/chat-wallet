@@ -851,7 +851,6 @@ def send_modal():
     with col1:
         if st.button("Cancel", use_container_width=True):
             st.session_state.show_send_modal = False
-            st.rerun()
 
     with col2:
         if st.button("Confirm & Send", type="primary", use_container_width=True, disabled=not can_send):
@@ -904,10 +903,8 @@ def send_modal():
 
                         st.link_button("View on Explorer", result["explorer_url"], use_container_width=True)
 
-                        # Close modal after success
-                        time.sleep(2)
+                        # Close modal after user clicks away
                         st.session_state.show_send_modal = False
-                        st.rerun()
                     else:
                         st.error(f"Transaction failed: {result['error']}")
 
@@ -925,7 +922,6 @@ def sidebar():
             st.info("Sign in to access your wallet")
             if st.button("Sign In", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
-                st.rerun()
 
             st.divider()
             st.caption("**Preview Mode**")
@@ -950,15 +946,12 @@ def sidebar():
             address = st.session_state.wallet_address
             st.code(ChainUtils.format_address(address, 8))
 
-            # Add USDC button
+            # Action buttons
             if st.button("Deposit", use_container_width=True, type="primary"):
                 st.session_state.show_deposit_modal = True
-                st.rerun()
 
-            # Send button
             if st.button("Send", use_container_width=True):
                 st.session_state.show_send_modal = True
-                st.rerun()
 
             # Refresh balances
             if st.button("Refresh", use_container_width=True):
@@ -989,40 +982,33 @@ def sidebar():
             st.divider()
 
             # Settings button
-            if st.button("Settings", use_container_width=True):
+            if st.button("⚙️ Settings", use_container_width=True):
                 st.session_state.show_settings = True
-                st.rerun()
 
-            # Lock wallet (keep session)
-            if st.button("Lock", use_container_width=True):
+            # Lock wallet
+            if st.button("🔒 Lock", use_container_width=True):
                 WalletManager.lock_wallet()
-                st.rerun()
 
-            # Logout (clear session)
+            # Logout
             if st.button("Logout", use_container_width=True):
                 SessionManager.logout()
-                st.rerun()
 
         else:
             # Wallet is locked or doesn't exist
             if "wallet_encrypted" in st.session_state:
-                st.info("Wallet locked")
+                st.info("🔒 Wallet locked")
                 unlock_password = st.text_input("Password", type="password", key="unlock_pwd")
                 if st.button("Unlock", use_container_width=True, type="primary"):
                     if unlock_password:
-                        # Re-derive encryption key from password and verify
                         if WalletManager.unlock_wallet_with_password(unlock_password):
-                            st.success("Wallet unlocked")
-                            st.rerun()
+                            st.success("✓ Unlocked")
                         else:
                             st.error("Incorrect password")
             elif st.session_state.get("wallet_address"):
-                # Logged in but no wallet data in session - need to import
                 st.info("Import your wallet to continue")
                 st.caption(f"Address: {ChainUtils.format_address(st.session_state.wallet_address)}")
                 if st.button("Import Wallet", use_container_width=True, type="primary"):
                     st.session_state.show_auth_modal = True
-                    st.rerun()
 
 
 def render_quick_actions():
@@ -1032,17 +1018,17 @@ def render_quick_actions():
     with col1:
         if st.button("💸 Send Money", key="quick_send", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "I want to send money"})
-            st.rerun()
+            st.session_state._quick_action_triggered = True
 
     with col2:
         if st.button("🎁 Buy Gift Card", key="quick_giftcard", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Show me popular gift cards"})
-            st.rerun()
+            st.session_state._quick_action_triggered = True
 
     with col3:
         if st.button("💳 Pay Bill", key="quick_bill", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
-            st.rerun()
+            st.session_state._quick_action_triggered = True
 
 
 def chat_interface():
@@ -1079,9 +1065,7 @@ Your wallet is self-custodial. You control the keys. Optionally create an accoun
                     with st.spinner("Creating your wallet..."):
                         if create_guest_wallet():
                             st.session_state.quick_start_active = True
-                            st.success("✅ Wallet created! Now get your FREE API key...")
-                            time.sleep(1)
-                            st.rerun()
+                            st.success("✅ Wallet created!")
                         else:
                             st.error("Failed to create wallet. Please try again.")
 
@@ -1199,7 +1183,7 @@ Error details: `{error_msg}`"""
 Ask me anything or try one of the commands above.
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
-        st.rerun()
+        # Message will display on next natural render - no rerun needed
 
 
 def main():
@@ -1489,98 +1473,74 @@ def main():
 
     init_state()
 
-    # Initialize cookie manager (happens once, no forced rerun)
-    if "_cookie_manager_init" not in st.session_state:
-        st.session_state._cookie_manager_init = True
-        SessionManager.get_cookie_manager()
-        # Cookie manager needs one render cycle to be ready
-        # Use stop() instead of rerun to prevent flash
-        st.stop()
-
-    # Restore session from cookie if not already done
-    if not st.session_state.get("_app_initialized"):
-        session_restored = SessionManager.restore_session()
+    # Initialize session management (simplified - no blocking stop())
+    if "_app_initialized" not in st.session_state:
         st.session_state._app_initialized = True
+        st.session_state._cookie_manager_init = True
+        # Try to restore session - happens inline, no rerun needed
+        try:
+            SessionManager.get_cookie_manager()
+            SessionManager.restore_session()
+        except Exception as e:
+            # Cookie manager can fail on first load - this is OK
+            pass
 
-        # Only rerun if we actually restored a session (to show logged-in UI)
-        if session_restored:
-            st.rerun()
-
-    # Handle OAuth callback
+    # Handle OAuth callback (simplified - no blocking sleep)
     query_params = st.query_params
     if "code" in query_params and "state" in query_params:
-        # OAuth callback from Google
         from gmail_oauth import GmailOAuth
 
         code = query_params["code"]
-        user_id = query_params["state"]  # User ID passed as state
+        user_id = query_params["state"]
 
-        # Get app URL for redirect
         app_url = os.getenv("APP_URL", "http://localhost:8501")
         redirect_uri = f"{app_url}/oauth/callback"
 
-        with st.spinner("Connecting Gmail..."):
-            success = GmailOAuth.handle_oauth_callback(code, redirect_uri, user_id)
+        success = GmailOAuth.handle_oauth_callback(code, redirect_uri, user_id)
 
-        if success:
-            st.success("Gmail connected successfully")
-            show_success_animation()
-        else:
-            st.error("Failed to connect Gmail")
-
-        # Clear query params and redirect back to settings
+        # Clear params immediately to prevent reprocessing
         st.query_params.clear()
         st.session_state.show_settings = True
-        time.sleep(2)  # Show success message
-        st.rerun()
+        st.session_state._oauth_result = "success" if success else "error"
 
     # Show auth modal if requested
     if st.session_state.get("show_auth_modal"):
         wallet_setup_ui()
-        if st.button("Back", use_container_width=False):
+        if st.button("← Back to Home", use_container_width=False):
             st.session_state.show_auth_modal = False
-            st.rerun()
         return
 
-    # Initialize agent only if wallet exists (async, non-blocking)
+    # Initialize agent only if wallet exists and API key is configured
     if st.session_state.wallet_address and st.session_state.agent is None:
         if not st.session_state.get("_agent_initializing"):
             st.session_state._agent_initializing = True
-
             try:
-                # Create agent (fast)
                 agent = create_agent()
-
-                # If None returned (missing API key), banner will handle it
                 if agent:
                     st.session_state.agent = agent
-
-                    # Fetch balances in background (don't block UI)
-                    if not st.session_state.get("balances"):
-                        st.session_state.balances = {}
-
             except Exception as e:
-                # Log error but don't show to user (banner handles API key issues)
-                print(f"Agent initialization error: {e}")
+                from utils.logger import logger
+                logger.error(f"Agent initialization error: {e}")
+            finally:
                 st.session_state._agent_initializing = False
 
-    # Lazy-load balances after agent is ready (non-blocking)
-    if st.session_state.wallet_address and not st.session_state.get("_balances_loaded"):
-        if st.session_state.get("agent"):
-            st.session_state._balances_loaded = True
-            # Fetch in background - will update on next rerun
+    # Fetch balances once (don't block, just set empty if not loaded)
+    if st.session_state.wallet_address and not st.session_state.get("balances"):
+        st.session_state.balances = {}
+        # Only fetch if not locked
+        if not st.session_state.get("wallet_locked", True):
             try:
                 balances = ChainUtils.get_all_balances(st.session_state.wallet_address)
                 st.session_state.balances = balances
             except Exception as e:
-                print(f"Balance fetch error: {e}")
+                from utils.logger import logger
+                logger.error(f"Balance fetch error: {e}")
 
     # Show deposit modal if requested (only if logged in)
     if st.session_state.get("show_deposit_modal") and st.session_state.wallet_address:
         deposit_modal()
-        if st.button("Back"):
+        if st.button("← Back"):
             st.session_state.show_deposit_modal = False
-            st.rerun()
         return
 
     # Show send modal if requested (only if logged in)
@@ -1590,10 +1550,16 @@ def main():
 
     # Show settings page if requested (only if logged in)
     if st.session_state.get("show_settings") and st.session_state.wallet_address:
+        # Show OAuth result toast if just completed
+        if st.session_state.get("_oauth_result"):
+            if st.session_state._oauth_result == "success":
+                st.success("Gmail connected successfully!")
+            else:
+                st.error("Failed to connect Gmail")
+            st.session_state._oauth_result = None
         settings_page()
-        if st.button("Back"):
+        if st.button("← Back"):
             st.session_state.show_settings = False
-            st.rerun()
         return
 
     # Main layout - always show (preview or logged in)

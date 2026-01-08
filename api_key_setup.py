@@ -371,7 +371,6 @@ Chat Wallet uses **your own AI provider** (Anthropic or OpenAI) to power the ass
     st.markdown("---")
     if st.button("⏭️ Skip for now", key="skip_api_setup", use_container_width=True):
         st.session_state.api_key_skipped = True
-        st.rerun()
 
 
 def check_api_key_status() -> tuple[bool, str]:

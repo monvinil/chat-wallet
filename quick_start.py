@@ -94,7 +94,6 @@ You're using a temporary wallet. Get your **FREE** Google Gemini API key to star
 
             if st.button("Got it! I'll get my FREE key now", key="dismiss_quick_start_banner"):
                 st.session_state.quick_start_banner_dismissed = True
-                st.rerun()
 
 
 def show_save_account_prompt():
@@ -123,7 +122,6 @@ Otherwise, you can keep using guest mode - your wallet works fine without an acc
                 with col1:
                     if st.button("Create Account", key="save_guest_wallet", type="primary", use_container_width=True):
                         st.session_state.show_save_account_modal = True
-                        st.rerun()
 
                 with col2:
                     if st.button("Maybe Later", key="dismiss_save_prompt", use_container_width=True):
