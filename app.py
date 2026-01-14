@@ -912,6 +912,7 @@ def sidebar():
             st.caption("Sign in to access your wallet")
             if st.button("Sign In", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
+                st.rerun()
 
             st.divider()
             st.metric("Total Balance", "$0.00")
@@ -939,9 +940,11 @@ def sidebar():
             with col1:
                 if st.button("Deposit", use_container_width=True, type="primary"):
                     st.session_state.show_deposit_modal = True
+                    st.rerun()
             with col2:
                 if st.button("Send", use_container_width=True):
                     st.session_state.show_send_modal = True
+                    st.rerun()
 
             st.divider()
 
@@ -973,14 +976,17 @@ def sidebar():
             # Settings and account
             if st.button("Settings", use_container_width=True):
                 st.session_state.show_settings = True
+                st.rerun()
 
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Lock", use_container_width=True):
                     WalletManager.lock_wallet()
+                    st.rerun()
             with col2:
                 if st.button("Log out", use_container_width=True):
                     SessionManager.logout()
+                    st.rerun()
 
         else:
             # Wallet is locked or doesn't exist
@@ -991,6 +997,7 @@ def sidebar():
                     if unlock_password:
                         if WalletManager.unlock_wallet_with_password(unlock_password):
                             st.success("Unlocked")
+                            st.rerun()
                         else:
                             st.error("Incorrect password")
             elif st.session_state.get("wallet_address"):
@@ -998,6 +1005,7 @@ def sidebar():
                 st.code(ChainUtils.format_address(st.session_state.wallet_address))
                 if st.button("Import Wallet", use_container_width=True, type="primary"):
                     st.session_state.show_auth_modal = True
+                    st.rerun()
 
 
 def render_quick_actions():
@@ -1008,16 +1016,19 @@ def render_quick_actions():
         if st.button("Send", key="quick_send", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "I want to send money"})
             st.session_state._quick_action_triggered = True
+            st.rerun()
 
     with col2:
         if st.button("Gift Card", key="quick_giftcard", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Show me gift cards"})
             st.session_state._quick_action_triggered = True
+            st.rerun()
 
     with col3:
         if st.button("Pay Bill", key="quick_bill", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
             st.session_state._quick_action_triggered = True
+            st.rerun()
 
 
 def chat_interface():
@@ -1055,6 +1066,7 @@ Your wallet is self-custodial—you control the private keys.
                         if create_guest_wallet():
                             st.session_state.quick_start_active = True
                             st.success("Wallet created")
+                            st.rerun()
                         else:
                             st.error("Could not create wallet. Please try again.")
 
@@ -1177,22 +1189,12 @@ def main():
     <style>
     /* Smooth fade-in to prevent flash */
     .stApp {
-        animation: fadeIn 0.2s ease-out;
+        animation: fadeIn 0.3s ease-out;
     }
 
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
-    }
-
-    /* Hide skeleton loaders during initial load to prevent boxes from showing */
-    .stSkeleton {
-        display: none !important;
-    }
-
-    /* Hide Streamlit's default loading animation */
-    .stSpinner > div {
-        display: none !important;
     }
 
     /* Clean, professional typography */

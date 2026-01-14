@@ -42,8 +42,8 @@ class WalletManager:
         Decrypt wallet data using stored key
 
         Args:
-            encrypted_data: Encrypted wallet data (hex string)
-            key: Fernet key used for encryption
+            encrypted_data: Encrypted wallet data (base64 string from Fernet)
+            key: Fernet key used for encryption (base64 encoded)
 
         Returns:
             Decrypted wallet data, or None if decryption fails
@@ -51,11 +51,11 @@ class WalletManager:
         try:
             from cryptography.fernet import Fernet
             f = Fernet(key.encode())
-            decrypted = f.decrypt(bytes.fromhex(encrypted_data))
+            # encrypted_data is already base64 from Fernet.encrypt()
+            decrypted = f.decrypt(encrypted_data.encode())
             return decrypted.decode()
         except Exception as e:
             logger.error(f"Failed to decrypt wallet: {e}")
-            st.error(f"Failed to decrypt wallet: {e}")
             return None
 
     @staticmethod
@@ -256,33 +256,39 @@ class WalletManager:
         Returns: True if successful, False otherwise
         """
         if "wallet_encrypted" not in st.session_state:
+            logger.warning("unlock_wallet_with_password: No wallet_encrypted in session")
             return False
         if "wallet_salt" not in st.session_state:
+            logger.warning("unlock_wallet_with_password: No wallet_salt in session")
             return False
 
         try:
-            # Re-derive key from password using stored salt
+            from cryptography.fernet import Fernet
+            import base64
+
+            # Re-derive key from password using stored salt (uses PasswordEncryption utility)
             salt = bytes.fromhex(st.session_state.wallet_salt)
-            kdf = PBKDF2HMAC(
-                algorithm=hashes.SHA256(),
-                length=32,
-                salt=salt,
-                iterations=100000,
-                backend=default_backend()
-            )
-            key = kdf.derive(password.encode())
+            key = PasswordEncryption.derive_key(password, salt)
+
+            # Convert to Fernet key format (base64 encoded)
             fernet_key = base64.urlsafe_b64encode(key).decode()
 
             # Try to decrypt wallet data to verify password is correct
+            # Note: encrypted_data from PasswordEncryption.encrypt() is base64 string (not hex)
             try:
                 f = Fernet(fernet_key.encode())
-                decrypted = f.decrypt(bytes.fromhex(st.session_state.wallet_encrypted))
+                encrypted_data = st.session_state.wallet_encrypted
+                decrypted = f.decrypt(encrypted_data.encode())
                 # Password is correct, store key in session
                 st.session_state.wallet_key = fernet_key
                 st.session_state.wallet_locked = False
+                st.session_state.wallet_data = decrypted.decode()
+                logger.info("Wallet unlocked successfully")
                 return True
-            except Exception:
+            except Exception as e:
+                logger.error(f"Wallet decryption failed: {e}")
                 return False
 
-        except Exception:
+        except Exception as e:
+            logger.error(f"unlock_wallet_with_password error: {e}")
             return False

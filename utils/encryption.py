@@ -8,6 +8,7 @@ This module provides consistent encryption/decryption functionality across:
 """
 
 import os
+import base64
 import hashlib
 import streamlit as st
 from cryptography.fernet import Fernet
@@ -53,22 +54,25 @@ class PasswordEncryption:
             password: User password
 
         Returns:
-            Dictionary with encrypted_data (str), salt (bytes), and key (bytes)
+            Dictionary with encrypted_data (str), salt (str hex), and key (str base64)
         """
         # Generate random salt
         salt = os.urandom(PasswordEncryption.SALT_LENGTH)
 
-        # Derive encryption key
-        key = PasswordEncryption.derive_key(password, salt)
+        # Derive encryption key (raw 32 bytes)
+        raw_key = PasswordEncryption.derive_key(password, salt)
+
+        # Convert to Fernet key format (base64 encoded)
+        fernet_key = base64.urlsafe_b64encode(raw_key)
 
         # Encrypt data
-        cipher = Fernet(key)
+        cipher = Fernet(fernet_key)
         encrypted = cipher.encrypt(data.encode())
 
         return {
             "encrypted_data": encrypted.decode(),
             "salt": salt.hex(),  # Store as hex string
-            "key": key
+            "key": fernet_key.decode()  # Store as base64 string
         }
 
     @staticmethod
@@ -77,7 +81,7 @@ class PasswordEncryption:
         Decrypt data with password
 
         Args:
-            encrypted_data: Encrypted data (base64 string)
+            encrypted_data: Encrypted data (base64 string from Fernet)
             password: User password
             salt: Salt used for encryption (hex string)
 
@@ -88,11 +92,14 @@ class PasswordEncryption:
             # Convert salt from hex
             salt_bytes = bytes.fromhex(salt)
 
-            # Derive same encryption key
-            key = PasswordEncryption.derive_key(password, salt_bytes)
+            # Derive same encryption key (raw 32 bytes)
+            raw_key = PasswordEncryption.derive_key(password, salt_bytes)
+
+            # Convert to Fernet key format (base64 encoded)
+            fernet_key = base64.urlsafe_b64encode(raw_key)
 
             # Decrypt data
-            cipher = Fernet(key)
+            cipher = Fernet(fernet_key)
             decrypted = cipher.decrypt(encrypted_data.encode())
 
             return decrypted.decode()
