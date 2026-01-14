@@ -312,16 +312,16 @@ def init_state():
 def wallet_setup_ui():
     """Show wallet setup screen with email/password account"""
     st.title("Chat Wallet")
-    st.markdown("##### Self-custody wallet with AI-powered transactions")
+    st.caption("Self-custodial wallet with AI-powered transactions")
 
-    st.info("**You control your keys.** Your wallet is encrypted client-side and backed up securely to the cloud.")
+    st.info("Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.")
 
-    tab1, tab2, tab3 = st.tabs(["Sign Up", "Log In", "Import Wallet"])
+    tab1, tab2, tab3 = st.tabs(["Create Account", "Sign In", "Import Wallet"])
 
     # ========== TAB 1: SIGN UP ==========
     with tab1:
-        st.subheader("Create Account")
-        st.caption("Create a new wallet. Access it from any device with your credentials.")
+        st.markdown("#### Create Account")
+        st.caption("Create a new wallet that syncs across all your devices.")
 
         # Use form to prevent sidebar closing and enable password autofill
         with st.form(key="signup_form", clear_on_submit=False):
@@ -412,25 +412,25 @@ def wallet_setup_ui():
                                 # Create persistent session (cookie)
                                 SessionManager.login(user["id"], email, wallet_info["address"])
 
-                                st.success("Account created successfully")
+                                st.success("Account created")
 
-                                # Show seed phrase in expander (no animation overlap)
+                                # Show seed phrase in expander
                                 if wallet_info.get("mnemonic"):
-                                    with st.expander("🔐 **CRITICAL: Save Your Recovery Phrase**", expanded=True):
-                                        st.warning("⚠️ Write this down and store it securely. This is the ONLY way to recover your wallet.")
+                                    with st.expander("Save your recovery phrase", expanded=True):
+                                        st.warning("Write this down and store it securely. This is the only way to recover your wallet if you lose your password.")
                                         st.code(wallet_info["mnemonic"], language=None)
 
-                                        acknowledged = st.checkbox("✓ I have safely stored my recovery phrase")
+                                        acknowledged = st.checkbox("I have saved my recovery phrase")
 
                                         if acknowledged:
-                                            if st.button("Continue to Setup →", type="primary", use_container_width=True):
+                                            if st.button("Continue", type="primary", use_container_width=True):
                                                 # Initialize onboarding for new user
                                                 st.session_state.onboarding_step = 1
                                                 st.session_state.onboarding_complete = False
                                                 st.session_state.just_signed_up = True
                                                 st.rerun()
                                         else:
-                                            st.info("👆 Please confirm you've saved your recovery phrase to continue")
+                                            st.caption("Please confirm you've saved your recovery phrase to continue")
                                 else:
                                     # No seed phrase (shouldn't happen, but handle gracefully)
                                     st.session_state.onboarding_step = 1
@@ -438,15 +438,14 @@ def wallet_setup_ui():
                                     time.sleep(1)
                                     st.rerun()
                             else:
-                                st.error("Failed to create user account.")
-                                st.info("Possible causes: Supabase credentials not configured, email already exists, or database migrations not run.")
+                                st.error("Could not create account. Please try again.")
 
         st.caption("Your wallet syncs across all your devices automatically.")
 
     # ========== TAB 2: LOG IN ==========
     with tab2:
-        st.subheader("Log In")
-        st.caption("Access your existing wallet from any device.")
+        st.markdown("#### Sign In")
+        st.caption("Access your existing wallet.")
 
         # Use form to prevent sidebar closing and enable password autofill
         with st.form(key="login_form", clear_on_submit=False):
@@ -467,20 +466,20 @@ def wallet_setup_ui():
 
         if submit_login:
             if not login_email or not login_password:
-                st.error("Please enter both email and password")
+                st.error("Please enter email and password")
             else:
-                with st.spinner("Logging in..."):
+                with st.spinner("Signing in..."):
                     # Get user from database
                     user = get_user_by_email(login_email)
 
                     if not user:
-                        st.error("Account not found. Please sign up first.")
+                        st.error("No account found with this email")
                     else:
                         # Verify password
                         stored_hash = get_user_password_hash(user["id"])
 
                         if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
-                            st.error("Incorrect password. Please try again.")
+                            st.error("Incorrect password")
                         else:
                             # Password verified (or no hash stored - legacy account)
                             # Get user's wallet
@@ -512,16 +511,16 @@ def wallet_setup_ui():
                                     # Decrypt with password
                                     if WalletManager.unlock_wallet_with_password(login_password):
                                         st.session_state.wallet_locked = False
-                                        st.success("Welcome back. Wallet restored from cloud.")
+                                        st.success("Signed in. Wallet restored.")
                                     else:
                                         st.session_state.wallet_locked = True
-                                        st.success("Welcome back.")
-                                        st.warning("Could not decrypt wallet. Try unlocking with your password.")
+                                        st.success("Signed in")
+                                        st.warning("Could not decrypt wallet. Enter your password to unlock.")
                                 else:
                                     # No cloud backup - need manual import (legacy account)
                                     st.session_state.wallet_locked = True
-                                    st.success("Welcome back.")
-                                    st.info("To access your funds, import your wallet using your seed phrase or private key.")
+                                    st.success("Signed in")
+                                    st.info("Import your wallet using your recovery phrase to access your funds.")
 
                                 # Check if onboarding was completed
                                 from settings_manager import SettingsManager
@@ -532,29 +531,29 @@ def wallet_setup_ui():
                                     # Resume onboarding at API setup step
                                     st.session_state.onboarding_step = 2
                                     st.session_state.onboarding_complete = False
-                                    st.info("👋 Let's finish setting up your AI provider to unlock chat features.")
+                                    st.info("Connect an AI provider to start chatting.")
 
                                 # No animation delay - just rerun
                                 st.rerun()
                             else:
-                                st.error("No wallet found for this account.")
+                                st.error("No wallet found for this account")
 
     # ========== TAB 3: IMPORT WALLET ==========
     with tab3:
-        st.subheader("Import Wallet")
+        st.markdown("#### Import Wallet")
         st.caption("Import an existing wallet using your recovery phrase or private key.")
 
         import_email = st.text_input("Email (optional)", key="import_email", placeholder="your@email.com")
         recovery_input = st.text_area(
-            "Recovery Phrase or Private Key",
+            "Recovery phrase or private key",
             key="import_recovery",
-            placeholder="Enter 12-word phrase or 0x...",
-            help="Enter either your 12-word seed phrase or your private key",
+            placeholder="12-word phrase or 0x...",
+            help="Enter your 12-word seed phrase or private key",
             height=100
         )
-        import_password = st.text_input("Encryption Password", type="password", key="import_pwd")
+        import_password = st.text_input("Password", type="password", key="import_pwd", help="This password will encrypt your wallet locally")
 
-        st.caption("Your credentials are encrypted locally before storage.")
+        st.caption("Your wallet is encrypted locally before storage.")
 
         if st.button("Import Wallet", type="primary", disabled=not (recovery_input and import_password)):
             with st.spinner("Importing wallet..."):
@@ -582,13 +581,11 @@ def wallet_setup_ui():
                             st.session_state.user_email = import_email
                             st.session_state.user_id = user["id"]
 
-                    st.success("Wallet imported successfully.")
+                    st.success("Wallet imported")
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("Invalid recovery phrase or private key.")
-
-        st.caption("Private keys are encrypted with AES-256 before storage.")
+                    st.error("Invalid recovery phrase or private key")
 
 
 def show_success_animation():
@@ -732,7 +729,7 @@ def generate_qr(data: str):
 
 def deposit_modal():
     """Show deposit address modal"""
-    st.subheader("Deposit")
+    st.markdown("### Deposit")
 
     # Chain selector
     chain_options = {
@@ -742,14 +739,16 @@ def deposit_modal():
         "Polygon Amoy (Testnet)": "polygon-amoy",
     }
 
-    selected_chain_name = st.selectbox("Select Network", list(chain_options.keys()))
+    selected_chain_name = st.selectbox("Network", list(chain_options.keys()))
     selected_chain = chain_options[selected_chain_name]
 
     network = NETWORKS[selected_chain]
     address = st.session_state.wallet_address
 
-    st.markdown(f"**Network:** {network['name']}")
-    st.markdown(f"**Type:** {'Testnet' if network['testnet'] else 'Mainnet'}")
+    if network['testnet']:
+        st.caption(f"{network['name']} (Testnet)")
+    else:
+        st.caption(f"{network['name']} (Mainnet)")
 
     # Address
     st.code(address)
@@ -757,32 +756,28 @@ def deposit_modal():
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("Copy Address", use_container_width=True):
+        if st.button("Copy", use_container_width=True):
             st.toast("Address copied")
 
     with col2:
         explorer_url = ChainUtils.get_explorer_url(selected_chain, address)
-        st.link_button("View on Explorer", explorer_url, use_container_width=True)
+        st.link_button("View on explorer", explorer_url, use_container_width=True)
 
     # QR Code
-    st.markdown("**QR Code**")
+    st.divider()
     qr_img = generate_qr(address)
-    st.image(qr_img, width=200)
+    st.image(qr_img, width=180)
 
     # Instructions
-    with st.expander("Getting testnet funds"):
-        if "sepolia" in selected_chain or "amoy" in selected_chain:
+    if "sepolia" in selected_chain or "amoy" in selected_chain:
+        with st.expander("Get testnet funds"):
             st.markdown("""
-            **Testnet USDC:**
-            1. Obtain testnet ETH from a faucet
-            2. Use a testnet USDC faucet or bridge
-
-            **Faucets:**
-            - [Coinbase Faucet](https://portal.cdp.coinbase.com/products/faucet)
-            - [Alchemy Faucet](https://sepoliafaucet.com/)
-            """)
-        else:
-            st.warning("This is mainnet. Only deposit real funds if intended.")
+Get testnet tokens from these faucets:
+- [Coinbase Faucet](https://portal.cdp.coinbase.com/products/faucet)
+- [Alchemy Faucet](https://sepoliafaucet.com/)
+""")
+    else:
+        st.warning("This is mainnet. Only deposit real funds.")
 
 
 def send_modal():
@@ -790,8 +785,8 @@ def send_modal():
     from transaction_relayer import TransactionRelayer
     from meta_tx import MetaTransaction
 
-    st.subheader("Send USDC")
-    st.caption("Gasless transaction - we cover the network fees.")
+    st.markdown("### Send USDC")
+    st.caption("Gasless—network fees are covered.")
 
     # Network selector
     network_options = {
@@ -813,15 +808,15 @@ def send_modal():
             gas_cost, app_fee = relayer.estimate_gas_cost(amount)
             total = amount + gas_cost + app_fee
 
-            st.info(f"""
-            **Fee Summary**
-            - Amount: ${amount:.2f}
-            - Network Fee: ${gas_cost:.3f} (covered)
-            - Service Fee: ${app_fee:.3f}
-            - **Total: ${total:.2f}**
-            """)
+            st.markdown(f"""
+**Fee breakdown**
+- Amount: ${amount:.2f}
+- Network fee: ${gas_cost:.3f} (covered)
+- Service fee: ${app_fee:.3f}
+- **Total: ${total:.2f}**
+""")
         except Exception as e:
-            st.warning(f"Could not estimate fees: {e}")
+            st.caption(f"Could not estimate fees: {e}")
             total = amount
 
     # Validate inputs
@@ -842,7 +837,7 @@ def send_modal():
                 recipient_error = "Invalid address format"
 
     if recipient and not valid_recipient:
-        st.warning(f"⚠️ {recipient_error}")
+        st.warning(recipient_error)
 
     can_send = valid_recipient and amount > 0
 
@@ -892,24 +887,19 @@ def send_modal():
                     )
 
                     if result["success"]:
-                        st.success(f"""
-                        **Transaction Complete**
-
-                        Hash: `{result['tx_hash'][:20]}...`
-                        Amount: ${result['amount']:.2f}
-                        Network Fee: ${result['gas_cost']:.3f}
-                        Total: ${result['total_cost']:.2f}
-                        """)
-
-                        st.link_button("View on Explorer", result["explorer_url"], use_container_width=True)
-
-                        # Close modal after user clicks away
+                        st.success("Transaction complete")
+                        st.markdown(f"""
+- Hash: `{result['tx_hash'][:20]}...`
+- Amount: ${result['amount']:.2f}
+- Fee: ${result['gas_cost']:.3f}
+""")
+                        st.link_button("View on explorer", result["explorer_url"], use_container_width=True)
                         st.session_state.show_send_modal = False
                     else:
                         st.error(f"Transaction failed: {result['error']}")
 
                 except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                    st.error(f"Something went wrong: {str(e)}")
 
 
 def sidebar():
@@ -919,25 +909,23 @@ def sidebar():
 
         # Show login button if no wallet
         if not st.session_state.wallet_address:
-            st.info("Sign in to access your wallet")
+            st.caption("Sign in to access your wallet")
             if st.button("Sign In", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
 
             st.divider()
-            st.caption("**Preview Mode**")
-            st.metric("Total Balance", "$0.00", help="Sign in to view balance")
+            st.metric("Total Balance", "$0.00")
 
             with st.expander("Balance by Network"):
-                st.caption("Base Sepolia: $0.00")
-                st.caption("Base Mainnet: $0.00")
-                st.caption("Arbitrum Sepolia: $0.00")
+                st.caption("Base: $0.00")
+                st.caption("Arbitrum: $0.00")
+                st.caption("Polygon: $0.00")
 
             st.divider()
 
             # Preview buttons (disabled)
-            st.button("Deposit", use_container_width=True, disabled=True, help="Sign in to deposit")
-            st.button("Send", use_container_width=True, disabled=True, help="Sign in to send")
-            st.button("Refresh", use_container_width=True, disabled=True, help="Sign in to refresh")
+            st.button("Deposit", use_container_width=True, disabled=True)
+            st.button("Send", use_container_width=True, disabled=True)
 
             return
 
@@ -946,67 +934,68 @@ def sidebar():
             address = st.session_state.wallet_address
             st.code(ChainUtils.format_address(address, 8))
 
-            # Action buttons
-            if st.button("Deposit", use_container_width=True, type="primary"):
-                st.session_state.show_deposit_modal = True
-
-            if st.button("Send", use_container_width=True):
-                st.session_state.show_send_modal = True
-
-            # Refresh balances
-            if st.button("Refresh", use_container_width=True):
-                with st.spinner("Updating..."):
-                    balances = ChainUtils.get_all_balances(st.session_state.wallet_address)
-                    st.session_state.balances = balances
-                    st.toast("Balances updated")
+            # Action buttons in row
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Deposit", use_container_width=True, type="primary"):
+                    st.session_state.show_deposit_modal = True
+            with col2:
+                if st.button("Send", use_container_width=True):
+                    st.session_state.show_send_modal = True
 
             st.divider()
 
             # Show balances
             if st.session_state.balances:
                 total_usdc = ChainUtils.calculate_total_usdc(st.session_state.balances)
-
-                # Total balance
-                st.metric("Total Balance", f"${total_usdc:.2f}")
+                st.metric("Balance", f"${total_usdc:.2f}")
 
                 # Expandable breakdown
-                with st.expander("Balance by Network"):
+                with st.expander("By network"):
                     for network_key, chain_balances in st.session_state.balances.items():
                         network_name = NETWORKS[network_key]["name"]
                         usdc = chain_balances.get("usdc", 0.0)
 
                         if usdc > 0:
-                            st.markdown(f"**{network_name}**")
-                            st.markdown(f"USDC: ${usdc:.2f}")
+                            st.caption(f"{network_name}: ${usdc:.2f}")
+            else:
+                st.metric("Balance", "$0.00")
+
+            # Refresh balances
+            if st.button("Refresh balance", use_container_width=True):
+                with st.spinner("Updating..."):
+                    balances = ChainUtils.get_all_balances(st.session_state.wallet_address)
+                    st.session_state.balances = balances
+                    st.toast("Updated")
 
             st.divider()
 
-            # Settings button
-            if st.button("⚙️ Settings", use_container_width=True):
+            # Settings and account
+            if st.button("Settings", use_container_width=True):
                 st.session_state.show_settings = True
 
-            # Lock wallet
-            if st.button("🔒 Lock", use_container_width=True):
-                WalletManager.lock_wallet()
-
-            # Logout
-            if st.button("Logout", use_container_width=True):
-                SessionManager.logout()
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Lock", use_container_width=True):
+                    WalletManager.lock_wallet()
+            with col2:
+                if st.button("Log out", use_container_width=True):
+                    SessionManager.logout()
 
         else:
             # Wallet is locked or doesn't exist
             if "wallet_encrypted" in st.session_state:
-                st.info("🔒 Wallet locked")
+                st.caption("Wallet locked")
                 unlock_password = st.text_input("Password", type="password", key="unlock_pwd")
                 if st.button("Unlock", use_container_width=True, type="primary"):
                     if unlock_password:
                         if WalletManager.unlock_wallet_with_password(unlock_password):
-                            st.success("✓ Unlocked")
+                            st.success("Unlocked")
                         else:
                             st.error("Incorrect password")
             elif st.session_state.get("wallet_address"):
-                st.info("Import your wallet to continue")
-                st.caption(f"Address: {ChainUtils.format_address(st.session_state.wallet_address)}")
+                st.caption("Import your wallet to continue")
+                st.code(ChainUtils.format_address(st.session_state.wallet_address))
                 if st.button("Import Wallet", use_container_width=True, type="primary"):
                     st.session_state.show_auth_modal = True
 
@@ -1016,17 +1005,17 @@ def render_quick_actions():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("💸 Send Money", key="quick_send", use_container_width=True):
+        if st.button("Send", key="quick_send", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "I want to send money"})
             st.session_state._quick_action_triggered = True
 
     with col2:
-        if st.button("🎁 Buy Gift Card", key="quick_giftcard", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Show me popular gift cards"})
+        if st.button("Gift Card", key="quick_giftcard", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "Show me gift cards"})
             st.session_state._quick_action_triggered = True
 
     with col3:
-        if st.button("💳 Pay Bill", key="quick_bill", use_container_width=True):
+        if st.button("Pay Bill", key="quick_bill", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
             st.session_state._quick_action_triggered = True
 
@@ -1040,40 +1029,40 @@ def chat_interface():
     if not st.session_state.wallet_address:
         from quick_start import create_guest_wallet
 
-        # Show conversion-focused intro with quick start button
+        # Show clean intro with quick start button
         with st.chat_message("assistant"):
-            st.markdown("""**Chat Wallet** lets you manage money through conversation.
+            st.markdown("""**Chat Wallet** lets you manage crypto through conversation.
 
 **What you can do:**
-- Check balance across multiple networks
-- Send USDC instantly
-- Buy gift cards (Amazon, Uber, Airbnb)
-- Purchase with crypto (domains, VPN, travel)
-- Automate bill payments
+- Check balances across Base, Arbitrum, and Polygon
+- Send USDC with zero gas fees
+- Buy gift cards from Amazon, Uber, Netflix, and more
+- Purchase domains, VPN subscriptions, and travel
+- Pay bills directly with crypto
 
-**Start in 30 seconds:**
-1. Click "Quick Start" below (creates temporary wallet)
-2. Get FREE Google Gemini key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-3. Paste key and start chatting
+**Get started:**
+1. Click **Quick Start** below to create a wallet
+2. Get a free API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+3. Start chatting
 
-Your wallet is self-custodial. You control the keys. Optionally create an account later to save it.
+Your wallet is self-custodial—you control the private keys.
 """)
 
             _, col_center, _ = st.columns([1, 2, 1])
             with col_center:
-                if st.button("🚀 Quick Start (30 seconds)", type="primary", use_container_width=True, key="quick_start_btn"):
-                    with st.spinner("Creating your wallet..."):
+                if st.button("Quick Start", type="primary", use_container_width=True, key="quick_start_btn"):
+                    with st.spinner("Creating wallet..."):
                         if create_guest_wallet():
                             st.session_state.quick_start_active = True
-                            st.success("✅ Wallet created!")
+                            st.success("Wallet created")
                         else:
-                            st.error("Failed to create wallet. Please try again.")
+                            st.error("Could not create wallet. Please try again.")
 
             st.divider()
-            st.caption("**Or** [Create Account](#) to save your wallet across devices (optional)")
+            st.caption("Or create an account to save your wallet across devices")
 
         # Disabled chat input
-        st.chat_input("Ask me anything...", disabled=True, key="preview_input")
+        st.chat_input("Message...", disabled=True, key="preview_input")
         return
 
     # Show onboarding flow if user hasn't completed setup
@@ -1109,7 +1098,7 @@ Your wallet is self-custodial. You control the keys. Optionally create an accoun
             st.markdown(msg["content"])
 
     # Chat input
-    if prompt := st.chat_input("Ask me anything about your wallet..."):
+    if prompt := st.chat_input("Message..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         with st.chat_message("user"):
@@ -1146,44 +1135,32 @@ Please refresh the page (F5) or try again in a moment. The AI agent is still loa
 
                     # Provide helpful guidance for API key errors
                     if "API key" in error_msg or "credit" in error_msg.lower() or "authentication" in error_msg.lower():
-                        response = f"""**API Key Required**
+                        response = """**API key issue**
 
-The AI chat feature requires your own API key to work.
+There's a problem with your AI provider. Please check your API key in Settings.
 
-**To configure:**
-1. Go to **Settings** (⚙️ in sidebar)
-2. Choose your AI provider (Anthropic or OpenAI)
-3. Enter your API key
-4. Save settings
-
-Get an API key:
-- Anthropic: https://console.anthropic.com
-- OpenAI: https://platform.openai.com
-
-Error details: `{error_msg}`"""
+If you're using Anthropic or OpenAI, make sure you have credits in your account."""
                     else:
-                        response = f"Error: {error_msg}"
+                        response = f"Something went wrong: {error_msg}"
 
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
     # Welcome message for logged in users (only shown after onboarding complete)
     if not st.session_state.messages:
-        welcome = f"""**Wallet ready:** `{ChainUtils.format_address(st.session_state.wallet_address)}`
+        welcome = f"""Wallet connected: `{ChainUtils.format_address(st.session_state.wallet_address)}`
 
-**Available commands:**
-- *"What's my balance?"* - View USDC across all networks
-- *"Send $X to [address]"* - Transfer funds instantly
-- *"Show my deposit address"* - Get QR code to receive money
-- *"Buy a $50 Amazon gift card"* - Purchase with USDC
-- *"Register example.com domain"* - Buy domains with crypto (Porkbun, Namecheap)
-- *"Get Mullvad VPN for 1 month"* - Subscribe to VPN anonymously
-- *"Check my email for bills"* - Find recent invoices to pay
+**Try these commands:**
+- "What's my balance?"
+- "Send $20 to 0x..."
+- "Show my deposit address"
+- "Buy a $25 Amazon gift card"
+- "Register mydomain.com"
+- "Get Mullvad VPN"
 
-Ask me anything or try one of the commands above.
+What would you like to do?
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
-        # Message will display on next natural render - no rerun needed
 
 
 def main():

@@ -75,46 +75,42 @@ def setup_demo_gemini_key():
 
 
 def show_quick_start_banner():
-    """
-    Show friendly banner explaining guest mode and how to get their own FREE key
-    """
+    """Show banner explaining guest mode"""
     if st.session_state.get("guest_mode") and not st.session_state.get("quick_start_banner_dismissed"):
         with st.container():
             st.info("""
-**🚀 Quick Start Mode**
+**Guest wallet active**
 
-You're using a temporary wallet. Get your **FREE** Google Gemini API key to start chatting:
+Get a free Google Gemini API key to start chatting:
 
-1. Visit [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (takes 30 seconds)
-2. Click "Get API Key" → Create in new project
-3. Come back and click "Connect AI" in the sidebar
+1. Visit [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Click **Get API Key** → **Create in new project**
+3. Return here and connect your key
 
-💡 **Want to save your wallet?** Create an account later to sync across devices.
+Create an account anytime to save your wallet across devices.
 """)
 
-            if st.button("Got it! I'll get my FREE key now", key="dismiss_quick_start_banner"):
+            if st.button("Got it", key="dismiss_quick_start_banner"):
                 st.session_state.quick_start_banner_dismissed = True
 
 
 def show_save_account_prompt():
-    """
-    Show occasional prompts to encourage saving the guest wallet to an account
-    """
+    """Show prompt to encourage saving the guest wallet to an account"""
     if st.session_state.get("guest_mode"):
-        # Show after certain actions (e.g., after 3 messages or first transaction)
         message_count = len(st.session_state.get("messages", []))
 
-        if message_count == 6:  # After 3 back-and-forth messages
-            with st.expander("💾 **Save Your Wallet** (Optional)", expanded=False):
+        # Show after several exchanges
+        if message_count >= 6 and not st.session_state.get("save_prompt_dismissed"):
+            with st.expander("Save your wallet", expanded=False):
                 st.markdown("""
-Want to access this wallet from other devices?
+Create an account to access this wallet from any device.
 
-**Create a free account** to:
-- ✅ Sync wallet across all your devices
-- ✅ Never lose access to your funds
-- ✅ Backup your recovery phrase securely
+**With an account you can:**
+- Sync across all your devices
+- Securely backup your recovery phrase
+- Never lose access to your funds
 
-Otherwise, you can keep using guest mode - your wallet works fine without an account!
+You can continue using guest mode if you prefer.
 """)
 
                 col1, col2 = st.columns([1, 1])
@@ -124,43 +120,41 @@ Otherwise, you can keep using guest mode - your wallet works fine without an acc
                         st.session_state.show_save_account_modal = True
 
                 with col2:
-                    if st.button("Maybe Later", key="dismiss_save_prompt", use_container_width=True):
+                    if st.button("Not now", key="dismiss_save_prompt", use_container_width=True):
                         st.session_state.save_prompt_dismissed = True
 
 
 @st.dialog("Save Your Wallet", width="large")
 def save_guest_wallet_modal():
-    """
-    Convert guest wallet to permanent account
-    """
+    """Convert guest wallet to permanent account"""
     st.markdown("""
-### Create Account to Save Your Wallet
+#### Create an account
 
-Your current wallet will be permanently saved and accessible from any device.
+Your wallet will be saved and accessible from any device.
 """)
 
     email = st.text_input("Email", placeholder="your@email.com")
-    password = st.text_input("Password (min 8 characters)", type="password")
-    password_confirm = st.text_input("Confirm Password", type="password")
+    password = st.text_input("Password", type="password", help="Minimum 8 characters")
+    password_confirm = st.text_input("Confirm password", type="password")
 
-    if st.button("Create Account & Save Wallet", type="primary", use_container_width=True):
+    if st.button("Create Account", type="primary", use_container_width=True):
         if not email or not password:
             st.error("Please enter both email and password")
         elif password != password_confirm:
-            st.error("Passwords do not match")
+            st.error("Passwords don't match")
         elif len(password) < 8:
             st.error("Password must be at least 8 characters")
         elif "@" not in email:
-            st.error("Please enter a valid email address")
+            st.error("Please enter a valid email")
         else:
             from supabase_client import create_user, save_wallet_address, get_user_by_email
             from session_manager import SessionManager
 
-            with st.spinner("Saving your wallet..."):
+            with st.spinner("Creating account..."):
                 # Check if user exists
                 existing_user = get_user_by_email(email)
                 if existing_user:
-                    st.error("Account already exists. Please log in instead.")
+                    st.error("An account with this email already exists. Please sign in instead.")
                 else:
                     # Hash password
                     password_hash = WalletManager.hash_password(password)
@@ -209,19 +203,19 @@ Your current wallet will be permanently saved and accessible from any device.
                                         model=llm_config.get("model")
                                     )
 
-                                st.success("✅ Account created! Your wallet is now saved permanently.")
+                                st.success("Account created. Your wallet is now saved.")
 
                                 # Show recovery phrase
                                 if st.session_state.get("guest_mnemonic"):
-                                    st.warning("⚠️ **Save your recovery phrase:**")
+                                    st.warning("**Save your recovery phrase**")
                                     st.code(st.session_state.guest_mnemonic, language=None)
-                                    st.caption("Write this down - it's the only way to recover your wallet if you forget your password.")
+                                    st.caption("Write this down. It's the only way to recover your wallet if you forget your password.")
 
-                                st.info("Close this dialog to continue chatting.")
+                                st.caption("Close this dialog to continue.")
                                 st.session_state.show_save_account_modal = False
                             else:
-                                st.error("Wallet data not found in session")
+                                st.error("Could not find wallet data. Please try again.")
                         else:
-                            st.error("Failed to create account")
+                            st.error("Could not create account. Please try again.")
                     except Exception as e:
-                        st.error(f"Error: {str(e)}")
+                        st.error(f"Something went wrong: {str(e)}")
