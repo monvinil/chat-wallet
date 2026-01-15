@@ -1398,8 +1398,8 @@ Just tell me what you need:
 I'll handle the blockchain stuff. You just chat.
 """)
 
-            if st.button("Create my wallet", type="primary", use_container_width=True, key="quick_start_btn"):
-                with st.spinner("Setting up..."):
+            if st.button("Get Started", type="primary", use_container_width=True, key="quick_start_btn"):
+                with st.spinner("Creating wallet..."):
                     if create_guest_wallet():
                         st.session_state.quick_start_active = True
                         st.rerun()
