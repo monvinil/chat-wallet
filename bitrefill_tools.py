@@ -81,28 +81,41 @@ def get_gift_card_details(product_id: str) -> str:
 
 
 @tool
-def buy_gift_card(product_id: str, amount: float, email: Optional[str] = None) -> str:
+def buy_gift_card(product_id: str, amount: float, email: Optional[str] = None, user_approved: bool = False) -> str:
     """
     Purchase a gift card with cryptocurrency.
 
-    IMPORTANT: Only call this after user explicitly approves the purchase.
-    Check user's spending limits in settings before purchasing.
+    This tool enforces spending limits. If the amount exceeds the user's
+    approval threshold, it returns an approval request that must be confirmed.
 
     Args:
         product_id: Product ID (e.g., "amazon-us")
         amount: Amount in USD (must be within product's min/max range)
         email: Email to send gift card to (uses user's connected email if not provided)
+        user_approved: Set to True only after user explicitly says 'yes' or 'approve'
 
     Returns:
         Order details with payment information or gift card code
     """
     try:
+        from spending_limits import check_spending_limit, SpendingLimits
+
+        user_id = st.session_state.get("user_id") or st.session_state.get("wallet_address")
+        if not user_id:
+            return "Error: User not logged in"
+
+        # Check spending limits
+        can_proceed, message = check_spending_limit(user_id, amount, f"${amount:.2f} gift card purchase")
+
+        if not can_proceed:
+            return f"Transaction blocked: {message}"
+
+        # If approval is needed and not yet given
+        if message and not user_approved:
+            return message  # Returns approval request
+
         # Get user's connected email if not provided
         if not email:
-            user_id = st.session_state.get("wallet_address")
-            if not user_id:
-                return "Error: User not logged in"
-
             from settings_manager import SettingsManager
             connection = SettingsManager.get_oauth_connection(user_id, "email")
 
@@ -110,6 +123,9 @@ def buy_gift_card(product_id: str, amount: float, email: Optional[str] = None) -
                 email = connection.get("provider_user_id")
             else:
                 return "Error: No email connected. User must connect email in Settings → Connected Accounts"
+
+        # Record the spend before creating order
+        SpendingLimits.record_spend(user_id, amount)
 
         # Create order
         client = get_bitrefill_client()

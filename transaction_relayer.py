@@ -105,9 +105,10 @@ class TransactionRelayer:
         self,
         message: Dict[str, Any],
         signature: str,
-        user_address: str
+        user_address: str,
+        user_id: Optional[str] = None
     ) -> Tuple[bool, Optional[str]]:
-        """Validate meta-transaction"""
+        """Validate meta-transaction including spending limits"""
 
         # Verify signature with correct chain ID
         chain_id = self.network["chain_id"]
@@ -131,6 +132,18 @@ class TransactionRelayer:
 
         if internal_balance < total_needed:
             return False, f"Insufficient balance. Need ${total_needed:.2f}, have ${internal_balance:.2f}"
+
+        # Check spending limits if user_id provided
+        if user_id:
+            try:
+                from spending_limits import check_spending_limit
+                can_proceed, limit_msg = check_spending_limit(
+                    user_id, float(total_needed), "USDC transfer"
+                )
+                if not can_proceed:
+                    return False, limit_msg
+            except ImportError:
+                pass  # Spending limits module not available
 
         return True, None
 

@@ -22,16 +22,25 @@ def create_guest_wallet():
         wallet_info = WalletManager.create_new_wallet()
 
         if wallet_info:
-            # Store in session only (not cloud - this is a guest wallet)
+            # Set a temporary user ID for guest
+            guest_user_id = f"guest_{wallet_info['address'][:8]}"
+
+            # Encrypt wallet data immediately with a derived key from guest ID
+            # This prevents plaintext private keys in session state
+            from utils.encryption import PasswordEncryption
+            encrypted = PasswordEncryption.encrypt(wallet_info["wallet_data"], guest_user_id)
+
+            # Store encrypted data in session
             st.session_state.wallet_address = wallet_info["address"]
-            st.session_state.wallet_data = wallet_info["wallet_data"]
+            st.session_state.wallet_encrypted = encrypted["encrypted_data"]
+            st.session_state.wallet_salt = encrypted["salt"]
+            st.session_state.wallet_key = encrypted["key"]
             st.session_state.wallet_locked = False
             st.session_state.guest_wallet_address = wallet_info["address"]
             st.session_state.guest_mode = True
-            st.session_state.guest_mnemonic = wallet_info.get("mnemonic")  # Save for later if they want to create account
-
-            # Set a temporary user ID for guest
-            st.session_state.user_id = f"guest_{wallet_info['address'][:8]}"
+            st.session_state.guest_mnemonic = wallet_info.get("mnemonic")  # Save for account creation
+            st.session_state.user_id = guest_user_id
+            st.session_state._guest_user_id = guest_user_id  # Preserve for conversion
 
             return True
     except Exception as e:
@@ -168,9 +177,21 @@ Your wallet will be saved and accessible from any device.
                         )
 
                         if user:
-                            # Encrypt wallet data
-                            wallet_data = st.session_state.get("wallet_data")
+                            # Get guest user ID BEFORE updating session (for API key migration)
+                            guest_user_id = st.session_state.get("_guest_user_id")
+
+                            # Decrypt guest wallet data to re-encrypt with user password
+                            from utils.encryption import PasswordEncryption
+                            wallet_data = None
+                            if st.session_state.get("wallet_encrypted") and guest_user_id:
+                                wallet_data = PasswordEncryption.decrypt(
+                                    st.session_state.wallet_encrypted,
+                                    guest_user_id,
+                                    st.session_state.wallet_salt
+                                )
+
                             if wallet_data:
+                                # Re-encrypt with user's password
                                 encrypted = WalletManager.encrypt_wallet_data(wallet_data, password)
 
                                 # Save to cloud
@@ -181,27 +202,28 @@ Your wallet will be saved and accessible from any device.
                                     encryption_salt=encrypted["salt"]
                                 )
 
-                                # Update session
+                                # Copy API key to new user account BEFORE updating user_id
+                                if guest_user_id:
+                                    llm_config = SettingsManager.get_llm_config(guest_user_id)
+                                    if llm_config.get("api_key") and not st.session_state.get("using_demo_key"):
+                                        SettingsManager.update_llm_settings(
+                                            user["id"],
+                                            provider=llm_config.get("provider"),
+                                            api_key=llm_config.get("api_key"),
+                                            model=llm_config.get("model")
+                                        )
+
+                                # Update session with new user info
                                 st.session_state.wallet_encrypted = encrypted["encrypted_data"]
                                 st.session_state.wallet_salt = encrypted["salt"]
                                 st.session_state.wallet_key = encrypted["key"]
                                 st.session_state.user_id = user["id"]
                                 st.session_state.user_email = email
                                 st.session_state.guest_mode = False
+                                st.session_state._guest_user_id = None  # Clear guest ID
 
                                 # Create persistent session
                                 SessionManager.login(user["id"], email, st.session_state.wallet_address)
-
-                                # Copy API key to new user account if configured
-                                guest_user_id = st.session_state.get("user_id")
-                                llm_config = SettingsManager.get_llm_config(guest_user_id)
-                                if llm_config.get("api_key") and not st.session_state.get("using_demo_key"):
-                                    SettingsManager.update_llm_settings(
-                                        user["id"],
-                                        provider=llm_config.get("provider"),
-                                        api_key=llm_config.get("api_key"),
-                                        model=llm_config.get("model")
-                                    )
 
                                 st.success("Account created. Your wallet is now saved.")
 

@@ -414,23 +414,12 @@ def wallet_setup_ui():
 
                                 st.success("Account created")
 
-                                # Show seed phrase in expander
+                                # Show seed phrase with verification
                                 if wallet_info.get("mnemonic"):
-                                    with st.expander("Save your recovery phrase", expanded=True):
-                                        st.warning("Write this down and store it securely. This is the only way to recover your wallet if you lose your password.")
-                                        st.code(wallet_info["mnemonic"], language=None)
-
-                                        acknowledged = st.checkbox("I have saved my recovery phrase")
-
-                                        if acknowledged:
-                                            if st.button("Continue", type="primary", use_container_width=True):
-                                                # Initialize onboarding for new user
-                                                st.session_state.onboarding_step = 1
-                                                st.session_state.onboarding_complete = False
-                                                st.session_state.just_signed_up = True
-                                                st.rerun()
-                                        else:
-                                            st.caption("Please confirm you've saved your recovery phrase to continue")
+                                    _render_seed_phrase_verification(
+                                        wallet_info["mnemonic"],
+                                        on_complete=lambda: _complete_signup_after_verification()
+                                    )
                                 else:
                                     # No seed phrase (shouldn't happen, but handle gracefully)
                                     st.session_state.onboarding_step = 1
@@ -586,6 +575,86 @@ def wallet_setup_ui():
                     st.rerun()
                 else:
                     st.error("Invalid recovery phrase or private key")
+
+
+def _render_seed_phrase_verification(mnemonic: str, on_complete):
+    """
+    Render seed phrase with verification step requiring user to confirm 3 random words.
+    This ensures the user has actually written down their recovery phrase.
+    """
+    import random
+
+    words = mnemonic.split()
+
+    # Initialize verification state if not set
+    if "_seed_verify_indices" not in st.session_state:
+        # Pick 3 random word positions (1-indexed for user display)
+        indices = sorted(random.sample(range(len(words)), 3))
+        st.session_state._seed_verify_indices = indices
+        st.session_state._seed_verify_step = "show"  # "show" or "verify"
+
+    indices = st.session_state._seed_verify_indices
+
+    if st.session_state.get("_seed_verify_step") == "show":
+        # Step 1: Show the seed phrase
+        with st.expander("Save your recovery phrase", expanded=True):
+            st.warning("Write this down and store it securely. This is the only way to recover your wallet if you lose your password.")
+            st.code(mnemonic, language=None)
+
+            st.caption("You'll need to verify 3 words in the next step.")
+
+            if st.button("I've written it down", type="primary", use_container_width=True):
+                st.session_state._seed_verify_step = "verify"
+                st.rerun()
+
+    elif st.session_state.get("_seed_verify_step") == "verify":
+        # Step 2: Verify 3 words
+        st.markdown("#### Verify your recovery phrase")
+        st.caption("Enter the requested words to confirm you've saved your phrase.")
+
+        all_correct = True
+        user_inputs = []
+
+        for i, idx in enumerate(indices):
+            word_num = idx + 1  # 1-indexed for display
+            user_input = st.text_input(
+                f"Word #{word_num}",
+                key=f"seed_verify_{i}",
+                placeholder=f"Enter word {word_num}"
+            ).strip().lower()
+            user_inputs.append(user_input)
+
+            if user_input and user_input != words[idx].lower():
+                all_correct = False
+
+        # Check if all filled and correct
+        all_filled = all(u for u in user_inputs)
+
+        col1, col2 = st.columns([1, 1])
+
+        with col1:
+            if st.button("Show phrase again", use_container_width=True):
+                st.session_state._seed_verify_step = "show"
+                st.rerun()
+
+        with col2:
+            if st.button("Verify", type="primary", use_container_width=True, disabled=not all_filled):
+                if all_correct:
+                    # Clean up verification state
+                    st.session_state._seed_verify_indices = None
+                    st.session_state._seed_verify_step = None
+                    # Call completion callback
+                    on_complete()
+                else:
+                    st.error("One or more words are incorrect. Please check your recovery phrase.")
+
+
+def _complete_signup_after_verification():
+    """Complete signup flow after seed phrase verification"""
+    st.session_state.onboarding_step = 1
+    st.session_state.onboarding_complete = False
+    st.session_state.just_signed_up = True
+    st.rerun()
 
 
 def show_success_animation():
@@ -781,9 +850,15 @@ Get testnet tokens from these faucets:
 
 
 def send_modal():
-    """Show send transaction modal with gasless transfer"""
+    """Show send transaction modal with gasless transfer and confirmation"""
     from transaction_relayer import TransactionRelayer
     from meta_tx import MetaTransaction
+    from spending_limits import check_spending_limit, SpendingLimits
+
+    # Check if we're in confirmation step
+    if st.session_state.get("_send_confirm_step"):
+        _render_send_confirmation()
+        return
 
     st.markdown("### Send USDC")
     st.caption("Gasless—network fees are covered.")
@@ -802,6 +877,9 @@ def send_modal():
     amount = st.number_input("Amount (USDC)", min_value=0.01, step=0.01, format="%.2f")
 
     # Estimate fees
+    total = amount
+    gas_cost = 0
+    app_fee = 0
     if amount > 0:
         try:
             relayer = TransactionRelayer(network_key)
@@ -815,8 +893,8 @@ def send_modal():
 - Service fee: ${app_fee:.3f}
 - **Total: ${total:.2f}**
 """)
-        except Exception as e:
-            st.caption(f"Could not estimate fees: {e}")
+        except Exception:
+            st.caption("Could not estimate fees")
             total = amount
 
     # Validate inputs
@@ -839,18 +917,85 @@ def send_modal():
     if recipient and not valid_recipient:
         st.warning(recipient_error)
 
-    can_send = valid_recipient and amount > 0
+    # Check spending limits
+    user_id = st.session_state.get("user_id")
+    spending_blocked = False
+    spending_message = None
+
+    if user_id and amount > 0:
+        can_proceed, msg = check_spending_limit(user_id, total, "USDC transfer")
+        if not can_proceed:
+            spending_blocked = True
+            spending_message = msg
+            st.error(msg)
+
+    can_send = valid_recipient and amount > 0 and not spending_blocked
 
     col1, col2 = st.columns([1, 1])
 
     with col1:
         if st.button("Cancel", use_container_width=True):
             st.session_state.show_send_modal = False
+            st.rerun()
 
     with col2:
-        if st.button("Confirm & Send", type="primary", use_container_width=True, disabled=not can_send):
+        if st.button("Review", type="primary", use_container_width=True, disabled=not can_send):
+            # Store transaction details for confirmation step
+            st.session_state._send_confirm_step = True
+            st.session_state._send_details = {
+                "recipient": recipient,
+                "amount": amount,
+                "total": total,
+                "gas_cost": gas_cost,
+                "app_fee": app_fee,
+                "network_key": network_key,
+                "network_name": selected_network
+            }
+            st.rerun()
+
+
+def _render_send_confirmation():
+    """Render send confirmation step"""
+    from transaction_relayer import TransactionRelayer
+    from meta_tx import MetaTransaction
+    from spending_limits import SpendingLimits
+    import time
+
+    details = st.session_state.get("_send_details", {})
+
+    st.markdown("### Confirm Transaction")
+    st.warning("Please review carefully before sending.")
+
+    # Show transaction summary
+    st.markdown(f"""
+**Sending to:**
+`{details.get('recipient', '')}`
+
+**Amount:** ${details.get('amount', 0):.2f} USDC
+**Network:** {details.get('network_name', '')}
+**Total (with fees):** ${details.get('total', 0):.2f}
+""")
+
+    # Confirm checkbox
+    confirmed = st.checkbox("I confirm this is the correct recipient address", key="send_confirm_checkbox")
+
+    col1, col2 = st.columns([1, 1])
+
+    with col1:
+        if st.button("Back", use_container_width=True):
+            st.session_state._send_confirm_step = False
+            st.rerun()
+
+    with col2:
+        if st.button("Send Now", type="primary", use_container_width=True, disabled=not confirmed):
             with st.spinner("Processing transaction..."):
                 try:
+                    # Get stored transaction details
+                    recipient = details.get("recipient")
+                    amount = details.get("amount")
+                    network_key = details.get("network_key")
+                    total = details.get("total")
+
                     # Get wallet data
                     wallet_data = WalletManager.get_wallet_from_session()
 
@@ -868,7 +1013,7 @@ def send_modal():
                         to_address=recipient,
                         amount=amount,
                         currency="USDC",
-                        nonce=int(time.time() * 1000)  # Millisecond-precision nonce for uniqueness
+                        nonce=int(time.time() * 1000)
                     )
 
                     # Sign message (user's signature, no gas!)
@@ -887,6 +1032,11 @@ def send_modal():
                     )
 
                     if result["success"]:
+                        # Record spend for daily tracking
+                        user_id = st.session_state.get("user_id")
+                        if user_id:
+                            SpendingLimits.record_spend(user_id, total)
+
                         st.success("Transaction complete")
                         st.markdown(f"""
 - Hash: `{result['tx_hash'][:20]}...`
@@ -894,6 +1044,10 @@ def send_modal():
 - Fee: ${result['gas_cost']:.3f}
 """)
                         st.link_button("View on explorer", result["explorer_url"], use_container_width=True)
+
+                        # Clean up and close modal
+                        st.session_state._send_confirm_step = False
+                        st.session_state._send_details = None
                         st.session_state.show_send_modal = False
                     else:
                         st.error(f"Transaction failed: {result['error']}")
@@ -971,6 +1125,9 @@ def sidebar():
                     st.session_state.balances = balances
                     st.toast("Updated")
 
+            # Transaction history section
+            render_transaction_history()
+
             st.divider()
 
             # Settings and account
@@ -1019,6 +1176,72 @@ def sidebar():
                 if st.button("Import Wallet", use_container_width=True, type="primary"):
                     st.session_state.show_auth_modal = True
                     st.rerun()
+
+
+def render_transaction_history():
+    """Render transaction history in sidebar"""
+    user_id = st.session_state.get("user_id")
+
+    # Guest users don't have persistent transaction history
+    if not user_id or user_id.startswith("guest_"):
+        return
+
+    with st.expander("Recent transactions", expanded=False):
+        try:
+            from supabase_client import get_supabase_client, get_user_transactions
+
+            client = get_supabase_client(use_service_key=True)
+            if not client:
+                st.caption("Unable to load transactions")
+                return
+
+            transactions = get_user_transactions(client, user_id, limit=5)
+
+            if not transactions:
+                st.caption("No transactions yet")
+                return
+
+            for tx in transactions:
+                tx_type = tx.get("type", "unknown")
+                amount = float(tx.get("amount", 0))
+                currency = tx.get("currency", "USD")
+                status = tx.get("status", "pending")
+                chain = tx.get("chain", "")
+
+                # Format type with icon
+                type_icons = {
+                    "deposit": "+",
+                    "withdrawal": "-",
+                    "send": "-",
+                    "swap": "~",
+                    "gift_card_purchase": "-"
+                }
+                icon = type_icons.get(tx_type, "")
+
+                # Status indicator
+                status_indicator = {
+                    "confirmed": "",
+                    "pending": " (pending)",
+                    "failed": " (failed)"
+                }.get(status, "")
+
+                # Format display
+                if tx_type in ["deposit"]:
+                    display = f"{icon}${amount:.2f} {currency}{status_indicator}"
+                else:
+                    display = f"{icon}${amount:.2f} {currency}{status_indicator}"
+
+                st.caption(f"{display}")
+
+                # Show explorer link if tx_hash exists
+                tx_hash = tx.get("tx_hash")
+                if tx_hash and chain:
+                    explorer_url = ChainUtils.get_tx_explorer_url(chain, tx_hash)
+                    if explorer_url:
+                        st.caption(f"[View]({explorer_url})")
+
+        except Exception as e:
+            st.caption("Unable to load transactions")
 
 
 def render_quick_actions():

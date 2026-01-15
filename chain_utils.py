@@ -27,9 +27,46 @@ USDC_ABI = [
     }
 ]
 
+# Module-level cache for Web3 instances (persists across requests)
+_web3_cache: Dict[str, Web3] = {}
+
+# Balance cache TTL in seconds
+BALANCE_CACHE_TTL = 30
+
 
 class ChainUtils:
     """Utilities for interacting with multiple chains"""
+
+    @staticmethod
+    def _get_web3(network_key: str) -> Optional[Web3]:
+        """Get cached Web3 instance for a network"""
+        global _web3_cache
+
+        if network_key in _web3_cache:
+            w3 = _web3_cache[network_key]
+            # Verify still connected
+            try:
+                if w3.is_connected():
+                    return w3
+            except Exception:
+                pass
+            # Connection lost, remove from cache
+            del _web3_cache[network_key]
+
+        # Create new connection
+        network = NETWORKS.get(network_key)
+        if not network or network["type"] != "evm":
+            return None
+
+        try:
+            w3 = Web3(Web3.HTTPProvider(network["rpc_url"]))
+            if w3.is_connected():
+                _web3_cache[network_key] = w3
+                return w3
+        except Exception:
+            pass
+
+        return None
 
     @staticmethod
     def _retry_rpc_call(func, max_retries: int = 3, backoff_factor: float = 1.5):
@@ -45,16 +82,45 @@ class ChainUtils:
         return None
 
     @staticmethod
-    def get_evm_balance(network_key: str, address: str) -> Dict[str, float]:
+    def _get_cached_balance(address: str, network_key: str) -> Optional[Dict[str, float]]:
+        """Get balance from session cache if not expired"""
+        cache_key = f"_balance_cache_{network_key}_{address}"
+        cache_time_key = f"_balance_cache_time_{network_key}_{address}"
+
+        cached_time = st.session_state.get(cache_time_key)
+        if cached_time and (time.time() - cached_time) < BALANCE_CACHE_TTL:
+            return st.session_state.get(cache_key)
+        return None
+
+    @staticmethod
+    def _set_cached_balance(address: str, network_key: str, balance: Dict[str, float]) -> None:
+        """Cache balance in session state"""
+        cache_key = f"_balance_cache_{network_key}_{address}"
+        cache_time_key = f"_balance_cache_time_{network_key}_{address}"
+
+        st.session_state[cache_key] = balance
+        st.session_state[cache_time_key] = time.time()
+
+    @staticmethod
+    def get_evm_balance(network_key: str, address: str, use_cache: bool = True) -> Dict[str, float]:
         """Get ETH and USDC balance for an EVM address"""
         network = NETWORKS.get(network_key)
 
         if not network or network["type"] != "evm":
             return {"eth": 0.0, "usdc": 0.0}
 
+        # Check cache first
+        if use_cache:
+            cached = ChainUtils._get_cached_balance(address, network_key)
+            if cached is not None:
+                return cached
+
         try:
-            # Connect to RPC with retry logic
-            w3 = Web3(Web3.HTTPProvider(network["rpc_url"]))
+            # Get cached Web3 instance
+            w3 = ChainUtils._get_web3(network_key)
+            if not w3:
+                # Fallback to creating new connection
+                w3 = Web3(Web3.HTTPProvider(network["rpc_url"]))
 
             def check_connection():
                 if not w3.is_connected():
@@ -86,10 +152,15 @@ class ChainUtils:
             # USDC has 6 decimals
             usdc_balance = float(usdc_balance_raw) / 1e6
 
-            return {
+            result = {
                 "eth": round(eth_balance, 6),
                 "usdc": round(usdc_balance, 2)
             }
+
+            # Cache the result
+            ChainUtils._set_cached_balance(address, network_key, result)
+
+            return result
 
         except Exception as e:
             # Silently return zeros instead of showing warnings (already retried 3x)

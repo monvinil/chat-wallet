@@ -10,6 +10,7 @@ This module provides consistent encryption/decryption functionality across:
 import os
 import base64
 import hashlib
+import bcrypt
 import streamlit as st
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -109,15 +110,39 @@ class PasswordEncryption:
     @staticmethod
     def hash_password(password: str) -> str:
         """
-        Hash password for storage (separate from encryption key derivation)
+        Hash password for storage using bcrypt (secure against rainbow tables)
 
         Args:
             password: User password
 
         Returns:
-            SHA-256 hash (hex string)
+            Bcrypt hash string (includes salt, starts with $2b$)
         """
-        return hashlib.sha256(password.encode()).hexdigest()
+        salt = bcrypt.gensalt(rounds=12)
+        return bcrypt.hashpw(password.encode(), salt).decode()
+
+    @staticmethod
+    def verify_password(password: str, stored_hash: str) -> bool:
+        """
+        Verify password against stored hash (supports bcrypt and legacy SHA-256)
+
+        Args:
+            password: User-provided password
+            stored_hash: Stored password hash (bcrypt or legacy SHA-256)
+
+        Returns:
+            True if password matches, False otherwise
+        """
+        try:
+            # Check if it's a bcrypt hash (starts with $2b$ or $2a$)
+            if stored_hash.startswith(('$2b$', '$2a$', '$2y$')):
+                return bcrypt.checkpw(password.encode(), stored_hash.encode())
+            else:
+                # Legacy SHA-256 hash (64 char hex string) - for backward compatibility
+                legacy_hash = hashlib.sha256(password.encode()).hexdigest()
+                return legacy_hash == stored_hash
+        except Exception:
+            return False
 
 
 class SettingsEncryption:

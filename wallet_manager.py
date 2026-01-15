@@ -233,18 +233,17 @@ class WalletManager:
     @staticmethod
     def verify_password(password: str, stored_hash: str) -> bool:
         """
-        Verify password against stored hash
+        Verify password against stored hash (bcrypt or legacy SHA-256)
 
         Args:
             password: User-provided password
-            stored_hash: Stored password hash (SHA-256 hex)
+            stored_hash: Stored password hash
 
         Returns:
             True if password matches, False otherwise
         """
         try:
-            password_hash = PasswordEncryption.hash_password(password)
-            return password_hash == stored_hash
+            return PasswordEncryption.verify_password(password, stored_hash)
         except Exception as e:
             logger.error(f"Password verification error: {e}")
             return False
