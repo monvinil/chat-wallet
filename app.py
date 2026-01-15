@@ -1198,9 +1198,10 @@ def sidebar():
     with st.sidebar:
         # Show login button if no wallet
         if not st.session_state.wallet_address:
-            st.metric("Balance", "$0.00")
+            st.markdown("#### Chat02")
+            st.caption("Sign in to access your wallet")
 
-            if st.button("Get Started", use_container_width=True, type="primary"):
+            if st.button("Sign In", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
                 st.rerun()
 
