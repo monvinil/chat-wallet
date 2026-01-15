@@ -1447,21 +1447,15 @@ def chat_interface():
 
         # Show clean intro with quick start button
         with st.chat_message("assistant"):
-            st.markdown("""**Chat Wallet** lets you manage crypto through conversation.
+            st.markdown("""Just tell me what you need:
 
-**What you can do:**
-- Check balances across Base, Arbitrum, and Polygon
-- Send USDC with zero gas fees
-- Buy gift cards from Amazon, Uber, Netflix, and more
-- Purchase domains, VPN subscriptions, and travel
-- Pay bills directly with crypto
+- **"Buy a $50 Amazon gift card"**
+- **"Pay my AWS bill"**
+- **"Send $20 to 0x..."**
 
-**Get started:**
-1. Click **Quick Start** below to create a wallet
-2. Get a free API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-3. Start chatting
+I'll handle the rest. No forms, no apps—just conversation.
 
-Your wallet is self-custodial—you control the private keys.
+Gift cards, subscriptions, domains, VPNs, and more. All paid with USDC.
 """)
 
             _, col_center, _ = st.columns([1, 2, 1])
