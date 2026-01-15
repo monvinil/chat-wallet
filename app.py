@@ -1677,18 +1677,33 @@ def main():
         transform: translateY(-1px);
     }
 
-    .stButton > button[kind="primary"] {
+    .stButton > button[kind="primary"],
+    .stButton > button[data-testid="baseButton-primary"],
+    button[kind="primary"] {
         background: var(--accent) !important;
+        background-color: var(--accent) !important;
         border-color: var(--accent) !important;
         color: #FFFFFF !important;
         font-weight: 600 !important;
         box-shadow: var(--shadow-md) !important;
     }
 
-    .stButton > button[kind="primary"]:hover {
+    .stButton > button[kind="primary"]:hover,
+    .stButton > button[data-testid="baseButton-primary"]:hover,
+    button[kind="primary"]:hover {
         background: var(--accent-hover) !important;
+        background-color: var(--accent-hover) !important;
         border-color: var(--accent-hover) !important;
+        color: #FFFFFF !important;
         box-shadow: var(--shadow-md) !important;
+    }
+
+    /* Force white text on primary buttons */
+    .stButton > button[kind="primary"] p,
+    .stButton > button[kind="primary"] span,
+    .stButton > button[data-testid="baseButton-primary"] p,
+    .stButton > button[data-testid="baseButton-primary"] span {
+        color: #FFFFFF !important;
     }
 
     .stButton > button:disabled {
