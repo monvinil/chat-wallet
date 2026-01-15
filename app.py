@@ -1316,34 +1316,66 @@ def render_quick_actions():
 
 
 def render_suggested_actions():
-    """Render horizontally scrollable action pills - mix of live features and roadmap capabilities"""
+    """
+    Render capability library - horizontally scrollable pills showing what's possible.
 
-    # Two categories: functional now, and advanced capabilities (the muscle flex)
-    # Functional actions trigger chat commands
-    # Advanced actions show what's possible with a "coming soon" indicator
+    Philosophy: These aren't just shortcuts, they're a discovery mechanism.
+    User thinks: "I could do this myself, but why would I when this handles it?"
 
-    live_actions = [
-        ("🎁", "Amazon Gift Card", "I want to buy an Amazon gift card", True),
-        ("📤", "Send USDC", "Help me send USDC", True),
-        ("🌐", "Buy Domain", "I want to register a domain", True),
-        ("🔐", "Get VPN", "I want to buy a VPN subscription", True),
+    Mix of live features and roadmap capabilities across diverse categories:
+    - Everyday rewards & treats
+    - Travel with perks
+    - Subscriptions & lifestyle
+    - DeFi & earning
+    - Crypto native tools
+    - Creator economy
+    """
+
+    # Capability library - diverse mix showing breadth
+    # (emoji, label, chat_prompt_or_description, is_live)
+    # is_live=True triggers chat, is_live=False shows "coming soon" with description
+
+    capabilities = [
+        # === EVERYDAY REWARDS & TREATS ===
+        ("🎁", "Amazon", "I want to buy an Amazon gift card", True),
+        ("☕", "Starbucks", "Get me a Starbucks gift card", True),
+        ("🍕", "DoorDash", "I want a DoorDash gift card", True),
+        ("🛍️", "Target", "Show me Target gift cards", True),
+
+        # === TRAVEL WITH PERKS ===
+        ("✈️", "Book Flight", "Earn 5% back in crypto on flights via Travala", False),
+        ("🏨", "Hotel + Bonus", "Book hotels, get bonus gift card rewards", False),
+        ("🚗", "Uber Credits", "I want Uber gift card credits", True),
+
+        # === SUBSCRIPTIONS & LIFESTYLE ===
+        ("🎵", "Apple Music", "Gift an Apple Music subscription", False),
+        ("📺", "Netflix", "I want a Netflix gift card", True),
+        ("🎮", "PlayStation", "Show me PlayStation gift cards", True),
+        ("💅", "Sephora", "Get a Sephora gift card", True),
+
+        # === DEFI & EARNING ===
+        ("💰", "Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
+        ("📈", "Swap to ETH", "Swap USDC to ETH at best rates", False),
+        ("₿", "Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
+
+        # === CRYPTO NATIVE ===
+        ("🌐", "Get Domain", "I want to register a domain", True),
+        ("🔐", "VPN Access", "I want a Mullvad VPN subscription", True),
+        ("📤", "Send USDC", "Help me send USDC to someone", True),
+
+        # === CREATOR ECONOMY ===
+        ("📺", "Creator Payout", "Instant payouts for international creators", False),
+        ("💜", "Tip Creator", "Send a tip to your favorite creator", False),
+
+        # === BILLS & UTILITIES ===
+        ("📱", "Phone Top-up", "I need to add minutes to my phone", True),
+        ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
     ]
 
-    # Advanced capabilities - the vision/muscle flex
-    # These show the app's ambition and where it's heading
-    advanced_actions = [
-        ("📺", "YouTube Vault", "Instant payouts for international creators", False),
-        ("💰", "Lend on Aave", "Earn yield on idle USDC", False),
-        ("₿", "Buy Bitcoin", "Stack sats directly from chat", False),
-        ("🎵", "Apple Music", "Gift subscriptions globally", False),
-    ]
-
-    all_actions = live_actions + advanced_actions
-
-    # CSS for horizontal scrolling pills with visual distinction
+    # CSS for horizontal scrolling capability pills
     st.markdown("""
     <style>
-    .action-pills-row {
+    .capability-row {
         display: flex;
         gap: 8px;
         overflow-x: auto;
@@ -1351,47 +1383,26 @@ def render_suggested_actions():
         scrollbar-width: none;
         -ms-overflow-style: none;
     }
-    .action-pills-row::-webkit-scrollbar {
+    .capability-row::-webkit-scrollbar {
         display: none;
-    }
-    .pill-live {
-        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%) !important;
-        border: 1px solid rgba(59, 130, 246, 0.3) !important;
-    }
-    .pill-advanced {
-        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        opacity: 0.85;
-    }
-    .pill-advanced:hover {
-        border-color: rgba(139, 92, 246, 0.4) !important;
-    }
-    .coming-badge {
-        font-size: 9px;
-        background: rgba(139, 92, 246, 0.2);
-        color: #A78BFA;
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-left: 4px;
-        font-weight: 600;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Build pills with visual distinction between live and advanced
-    cols = st.columns(len(all_actions))
-    for i, (emoji, label, prompt_or_desc, is_live) in enumerate(all_actions):
+    # Render as scrollable row of pills
+    cols = st.columns(len(capabilities))
+    for i, (emoji, label, prompt_or_desc, is_live) in enumerate(capabilities):
         with cols[i]:
             if is_live:
-                # Live feature - triggers chat
-                if st.button(f"{emoji} {label}", key=f"pill_{i}", use_container_width=True):
+                # Live capability - triggers chat
+                if st.button(f"{emoji} {label}", key=f"cap_{i}", use_container_width=True):
                     st.session_state.messages.append({"role": "user", "content": prompt_or_desc})
                     st.session_state._quick_action_triggered = True
                     st.rerun()
             else:
-                # Advanced capability - show vision with tooltip
-                if st.button(f"{emoji} {label} ✨", key=f"pill_{i}", use_container_width=True, help=prompt_or_desc):
-                    st.toast(f"**{label}** — {prompt_or_desc}. Coming in v2.", icon="✨")
+                # Roadmap capability - show what's coming with tooltip
+                if st.button(f"{emoji} {label} ✨", key=f"cap_{i}", use_container_width=True, help=prompt_or_desc):
+                    st.toast(f"**{label}** — {prompt_or_desc}. Coming soon.", icon="✨")
 
 
 def chat_interface():
