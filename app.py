@@ -1109,13 +1109,24 @@ Your wallet is self-custodial—you control the private keys.
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Chat input
-    if prompt := st.chat_input("Message..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
+    # Determine if we need to process a message (from chat input OR quick action)
+    prompt = None
+    if st.session_state.get("_quick_action_triggered"):
+        # Quick action button was clicked - get the last user message
+        st.session_state._quick_action_triggered = False
+        if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+            prompt = st.session_state.messages[-1]["content"]
 
-        with st.chat_message("user"):
-            st.markdown(prompt)
+    # Chat input (only if not processing quick action)
+    if not prompt:
+        prompt = st.chat_input("Message...")
+        if prompt:
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
 
+    # Process the message (from either source)
+    if prompt:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
