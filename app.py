@@ -1200,7 +1200,7 @@ def sidebar():
         if not st.session_state.wallet_address:
             st.caption("Already have an account?")
 
-            if st.button("Sign In", use_container_width=True):
+            if st.button("Sign Up / Sign In", use_container_width=True):
                 st.session_state.show_auth_modal = True
                 st.rerun()
 
@@ -1447,15 +1447,16 @@ def chat_interface():
 
         # Show clean intro with quick start button
         with st.chat_message("assistant"):
-            st.markdown("""Just tell me what you need:
+            st.markdown("""**Your crypto wallet that speaks your language.**
 
-- **"Buy a $50 Amazon gift card"**
-- **"Pay my AWS bill"**
-- **"Send $20 to 0x..."**
+Buy gift cards, pay bills, and send money—all through simple conversation.
 
-I'll handle the rest. No forms, no apps—just conversation.
+**Popular requests:**
+- "Buy a $50 Amazon gift card"
+- "Send $25 to vitalik.eth"
+- "Pay my phone bill"
 
-Gift cards, subscriptions, domains, VPNs, and more. All paid with USDC.
+Click **Quick Start** to create your wallet in seconds.
 """)
 
             _, col_center, _ = st.columns([1, 2, 1])
