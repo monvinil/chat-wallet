@@ -991,7 +991,8 @@ def sidebar():
         else:
             # Wallet is locked or doesn't exist
             if "wallet_encrypted" in st.session_state:
-                st.caption("Wallet locked")
+                st.caption("🔒 Wallet locked")
+                st.code(ChainUtils.format_address(st.session_state.wallet_address, 8))
                 unlock_password = st.text_input("Password", type="password", key="unlock_pwd")
                 if st.button("Unlock", use_container_width=True, type="primary"):
                     if unlock_password:
@@ -1000,6 +1001,18 @@ def sidebar():
                             st.rerun()
                         else:
                             st.error("Incorrect password")
+
+                st.divider()
+
+                # Allow Settings access even when locked
+                if st.button("Settings", use_container_width=True):
+                    st.session_state.show_settings = True
+                    st.rerun()
+
+                if st.button("Log out", use_container_width=True):
+                    SessionManager.logout()
+                    st.rerun()
+
             elif st.session_state.get("wallet_address"):
                 st.caption("Import your wallet to continue")
                 st.code(ChainUtils.format_address(st.session_state.wallet_address))
@@ -1029,6 +1042,107 @@ def render_quick_actions():
             st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
             st.session_state._quick_action_triggered = True
             st.rerun()
+
+
+def render_suggested_actions():
+    """Render horizontally scrollable action pills above chat input"""
+
+    # Suggested actions data
+    actions = [
+        ("🎵", "Apple Music 1mo"),
+        ("🎁", "Amazon Gift Card"),
+        ("📺", "YouTube Vault"),
+        ("💰", "Lend to Aave"),
+        ("₿", "Buy Bitcoin"),
+        ("🎧", "Spotify Premium"),
+        ("☕", "Starbucks Card"),
+    ]
+
+    # CSS for horizontal scrolling pills
+    st.markdown("""
+    <style>
+    .suggested-pills {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 12px 0;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .suggested-pills::-webkit-scrollbar {
+        display: none;
+    }
+    .pill-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 20px;
+        color: #93C5FD;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+        text-decoration: none;
+    }
+    .pill-btn:hover {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.5);
+        color: #BFDBFE;
+        transform: translateY(-1px);
+    }
+    .pill-btn:active {
+        transform: translateY(0);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Build HTML pills with data attributes for click handling
+    pills_html = '<div class="suggested-pills">'
+    for emoji, label in actions:
+        pills_html += f'<button class="pill-btn" onclick="showComingSoon(\'{label}\')">{emoji} {label}</button>'
+    pills_html += '</div>'
+
+    # JavaScript for click handling (shows toast via Streamlit's native toast styling)
+    pills_html += """
+    <script>
+    function showComingSoon(label) {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.innerHTML = '🚧 ' + label + ' — Coming soon!';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: fadeInOut 2.5s ease forwards;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+    </script>
+    <style>
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+        15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    }
+    </style>
+    """
+
+    st.markdown(pills_html, unsafe_allow_html=True)
 
 
 def chat_interface():
@@ -1077,6 +1191,12 @@ Your wallet is self-custodial—you control the private keys.
         st.chat_input("Message...", disabled=True, key="preview_input")
         return
 
+    # If wallet is locked, show a message to unlock
+    if st.session_state.get("wallet_locked", False) and st.session_state.get("wallet_encrypted"):
+        st.info("🔒 **Wallet locked** — Enter your password in the sidebar to unlock your wallet and start chatting.")
+        st.chat_input("Message...", disabled=True, key="locked_input")
+        return
+
     # Show onboarding flow if user hasn't completed setup
     from onboarding import show_onboarding
     if not show_onboarding():
@@ -1117,6 +1237,9 @@ Your wallet is self-custodial—you control the private keys.
         if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
             prompt = st.session_state.messages[-1]["content"]
 
+    # Suggested actions - scrollable pills above chat input
+    render_suggested_actions()
+
     # Chat input (only if not processing quick action)
     if not prompt:
         prompt = st.chat_input("Message...")
@@ -1132,9 +1255,31 @@ Your wallet is self-custodial—you control the private keys.
                 try:
                     # Safety check: ensure agent is initialized
                     if not st.session_state.get("agent"):
-                        response = """**Agent not initialized yet**
+                        # Try to initialize agent now
+                        try:
+                            agent = create_agent()
+                            if agent:
+                                st.session_state.agent = agent
+                        except Exception:
+                            pass
 
-Please refresh the page (F5) or try again in a moment. The AI agent is still loading."""
+                    if not st.session_state.get("agent"):
+                        # Still no agent - provide helpful guidance
+                        from api_key_setup import check_api_key_status
+                        has_key, provider = check_api_key_status()
+
+                        if not has_key:
+                            response = """**AI provider not connected**
+
+To use the chat assistant, you need to connect an AI provider first.
+
+Click **Settings** in the sidebar, then go to **AI Provider** to add your API key. We recommend Google Gemini—it's free."""
+                        else:
+                            response = """**AI assistant loading...**
+
+The assistant is still initializing. This usually takes a moment after logging in.
+
+**Try:** Refresh the page (F5) or wait a few seconds and try again."""
                     else:
                         # Lazy import LangChain message types
                         from langchain_core.messages import HumanMessage, AIMessage
@@ -1160,9 +1305,15 @@ Please refresh the page (F5) or try again in a moment. The AI agent is still loa
                     if "API key" in error_msg or "credit" in error_msg.lower() or "authentication" in error_msg.lower():
                         response = """**API key issue**
 
-There's a problem with your AI provider. Please check your API key in Settings.
+There's a problem with your AI provider. Please check your API key in **Settings** → **AI Provider**.
 
-If you're using Anthropic or OpenAI, make sure you have credits in your account."""
+Common fixes:
+- **Google Gemini:** Get a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+- **Anthropic/OpenAI:** Make sure you have credits in your account"""
+                    elif "rate" in error_msg.lower() or "quota" in error_msg.lower():
+                        response = """**Rate limit reached**
+
+You've hit the API rate limit. Wait a minute and try again, or switch to a different AI provider in Settings."""
                     else:
                         response = f"Something went wrong: {error_msg}"
 
@@ -1463,11 +1614,9 @@ def main():
 
     init_state()
 
-    # Initialize session management (simplified - no blocking stop())
-    if "_app_initialized" not in st.session_state:
-        st.session_state._app_initialized = True
-        st.session_state._cookie_manager_init = True
-        # Try to restore session - happens inline, no rerun needed
+    # Initialize cookie manager and restore session from cookie
+    # This handles page refresh - session state is cleared but cookies persist
+    if not st.session_state.get("wallet_address"):
         try:
             SessionManager.get_cookie_manager()
             SessionManager.restore_session()
@@ -1500,8 +1649,9 @@ def main():
             st.session_state.show_auth_modal = False
         return
 
-    # Initialize agent only if wallet exists and API key is configured
-    if st.session_state.wallet_address and st.session_state.agent is None:
+    # Initialize agent if user is logged in (even if wallet is locked - agent can still help)
+    # Agent needs: user_id (for API key lookup) and either wallet_address or user session
+    if (st.session_state.get("user_id") or st.session_state.wallet_address) and st.session_state.agent is None:
         if not st.session_state.get("_agent_initializing"):
             st.session_state._agent_initializing = True
             try:
@@ -1538,8 +1688,8 @@ def main():
         send_modal()
         return
 
-    # Show settings page if requested (only if logged in)
-    if st.session_state.get("show_settings") and st.session_state.wallet_address:
+    # Show settings page if requested (allow access even when wallet is locked)
+    if st.session_state.get("show_settings") and (st.session_state.wallet_address or st.session_state.get("user_id")):
         # Show OAuth result toast if just completed
         if st.session_state.get("_oauth_result"):
             if st.session_state._oauth_result == "success":

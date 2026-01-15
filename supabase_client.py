@@ -184,7 +184,9 @@ def save_wallet_address(user_id: str, address: str, chain: str = "evm",
         if encryption_salt:
             data["encryption_salt"] = encryption_salt
 
-        client.table("wallets").insert(data).execute()
+        # Use upsert to handle existing wallet records (e.g., from guest mode)
+        # This will update the encrypted data if wallet already exists
+        client.table("wallets").upsert(data, on_conflict="user_id,chain").execute()
         return True
     except Exception as e:
         # Check if columns don't exist yet
@@ -199,7 +201,7 @@ def save_wallet_address(user_id: str, address: str, chain: str = "evm",
                 "created_at": datetime.utcnow().isoformat()
             }
             try:
-                client.table("wallets").insert(data_minimal).execute()
+                client.table("wallets").upsert(data_minimal, on_conflict="user_id,chain").execute()
                 return True
             except Exception as e2:
                 st.error(f"Failed to save wallet: {e2}")

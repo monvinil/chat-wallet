@@ -128,9 +128,9 @@ class SettingsManager:
             return False
 
     @staticmethod
-    def get_llm_config(user_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_llm_config(user_id: Optional[str] = None, force_refresh: bool = False) -> Dict[str, Any]:
         """
-        Get LLM configuration for user
+        Get LLM configuration for user (cached per session for performance)
         Falls back to env var only for development (production requires user API key)
         """
         # Default config - only uses env var if set (for development)
@@ -144,16 +144,25 @@ class SettingsManager:
         if not user_id:
             return default_config
 
+        # Check session cache first (avoids repeated DB calls)
+        cache_key = f"_llm_config_{user_id}"
+        if not force_refresh and cache_key in st.session_state:
+            return st.session_state[cache_key]
+
         settings = SettingsManager.get_user_settings(user_id)
         if not settings or not settings.get("llm_api_key"):
             return default_config
 
-        return {
+        config = {
             "provider": settings.get("llm_provider", "anthropic"),
             "model": settings.get("llm_model", "claude-sonnet-4-20250514"),
             "api_key": settings.get("llm_api_key"),
             "using_default": False
         }
+
+        # Cache for this session
+        st.session_state[cache_key] = config
+        return config
 
     @staticmethod
     def save_oauth_connection(
@@ -319,7 +328,7 @@ class SettingsManager:
         # Get existing settings to preserve them
         existing = SettingsManager.get_user_settings(user_id)
 
-        return SettingsManager.save_user_settings(
+        success = SettingsManager.save_user_settings(
             user_id=user_id,
             llm_provider=provider,
             llm_model=model,
@@ -329,3 +338,11 @@ class SettingsManager:
             allow_recurring_payments=existing.get("allow_recurring_payments", False) if existing else False,
             allow_account_access=existing.get("allow_account_access", False) if existing else False
         )
+
+        # Invalidate LLM config cache on update
+        if success:
+            cache_key = f"_llm_config_{user_id}"
+            if cache_key in st.session_state:
+                del st.session_state[cache_key]
+
+        return success

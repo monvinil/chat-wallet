@@ -137,18 +137,22 @@ class SessionManager:
         if st.session_state.get("wallet_address") and st.session_state.get("user_id"):
             return True
 
-        # Skip if cookie manager not ready yet (prevents multiple reruns)
-        if "_cookie_manager_init" not in st.session_state:
-            return False
-
-        # IMPORTANT: Don't use _session_restore_attempted flag - it prevents restoration on refresh
-        # On page refresh, st.session_state is cleared, so we NEED to restore from cookie every time
-
         try:
             # Check for session cookie
             session_token = SessionManager.get_session_cookie()
-            if not session_token:
+
+            # Cookie manager may return None on first render - need rerun
+            # Track attempts to prevent infinite rerun loops
+            if session_token is None:
+                attempts = st.session_state.get("_cookie_read_attempts", 0)
+                if attempts < 2:
+                    st.session_state._cookie_read_attempts = attempts + 1
+                    # Cookie manager needs a rerun to read cookies from browser
+                    st.rerun()
                 return False
+
+            # Reset attempts counter on successful read
+            st.session_state._cookie_read_attempts = 0
 
             # Validate session in database
             session_data = SessionManager.get_session(session_token)

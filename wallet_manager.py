@@ -256,37 +256,35 @@ class WalletManager:
         Returns: True if successful, False otherwise
         """
         if "wallet_encrypted" not in st.session_state:
-            logger.warning("unlock_wallet_with_password: No wallet_encrypted in session")
+            logger.debug("unlock_wallet_with_password: No wallet_encrypted in session")
             return False
         if "wallet_salt" not in st.session_state:
-            logger.warning("unlock_wallet_with_password: No wallet_salt in session")
+            logger.debug("unlock_wallet_with_password: No wallet_salt in session")
             return False
 
         try:
             from cryptography.fernet import Fernet
             import base64
 
-            # Re-derive key from password using stored salt (uses PasswordEncryption utility)
-            salt = bytes.fromhex(st.session_state.wallet_salt)
-            key = PasswordEncryption.derive_key(password, salt)
+            salt_hex = st.session_state.wallet_salt
+            encrypted_data = st.session_state.wallet_encrypted
 
-            # Convert to Fernet key format (base64 encoded)
+            # Re-derive key from password using stored salt
+            salt = bytes.fromhex(salt_hex)
+            key = PasswordEncryption.derive_key(password, salt)
             fernet_key = base64.urlsafe_b64encode(key).decode()
 
             # Try to decrypt wallet data to verify password is correct
-            # Note: encrypted_data from PasswordEncryption.encrypt() is base64 string (not hex)
             try:
                 f = Fernet(fernet_key.encode())
-                encrypted_data = st.session_state.wallet_encrypted
                 decrypted = f.decrypt(encrypted_data.encode())
                 # Password is correct, store key in session
                 st.session_state.wallet_key = fernet_key
                 st.session_state.wallet_locked = False
                 st.session_state.wallet_data = decrypted.decode()
-                logger.info("Wallet unlocked successfully")
                 return True
             except Exception as e:
-                logger.error(f"Wallet decryption failed: {e}")
+                logger.debug(f"Wallet decryption failed: {type(e).__name__}")
                 return False
 
         except Exception as e:
