@@ -1190,8 +1190,8 @@ def _render_send_confirmation():
 def render_sidebar_footer():
     """Render professional footer with trust signals"""
     st.markdown("---")
-    st.caption("Self-custodial · Your keys, your crypto")
-    st.caption("[GitHub](https://github.com/anthropics/claude-code) · Open source")
+    st.caption("**Self-custodial** · We never hold your keys")
+    st.caption("Built on [Base](https://base.org) · [Arbitrum](https://arbitrum.io) · [Solana](https://solana.com)")
 
 
 def sidebar():
@@ -1201,18 +1201,16 @@ def sidebar():
 
         # Show login button if no wallet
         if not st.session_state.wallet_address:
-            st.caption("Sign in to access your wallet")
-            if st.button("Sign In", use_container_width=True, type="primary"):
+            st.caption("Create or connect your wallet")
+            if st.button("Get Started", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
                 st.rerun()
 
             st.divider()
-            st.metric("Total Balance", "$0.00")
+            st.metric("Balance", "$0.00")
 
-            with st.expander("Balance by Network"):
-                st.caption("Base: $0.00")
-                st.caption("Arbitrum: $0.00")
-                st.caption("Polygon: $0.00")
+            with st.expander("Networks"):
+                st.caption("Base · Arbitrum · Polygon · Solana")
 
             st.divider()
 
@@ -1450,21 +1448,21 @@ def render_suggested_actions():
     # is_live=True triggers chat, is_live=False shows "coming soon"
 
     capabilities = [
-        # === CORE ACTIONS ===
-        ("📤", "Send", "Help me send USDC to someone", True),
-        ("🎁", "Gift Cards", "Show me available gift cards", True),
-        ("📱", "Top-up", "I need to add minutes to my phone", True),
-        ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
+        # === INSTANT VALUE ===
+        ("💸", "Send", "Send $50 USDC to someone", True),
+        ("🎁", "Gift Cards", "Buy an Amazon gift card", True),
+        ("📱", "Top-up", "Add $10 to my phone", True),
+        ("💡", "Bills", "Pay my AWS bill with USDC", True),
 
         # === CRYPTO NATIVE ===
-        ("🌐", "Domain", "I want to register a domain", True),
-        ("🔐", "VPN", "I want a Mullvad VPN subscription", True),
-        ("⏰", "Schedule", "I want to set up a recurring payment", True),
+        ("🌐", "Domain", "Register a .com domain", True),
+        ("🔐", "VPN", "Get Mullvad VPN anonymously", True),
+        ("⏰", "Automate", "Set up weekly payments", True),
 
-        # === COMING SOON ===
-        ("📈", "Swap", "Swap USDC to ETH at best rates", False),
-        ("💰", "Earn", "Lend idle USDC, earn ~4% APY", False),
-        ("✈️", "Travel", "Book flights & hotels with crypto", False),
+        # === ROADMAP ===
+        ("📈", "Swap", "Swap USDC to ETH", False),
+        ("💰", "Earn", "Earn 4% APY on idle USDC", False),
+        ("✈️", "Travel", "Book flights with crypto", False),
     ]
 
     # Render all pills in a single row (10 items fits well)
@@ -1487,7 +1485,7 @@ def render_suggested_actions():
 def chat_interface():
     """Main chat interface"""
     st.title("Chat Wallet")
-    st.caption("Manage your wallet through conversation")
+    st.caption("The conversational interface for USDC")
 
     # Quick Start mode - create guest wallet if no wallet exists
     if not st.session_state.wallet_address:
@@ -1495,36 +1493,24 @@ def chat_interface():
 
         # Show clean intro with quick start button
         with st.chat_message("assistant"):
-            st.markdown("""**Chat Wallet** lets you manage crypto through conversation.
+            st.markdown("""**Spend USDC anywhere, just by asking.**
 
-**What you can do:**
-- Check balances across Base, Arbitrum, and Polygon
-- Send USDC with zero gas fees
-- Buy gift cards from Amazon, Uber, Netflix, and more
-- Purchase domains, VPN subscriptions, and travel
-- Pay bills directly with crypto
+Send money, buy gift cards, pay bills, register domains—all through natural conversation. No gas fees. No complexity.
 
-**Get started:**
-1. Click **Quick Start** below to create a wallet
-2. Get a free API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-3. Start chatting
+**Works with 1000+ brands:** Amazon, Uber, Netflix, Starbucks, Airbnb, and more.
 
-Your wallet is self-custodial—you control the private keys.
+**Powered by you:** Self-custodial wallet. Your keys, your crypto. We never touch your funds.
 """)
 
-            _, col_center, _ = st.columns([1, 2, 1])
-            with col_center:
-                if st.button("Quick Start", type="primary", use_container_width=True, key="quick_start_btn"):
-                    with st.spinner("Creating wallet..."):
-                        if create_guest_wallet():
-                            st.session_state.quick_start_active = True
-                            st.success("Wallet created")
-                            st.rerun()
-                        else:
-                            st.error("Could not create wallet. Please try again.")
+            if st.button("Create Wallet — Free", type="primary", use_container_width=True, key="quick_start_btn"):
+                with st.spinner("Creating wallet..."):
+                    if create_guest_wallet():
+                        st.session_state.quick_start_active = True
+                        st.rerun()
+                    else:
+                        st.error("Could not create wallet. Please try again.")
 
-            st.divider()
-            st.caption("Or create an account to save your wallet across devices")
+            st.caption("30 seconds to start · No signup required")
 
         # Disabled chat input
         st.chat_input("Message...", disabled=True, key="preview_input")
@@ -1661,17 +1647,14 @@ You've hit the API rate limit. Wait a minute and try again, or switch to a diffe
 
     # Welcome message for logged in users (only shown after onboarding complete)
     if not st.session_state.messages:
-        welcome = f"""Wallet connected: `{ChainUtils.format_address(st.session_state.wallet_address)}`
+        welcome = f"""Ready. Your wallet: `{ChainUtils.format_address(st.session_state.wallet_address)}`
 
-**Try these commands:**
-- "What's my balance?"
-- "Send $20 to 0x..."
-- "Show my deposit address"
-- "Buy a $25 Amazon gift card"
-- "Register mydomain.com"
-- "Get Mullvad VPN"
+Just tell me what you need:
 
-What would you like to do?
+• "Send $50 to vitalik.eth"
+• "Buy a $25 Amazon gift card"
+• "Pay my $127 AWS bill"
+• "Get Mullvad VPN for a year"
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
 
@@ -1685,280 +1668,336 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # Professional dark theme styling
+    # Design system: 8px grid, consistent radius (8px), unified color palette
     st.markdown("""
     <style>
-    /* Smooth fade-in to prevent flash */
-    .stApp {
-        animation: fadeIn 0.3s ease-out;
-    }
+    /* ============================================
+       DESIGN TOKENS
+       - Spacing: 4px, 8px, 12px, 16px, 24px, 32px
+       - Radius: 8px (buttons, inputs), 12px (cards)
+       - Colors: #FFFFFF (text), #A1A1AA (muted), #52525B (subtle)
+       ============================================ */
 
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    /* Clean, professional typography */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    /* Base reset and typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-font-smoothing: antialiased;
     }
 
-    /* Dark theme header styling */
+    .stApp {
+        background: #09090B;
+    }
+
+    /* Typography scale */
     h1 {
-        font-weight: 600 !important;
-        letter-spacing: -0.02em !important;
-        color: #F9FAFB !important;
-    }
-
-    h2, h3 {
-        font-weight: 500 !important;
-        color: #D1D5DB !important;
-    }
-
-    /* Clean metric card */
-    [data-testid="stMetric"] {
-        background: #1A1A24;
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 12px;
-        padding: 16px;
-    }
-
-    [data-testid="stMetricValue"] {
-        font-weight: 600 !important;
         font-size: 1.5rem !important;
-        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.025em !important;
+        color: #FAFAFA !important;
+        margin-bottom: 4px !important;
     }
 
-    [data-testid="stMetricLabel"] {
-        color: #9CA3AF !important;
-        font-size: 0.75rem !important;
+    h2 {
+        font-size: 1.125rem !important;
+        font-weight: 600 !important;
+        color: #FAFAFA !important;
+    }
+
+    h3 {
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        color: #A1A1AA !important;
         text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    /* Unified button styling */
+    p, li {
+        color: #E4E4E7 !important;
+        line-height: 1.6;
+    }
+
+    /* ============================================
+       BUTTONS - Unified 8px radius, 40px min height
+       ============================================ */
     .stButton > button {
         border-radius: 8px !important;
         font-weight: 500 !important;
-        font-size: 13px !important;
-        padding: 8px 14px !important;
-        min-height: 36px !important;
-        transition: background 0.15s ease, border-color 0.15s ease !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        background: #1E1E28 !important;
-        color: #D1D5DB !important;
+        font-size: 14px !important;
+        padding: 10px 16px !important;
+        min-height: 40px !important;
+        transition: all 0.15s ease !important;
+        border: 1px solid #27272A !important;
+        background: #18181B !important;
+        color: #E4E4E7 !important;
         box-shadow: none !important;
     }
 
     .stButton > button:hover {
-        background: #262630 !important;
-        border-color: rgba(255,255,255,0.18) !important;
-        color: #FFFFFF !important;
+        background: #27272A !important;
+        border-color: #3F3F46 !important;
+        color: #FAFAFA !important;
     }
 
     .stButton > button[kind="primary"] {
-        background: #3B82F6 !important;
-        border-color: #3B82F6 !important;
+        background: #2563EB !important;
+        border-color: #2563EB !important;
         color: #FFFFFF !important;
     }
 
     .stButton > button[kind="primary"]:hover {
-        background: #2563EB !important;
-        border-color: #2563EB !important;
+        background: #1D4ED8 !important;
+        border-color: #1D4ED8 !important;
     }
 
     .stButton > button:disabled {
-        opacity: 0.5 !important;
+        opacity: 0.4 !important;
         cursor: not-allowed !important;
-        background: #1A1A22 !important;
     }
 
-    /* Remove extra margin from button containers */
     .stButton {
-        margin: 0 !important;
+        margin-bottom: 8px !important;
     }
 
-    /* Refined dark sidebar */
+    /* ============================================
+       SIDEBAR - Clean, organized
+       ============================================ */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #141419 0%, #0F0F14 100%);
-        border-right: 1px solid rgba(255,255,255,0.04);
+        background: #0A0A0B !important;
+        border-right: 1px solid #27272A !important;
+        padding-top: 16px !important;
     }
 
     [data-testid="stSidebar"] h1 {
-        font-size: 1.25rem !important;
-        margin-bottom: 1rem;
-        color: #F9FAFB !important;
+        font-size: 1.125rem !important;
+        padding: 0 0 16px 0 !important;
+        margin: 0 !important;
     }
 
-    /* Dark input fields with glow */
+    [data-testid="stSidebar"] .stButton > button {
+        margin-bottom: 8px !important;
+    }
+
+    /* ============================================
+       INPUTS - Consistent 8px radius
+       ============================================ */
     .stTextInput > div > div > input,
-    .stTextArea > div > div > textarea {
-        border-radius: 10px !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        background: #1A1A24 !important;
-        padding: 14px !important;
+    .stTextArea > div > div > textarea,
+    .stNumberInput > div > div > input {
+        border-radius: 8px !important;
+        border: 1px solid #27272A !important;
+        background: #18181B !important;
+        padding: 12px 14px !important;
         font-size: 14px !important;
-        color: #E5E7EB !important;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        color: #FAFAFA !important;
     }
 
     .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus {
-        border-color: #3B82F6 !important;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.15), inset 0 2px 4px rgba(0,0,0,0.2) !important;
+    .stTextArea > div > div > textarea:focus,
+    .stNumberInput > div > div > input:focus {
+        border-color: #2563EB !important;
+        box-shadow: 0 0 0 2px rgba(37,99,235,0.2) !important;
+        outline: none !important;
     }
 
     .stTextInput > div > div > input::placeholder,
     .stTextArea > div > div > textarea::placeholder {
-        color: #6B7280 !important;
+        color: #52525B !important;
     }
 
-    /* Tab styling */
+    /* Select boxes */
+    .stSelectbox > div > div {
+        background: #18181B !important;
+        border: 1px solid #27272A !important;
+        border-radius: 8px !important;
+    }
+
+    /* ============================================
+       TABS - Clean underline style
+       ============================================ */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-        padding: 0;
+        border-bottom: 1px solid #27272A;
+        background: transparent !important;
     }
 
     .stTabs [data-baseweb="tab"] {
-        padding: 10px 16px;
+        padding: 12px 20px;
         font-weight: 500;
-        font-size: 13px;
-        color: #9CA3AF;
+        font-size: 14px;
+        color: #71717A;
         background: transparent !important;
         border: none !important;
         border-radius: 0 !important;
     }
 
     .stTabs [data-baseweb="tab"]:hover {
-        color: #D1D5DB;
-        background: rgba(255,255,255,0.02) !important;
+        color: #A1A1AA;
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #FFFFFF;
-        border-bottom: 2px solid #3B82F6 !important;
-        background: transparent !important;
+        color: #FAFAFA;
+        border-bottom: 2px solid #2563EB !important;
+        margin-bottom: -1px;
     }
 
-    /* Chat messages - simple dark background */
-    [data-testid="stChatMessage"] {
-        background: #1A1A24;
-        border: 1px solid rgba(255,255,255,0.06);
+    /* ============================================
+       CARDS & CONTAINERS - 12px radius
+       ============================================ */
+    [data-testid="stMetric"] {
+        background: #18181B;
+        border: 1px solid #27272A;
         border-radius: 12px;
         padding: 16px;
+    }
+
+    [data-testid="stMetricValue"] {
+        font-weight: 600 !important;
+        font-size: 1.75rem !important;
+        color: #FAFAFA !important;
+        letter-spacing: -0.025em;
+    }
+
+    [data-testid="stMetricLabel"] {
+        color: #71717A !important;
+        font-size: 0.75rem !important;
+        font-weight: 500 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Chat messages */
+    [data-testid="stChatMessage"] {
+        background: #18181B;
+        border: 1px solid #27272A;
+        border-radius: 12px;
+        padding: 16px 20px;
         margin-bottom: 12px;
     }
 
-    /* Dark code blocks */
-    code {
-        background: #252532 !important;
-        color: #A5B4FC !important;
-        padding: 3px 8px !important;
-        border-radius: 6px !important;
-        font-size: 13px !important;
-        border: 1px solid rgba(255,255,255,0.06);
-    }
-
-    /* Dark alert boxes */
+    /* Alert boxes */
     .stAlert {
         border-radius: 12px !important;
-        border: 1px solid rgba(255,255,255,0.06) !important;
-        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%) !important;
+        border: 1px solid #27272A !important;
+        background: #18181B !important;
     }
 
-    /* Dark dividers */
+    /* Expanders */
+    details {
+        background: #18181B !important;
+        border: 1px solid #27272A !important;
+        border-radius: 12px !important;
+    }
+
+    .streamlit-expanderHeader {
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        color: #A1A1AA !important;
+        padding: 12px 16px !important;
+    }
+
+    /* ============================================
+       CODE & MONOSPACE
+       ============================================ */
+    code {
+        background: #27272A !important;
+        color: #A5B4FC !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 13px !important;
+        font-family: 'SF Mono', 'Fira Code', monospace !important;
+        border: none !important;
+    }
+
+    pre {
+        background: #18181B !important;
+        border: 1px solid #27272A !important;
+        border-radius: 8px !important;
+        padding: 12px !important;
+    }
+
+    /* ============================================
+       UTILITY CLASSES
+       ============================================ */
+
+    /* Dividers - subtle */
     hr {
-        border-color: rgba(255,255,255,0.06) !important;
-        margin: 1.5rem 0 !important;
+        border: none !important;
+        border-top: 1px solid #27272A !important;
+        margin: 16px 0 !important;
+    }
+
+    /* Captions - consistent muted style */
+    .stCaption, [data-testid="stCaptionContainer"] p {
+        color: #71717A !important;
+        font-size: 13px !important;
+        line-height: 1.5;
+    }
+
+    /* Links */
+    a {
+        color: #60A5FA !important;
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: #93C5FD !important;
+        text-decoration: underline;
+    }
+
+    [data-testid="stSidebar"] a {
+        color: #71717A !important;
+    }
+
+    [data-testid="stSidebar"] a:hover {
+        color: #A1A1AA !important;
     }
 
     /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    header {visibility: hidden;}
 
-    /* Dark expander */
-    .streamlit-expanderHeader {
-        font-weight: 500 !important;
-        color: #9CA3AF !important;
-        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
-        border-radius: 10px;
-        padding: 12px 16px !important;
-    }
-
-    details {
-        background: transparent !important;
-        border: 1px solid rgba(255,255,255,0.06) !important;
-        border-radius: 12px !important;
-    }
-
-    /* Status indicator */
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-
-    .status-dot.connected {
-        background: #10B981;
-        box-shadow: 0 0 6px rgba(16,185,129,0.4);
-    }
-
-    .status-dot.disconnected {
-        background: #6B7280;
-    }
-
-    /* Number input styling */
-    .stNumberInput > div > div > input {
-        border-radius: 10px !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        background: #1A1A24 !important;
-        color: #E5E7EB !important;
-    }
-
-    /* Select box styling */
-    .stSelectbox > div > div {
-        background: #1A1A24 !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        border-radius: 10px !important;
-    }
-
-    /* Consistent caption styling */
-    .stCaption, [data-testid="stCaptionContainer"] p {
-        color: #6B7280 !important;
-        font-size: 0.8125rem !important;
-        line-height: 1.5;
-    }
-
-    /* Footer link styling */
-    [data-testid="stSidebar"] a {
-        color: #6B7280 !important;
-        text-decoration: none;
-        transition: color 0.15s ease;
-    }
-
-    [data-testid="stSidebar"] a:hover {
-        color: #9CA3AF !important;
-    }
-
-    /* Capability pill buttons in horizontal layout */
+    /* ============================================
+       CAPABILITY PILLS - Touch-friendly 40px
+       ============================================ */
     [data-testid="stHorizontalBlock"] .stButton > button {
-        border-radius: 18px !important;
-        font-size: 12px !important;
-        padding: 6px 12px !important;
-        min-height: 32px !important;
+        border-radius: 20px !important;
+        font-size: 13px !important;
+        padding: 8px 16px !important;
+        min-height: 36px !important;
         white-space: nowrap !important;
+        margin-bottom: 0 !important;
     }
 
-    /* Tighter column spacing for capability pills */
     [data-testid="stHorizontalBlock"] {
-        gap: 6px !important;
+        gap: 8px !important;
     }
 
     [data-testid="stHorizontalBlock"] > div {
         padding: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    /* ============================================
+       CHAT INPUT - Prominent
+       ============================================ */
+    [data-testid="stChatInput"] {
+        border-top: 1px solid #27272A;
+        padding-top: 16px;
+    }
+
+    [data-testid="stChatInput"] textarea {
+        border-radius: 12px !important;
+        background: #18181B !important;
+        border: 1px solid #27272A !important;
+        padding: 14px 16px !important;
+        font-size: 15px !important;
+    }
+
+    [data-testid="stChatInput"] textarea:focus {
+        border-color: #2563EB !important;
     }
     </style>
     """, unsafe_allow_html=True)
