@@ -1385,11 +1385,17 @@ def chat_interface():
     if not st.session_state.wallet_address:
         from quick_start import create_guest_wallet
 
-        # Warm welcome with educational hint at possibilities
+        # Clear value proposition with examples
         with st.chat_message("assistant"):
-            st.markdown("""Hey! I'm your wallet that understands plain English.
+            st.markdown("""**Chat02** — your wallet that speaks plain English.
 
-Tell me what you need—buy gift cards, pay bills, send money, grab a VPN—and I'll handle the rest. Your money, your words.
+Just tell me what you need:
+- "Buy a $50 Amazon gift card"
+- "Pay my AWS bill"
+- "Send $25 to alex.eth"
+- "Get a year of Mullvad VPN"
+
+I'll handle the blockchain stuff. You just chat.
 """)
 
             if st.button("Create my wallet", type="primary", use_container_width=True, key="quick_start_btn"):
@@ -1400,7 +1406,7 @@ Tell me what you need—buy gift cards, pay bills, send money, grab a VPN—and 
                     else:
                         st.error("Oops, something went wrong. Let's try that again.")
 
-            st.caption("Self-custodial · Multi-chain · No forms")
+            st.caption("Self-custodial · USDC on Base, Arbitrum, Polygon, Solana")
 
         # Disabled chat input
         st.chat_input("Message...", disabled=True, key="preview_input")
@@ -1526,11 +1532,17 @@ Wait a minute and try again, or switch providers in Settings if this keeps happe
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # Welcome message for logged in users (warm, capable, active assistant)
+    # Welcome message for logged in users - informative and actionable
     if not st.session_state.messages:
-        welcome = f"""Welcome back! Your wallet is ready at `{ChainUtils.format_address(st.session_state.wallet_address)}`.
+        welcome = f"""Ready to go! Your wallet: `{ChainUtils.format_address(st.session_state.wallet_address)}`
 
-What would you like to do? I can help with gift cards, bill payments, transfers, domains, VPNs—just tell me what you need.
+**What can I do?**
+- Buy gift cards (Amazon, Uber, Netflix, etc.)
+- Pay bills (AWS, domain renewals, subscriptions)
+- Send money to any address or ENS name
+- Get VPN subscriptions, domains, and more
+
+Just type what you need—or try the suggestions below.
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
 
@@ -1565,11 +1577,11 @@ def main():
         --text-secondary: #A1A1AA;
         --text-muted: #6B6B76;
 
-        /* Green accent (true muted sage) */
-        --accent: #6B9B7A;
-        --accent-hover: #5A8A69;
-        --accent-muted: rgba(107,155,122,0.15);
-        --accent-glow: rgba(107,155,122,0.2);
+        /* Blue accent */
+        --accent: #2563EB;
+        --accent-hover: #1D4ED8;
+        --accent-muted: rgba(37,99,235,0.15);
+        --accent-glow: rgba(37,99,235,0.2);
 
         /* Secondary blue for links */
         --link: #60A5FA;
@@ -1597,10 +1609,10 @@ def main():
         --text-primary: #18181B;
         --text-secondary: #52525B;
         --text-muted: #A1A1AA;
-        --accent: #5A8A69;
-        --accent-hover: #4A7A59;
-        --accent-muted: rgba(90,138,105,0.1);
-        --accent-glow: rgba(90,138,105,0.15);
+        --accent: #2563EB;
+        --accent-hover: #1D4ED8;
+        --accent-muted: rgba(37,99,235,0.1);
+        --accent-glow: rgba(37,99,235,0.15);
         --link: #2563EB;
         --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
         --shadow-md: 0 2px 8px rgba(0,0,0,0.08);

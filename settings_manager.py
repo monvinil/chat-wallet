@@ -74,26 +74,29 @@ class SettingsManager:
     @staticmethod
     def save_user_settings(
         user_id: str,
-        llm_provider: str = "anthropic",
-        llm_model: str = "claude-sonnet-4-20250514",
+        llm_provider: str = None,
+        llm_model: str = None,
         llm_api_key: Optional[str] = None,
-        daily_spend_limit: float = 100.00,
-        require_approval_above: float = 50.00,
-        allow_recurring_payments: bool = False,
-        allow_account_access: bool = False
+        daily_spend_limit: float = None,
+        require_approval_above: float = None,
+        allow_recurring_payments: bool = None,
+        allow_account_access: bool = None,
+        theme: str = None
     ) -> bool:
-        """Save or update user settings"""
+        """Save or update user settings (only updates provided fields)"""
         # Handle guest users - store in session state only
         if user_id and user_id.startswith("guest_"):
+            existing = st.session_state.get(f"guest_settings_{user_id}", {})
             guest_settings = {
                 "user_id": user_id,
-                "llm_provider": llm_provider,
-                "llm_model": llm_model,
-                "llm_api_key": llm_api_key,  # No encryption needed for session-only storage
-                "daily_spend_limit": daily_spend_limit,
-                "require_approval_above": require_approval_above,
-                "allow_recurring_payments": allow_recurring_payments,
-                "allow_account_access": allow_account_access
+                "llm_provider": llm_provider if llm_provider is not None else existing.get("llm_provider", "anthropic"),
+                "llm_model": llm_model if llm_model is not None else existing.get("llm_model", "claude-sonnet-4-20250514"),
+                "llm_api_key": llm_api_key if llm_api_key is not None else existing.get("llm_api_key"),
+                "daily_spend_limit": daily_spend_limit if daily_spend_limit is not None else existing.get("daily_spend_limit", 100.0),
+                "require_approval_above": require_approval_above if require_approval_above is not None else existing.get("require_approval_above", 50.0),
+                "allow_recurring_payments": allow_recurring_payments if allow_recurring_payments is not None else existing.get("allow_recurring_payments", False),
+                "allow_account_access": allow_account_access if allow_account_access is not None else existing.get("allow_account_access", False),
+                "theme": theme if theme is not None else existing.get("theme", "dark")
             }
             st.session_state[f"guest_settings_{user_id}"] = guest_settings
             return True
@@ -103,21 +106,25 @@ class SettingsManager:
             if not supabase:
                 return False
 
-            # Encrypt API key if provided
-            encrypted_key = None
-            if llm_api_key:
-                encrypted_key = SettingsManager._encrypt(llm_api_key)
+            # Build data dict with only provided fields
+            data = {"user_id": user_id}
 
-            data = {
-                "user_id": user_id,
-                "llm_provider": llm_provider,
-                "llm_model": llm_model,
-                "llm_api_key_encrypted": encrypted_key,
-                "daily_spend_limit": daily_spend_limit,
-                "require_approval_above": require_approval_above,
-                "allow_recurring_payments": allow_recurring_payments,
-                "allow_account_access": allow_account_access
-            }
+            if llm_provider is not None:
+                data["llm_provider"] = llm_provider
+            if llm_model is not None:
+                data["llm_model"] = llm_model
+            if llm_api_key is not None:
+                data["llm_api_key_encrypted"] = SettingsManager._encrypt(llm_api_key)
+            if daily_spend_limit is not None:
+                data["daily_spend_limit"] = daily_spend_limit
+            if require_approval_above is not None:
+                data["require_approval_above"] = require_approval_above
+            if allow_recurring_payments is not None:
+                data["allow_recurring_payments"] = allow_recurring_payments
+            if allow_account_access is not None:
+                data["allow_account_access"] = allow_account_access
+            if theme is not None:
+                data["theme"] = theme
 
             # Try to update first, insert if doesn't exist
             result = supabase.table("user_settings").upsert(data).execute()
