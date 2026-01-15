@@ -1467,36 +1467,6 @@ def render_suggested_actions():
         ("✈️", "Travel", "Book flights & hotels with crypto", False),
     ]
 
-    # CSS for horizontal scrolling pills container
-    st.markdown("""
-    <style>
-    /* Horizontal scroll container for capability pills */
-    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) {
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        padding-bottom: 8px;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(255,255,255,0.1) transparent;
-    }
-    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"])::-webkit-scrollbar {
-        height: 4px;
-    }
-    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"])::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.1);
-        border-radius: 2px;
-    }
-    /* Make pill buttons compact and non-wrapping */
-    div[data-testid="stHorizontalBlock"] .stButton {
-        min-width: fit-content !important;
-        flex-shrink: 0 !important;
-    }
-    div[data-testid="stHorizontalBlock"] .stButton button {
-        white-space: nowrap !important;
-        min-width: max-content !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
     # Render all pills in a single row (10 items fits well)
     cols = st.columns(len(capabilities))
 
@@ -1747,63 +1717,66 @@ def main():
         color: #D1D5DB !important;
     }
 
-    /* Professional card styling with texture */
+    /* Clean metric card */
     [data-testid="stMetric"] {
-        background: linear-gradient(145deg, #1F1F2E 0%, #16161F 100%);
+        background: #1A1A24;
         border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 16px;
     }
 
     [data-testid="stMetricValue"] {
-        font-weight: 700 !important;
-        font-size: 1.75rem !important;
+        font-weight: 600 !important;
+        font-size: 1.5rem !important;
         color: #FFFFFF !important;
     }
 
     [data-testid="stMetricLabel"] {
         color: #9CA3AF !important;
-        font-size: 0.875rem !important;
+        font-size: 0.75rem !important;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
     }
 
-    /* Button container - allow overflow for hover animation */
-    .stButton {
-        overflow: visible !important;
-        padding-top: 4px;
-    }
-
-    /* Textured buttons with depth */
+    /* Unified button styling */
     .stButton > button {
-        border-radius: 10px !important;
+        border-radius: 8px !important;
         font-weight: 500 !important;
-        padding: 0.625rem 1.25rem !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%) !important;
-        color: #E5E7EB !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+        font-size: 13px !important;
+        padding: 8px 14px !important;
+        min-height: 36px !important;
+        transition: background 0.15s ease, border-color 0.15s ease !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        background: #1E1E28 !important;
+        color: #D1D5DB !important;
+        box-shadow: none !important;
     }
 
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
-        border-color: rgba(255,255,255,0.12) !important;
-        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%) !important;
+        background: #262630 !important;
+        border-color: rgba(255,255,255,0.18) !important;
+        color: #FFFFFF !important;
     }
 
     .stButton > button[kind="primary"] {
-        background: linear-gradient(145deg, #3B82F6 0%, #2563EB 100%) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
+        background: #3B82F6 !important;
+        border-color: #3B82F6 !important;
         color: #FFFFFF !important;
-        box-shadow: 0 4px 16px rgba(59,130,246,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
     }
 
     .stButton > button[kind="primary"]:hover {
-        background: linear-gradient(145deg, #4F8FFF 0%, #3B7BF6 100%) !important;
-        box-shadow: 0 8px 28px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+        background: #2563EB !important;
+        border-color: #2563EB !important;
+    }
+
+    .stButton > button:disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        background: #1A1A22 !important;
+    }
+
+    /* Remove extra margin from button containers */
+    .stButton {
+        margin: 0 !important;
     }
 
     /* Refined dark sidebar */
@@ -1841,43 +1814,41 @@ def main():
         color: #6B7280 !important;
     }
 
-    /* Dark tabs with texture */
+    /* Tab styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background: transparent;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        padding: 4px 0 8px 0;
-        overflow: visible !important;
+        gap: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        padding: 0;
     }
 
     .stTabs [data-baseweb="tab"] {
-        border-radius: 8px;
-        padding: 10px 18px;
+        padding: 10px 16px;
         font-weight: 500;
-        background: transparent;
+        font-size: 13px;
         color: #9CA3AF;
-        transition: all 0.2s ease;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
     }
 
     .stTabs [data-baseweb="tab"]:hover {
-        background: rgba(255,255,255,0.04);
-        color: #E5E7EB;
+        color: #D1D5DB;
+        background: rgba(255,255,255,0.02) !important;
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%);
         color: #FFFFFF;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        border-bottom: 2px solid #3B82F6 !important;
+        background: transparent !important;
     }
 
-    /* Dark chat messages - unified styling for all messages */
+    /* Chat messages - simple dark background */
     [data-testid="stChatMessage"] {
-        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
-        border: 1px solid rgba(255,255,255,0.04);
-        border-radius: 16px;
-        padding: 18px;
-        margin-bottom: 14px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        background: #1A1A24;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
     }
 
     /* Dark code blocks */
@@ -1922,35 +1893,6 @@ def main():
         border-radius: 12px !important;
     }
 
-    /* Quick action chips */
-    .quick-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 24px;
-        color: #E5E7EB;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin: 4px;
-    }
-
-    .quick-action:hover {
-        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%);
-        border-color: rgba(255,255,255,0.12);
-        transform: translateY(-1px);
-    }
-
-    .quick-action.active {
-        background: linear-gradient(145deg, #3B82F6 0%, #2563EB 100%);
-        border-color: rgba(255,255,255,0.15);
-        color: #FFFFFF;
-    }
-
     /* Status indicator */
     .status-dot {
         width: 8px;
@@ -1961,20 +1903,11 @@ def main():
 
     .status-dot.connected {
         background: #10B981;
-        box-shadow: 0 0 8px rgba(16,185,129,0.5);
+        box-shadow: 0 0 6px rgba(16,185,129,0.4);
     }
 
     .status-dot.disconnected {
         background: #6B7280;
-    }
-
-    /* Section cards */
-    .section-card {
-        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 16px;
     }
 
     /* Number input styling */
@@ -2010,11 +1943,22 @@ def main():
         color: #9CA3AF !important;
     }
 
-    /* Pill button styling for suggested actions */
+    /* Capability pill buttons in horizontal layout */
     [data-testid="stHorizontalBlock"] .stButton > button {
-        border-radius: 20px !important;
-        font-size: 0.8125rem !important;
-        padding: 0.5rem 1rem !important;
+        border-radius: 18px !important;
+        font-size: 12px !important;
+        padding: 6px 12px !important;
+        min-height: 32px !important;
+        white-space: nowrap !important;
+    }
+
+    /* Tighter column spacing for capability pills */
+    [data-testid="stHorizontalBlock"] {
+        gap: 6px !important;
+    }
+
+    [data-testid="stHorizontalBlock"] > div {
+        padding: 0 !important;
     }
     </style>
     """, unsafe_allow_html=True)
