@@ -73,6 +73,13 @@ SYSTEM_PROMPT = """You are a professional wallet assistant that helps users mana
    - Search recent emails (last 24 hours)
    - Detect bills from emails automatically
 8. Execute multi-step tasks - bill payments, gift cards, service signups
+9. **Scheduled & recurring payments** (demo mode):
+   - One-time scheduled transfers: "Send $50 to 0x... tomorrow at 9am"
+   - Recurring payments: "Send $100 to 0x... every Friday"
+   - Recurring gift cards: "Buy a $25 Starbucks card every Monday"
+   - Conditional triggers: "If my balance drops below $100, alert me"
+   - Use create_scheduled_transfer, create_scheduled_gift_card for setup
+   - Use list_scheduled_tasks to show user's scheduled items
 
 **Email Automation Workflow:**
 When user asks to sign up for a service (e.g., Porkbun, Amazon):
@@ -257,17 +264,18 @@ def create_agent():
             max_tokens=4096
         )
 
-    # Import email, Bitrefill, and merchant tools
+    # Import email, Bitrefill, merchant, and scheduler tools
     from email_tools import get_email_tools
     from bitrefill_tools import get_bitrefill_tools
     from merchant_tools import get_merchant_tools
+    from scheduler_tools import get_scheduler_tools
 
     custom_tools = [
         tool_get_wallet_balance,
         tool_get_deposit_address,
         tool_preview_transaction,
         tool_read_latest_emails
-    ] + get_email_tools() + get_bitrefill_tools() + get_merchant_tools()  # Add email, Bitrefill, and crypto merchant tools
+    ] + get_email_tools() + get_bitrefill_tools() + get_merchant_tools() + get_scheduler_tools()
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
@@ -1363,6 +1371,10 @@ def render_suggested_actions():
         ("🔐", "VPN Access", "I want a Mullvad VPN subscription", True),
         ("📤", "Send USDC", "Help me send USDC to someone", True),
 
+        # === AUTOMATION & SCHEDULING ===
+        ("⏰", "Schedule", "I want to set up a recurring payment", True),
+        ("🔔", "Alerts", "Set up balance alerts and spending notifications", False),
+
         # === CREATOR ECONOMY ===
         ("📺", "Creator Payout", "Instant payouts for international creators", False),
         ("💜", "Tip Creator", "Send a tip to your favorite creator", False),
@@ -1372,37 +1384,55 @@ def render_suggested_actions():
         ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
     ]
 
-    # CSS for horizontal scrolling capability pills
+    # CSS for horizontal scrolling pills container
     st.markdown("""
     <style>
-    .capability-row {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding: 8px 0;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
+    /* Horizontal scroll container for capability pills */
+    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        padding-bottom: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.1) transparent;
     }
-    .capability-row::-webkit-scrollbar {
-        display: none;
+    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"])::-webkit-scrollbar {
+        height: 4px;
+    }
+    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"])::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+        border-radius: 2px;
+    }
+    /* Make pill buttons compact and non-wrapping */
+    div[data-testid="stHorizontalBlock"] .stButton {
+        min-width: fit-content !important;
+        flex-shrink: 0 !important;
+    }
+    div[data-testid="stHorizontalBlock"] .stButton button {
+        white-space: nowrap !important;
+        min-width: max-content !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Render as scrollable row of pills
-    cols = st.columns(len(capabilities))
-    for i, (emoji, label, prompt_or_desc, is_live) in enumerate(capabilities):
-        with cols[i]:
-            if is_live:
-                # Live capability - triggers chat
-                if st.button(f"{emoji} {label}", key=f"cap_{i}", use_container_width=True):
-                    st.session_state.messages.append({"role": "user", "content": prompt_or_desc})
-                    st.session_state._quick_action_triggered = True
-                    st.rerun()
-            else:
-                # Roadmap capability - show what's coming with tooltip
-                if st.button(f"{emoji} {label} ✨", key=f"cap_{i}", use_container_width=True, help=prompt_or_desc):
-                    st.toast(f"**{label}** — {prompt_or_desc}. Coming soon.", icon="✨")
+    # Render pills in rows of 8 for better layout
+    PILLS_PER_ROW = 8
+    for row_start in range(0, len(capabilities), PILLS_PER_ROW):
+        row_caps = capabilities[row_start:row_start + PILLS_PER_ROW]
+        cols = st.columns(len(row_caps))
+
+        for i, (emoji, label, prompt_or_desc, is_live) in enumerate(row_caps):
+            cap_idx = row_start + i
+            with cols[i]:
+                if is_live:
+                    # Live capability - triggers chat
+                    if st.button(f"{emoji} {label}", key=f"cap_{cap_idx}"):
+                        st.session_state.messages.append({"role": "user", "content": prompt_or_desc})
+                        st.session_state._quick_action_triggered = True
+                        st.rerun()
+                else:
+                    # Roadmap capability - show what's coming with tooltip
+                    if st.button(f"{emoji} {label} ✨", key=f"cap_{cap_idx}", help=prompt_or_desc):
+                        st.toast(f"**{label}** — {prompt_or_desc}. Coming soon.", icon="✨")
 
 
 def chat_interface():

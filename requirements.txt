@@ -36,3 +36,6 @@ google-api-python-client>=2.100.0
 
 # Session persistence (cookies)
 extra-streamlit-components>=0.1.60
+
+# Scheduler
+croniter>=1.4.0
