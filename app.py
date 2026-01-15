@@ -1378,62 +1378,130 @@ def render_quick_actions():
 
 def render_suggested_actions():
     """
-    Render capability library with tabbed categories.
-    Clean navigation, organized by use case.
+    Render capability library with thematic tabs.
+    Includes user favorites (shown first when populated).
     """
+    from settings_manager import SettingsManager
 
-    # Capabilities organized by category
-    # (emoji, label, chat_prompt, is_live)
-    categories = {
-        "🎁 Gift Cards": [
-            ("🎁", "Amazon", "I want to buy an Amazon gift card", True),
-            ("☕", "Starbucks", "Get me a Starbucks gift card", True),
-            ("🍕", "DoorDash", "I want a DoorDash gift card", True),
-            ("🛍️", "Target", "Show me Target gift cards", True),
-            ("🚗", "Uber", "I want Uber gift card credits", True),
-            ("📺", "Netflix", "I want a Netflix gift card", True),
-            ("🎮", "PlayStation", "Show me PlayStation gift cards", True),
-            ("💅", "Sephora", "Get a Sephora gift card", True),
-        ],
-        "💸 Bills & Send": [
-            ("📤", "Send USDC", "Help me send USDC to someone", True),
-            ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
-            ("📱", "Phone Top-up", "I need to add minutes to my phone", True),
-            ("⏰", "Schedule", "I want to set up a recurring payment", True),
-        ],
-        "🔧 Crypto Tools": [
-            ("🌐", "Get Domain", "I want to register a domain", True),
-            ("🔐", "VPN Access", "I want a Mullvad VPN subscription", True),
-        ],
-        "🚀 Coming Soon": [
-            ("✈️", "Book Flight", "Earn 5% back in crypto on flights via Travala", False),
-            ("🏨", "Hotels", "Book hotels, get bonus gift card rewards", False),
-            ("🎵", "Apple Music", "Gift an Apple Music subscription", False),
-            ("💰", "Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
-            ("📈", "Swap to ETH", "Swap USDC to ETH at best rates", False),
-            ("₿", "Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
-            ("🔔", "Alerts", "Set up balance alerts and spending notifications", False),
-        ],
+    user_id = st.session_state.get("user_id")
+
+    # All actions with unique IDs
+    # Format: {action_id: (emoji, label, prompt, is_live)}
+    ALL_ACTIONS = {
+        # Send & Pay
+        "send_usdc": ("📤", "Send USDC", "Help me send USDC to someone", True),
+        "pay_bills": ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
+        "phone_topup": ("📱", "Phone Top-up", "I need to add minutes to my phone", True),
+        "schedule": ("⏰", "Schedule", "I want to set up a recurring payment", True),
+        # Earn
+        "earn_yield": ("💰", "Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
+        "swap_eth": ("📈", "Swap to ETH", "Swap USDC to ETH at best rates", False),
+        "stack_sats": ("₿", "Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
+        # Tools
+        "domain": ("🌐", "Get Domain", "I want to register a domain", True),
+        "vpn": ("🔐", "VPN", "I want a Mullvad VPN subscription", True),
+        "esim": ("📶", "eSIM", "I need an international eSIM", False),
+        "alerts": ("🔔", "Alerts", "Set up balance alerts and spending notifications", False),
+        # Shopping
+        "amazon": ("🛒", "Amazon", "I want to buy an Amazon gift card", True),
+        "target": ("🎯", "Target", "Show me Target gift cards", True),
+        "walmart": ("🏪", "Walmart", "I want a Walmart gift card", True),
+        "bestbuy": ("💻", "Best Buy", "Show me Best Buy gift cards", True),
+        "sephora": ("💅", "Sephora", "Get a Sephora gift card", True),
+        # Food
+        "doordash": ("🍕", "DoorDash", "I want a DoorDash gift card", True),
+        "ubereats": ("🚗", "Uber Eats", "I want Uber Eats gift card credits", True),
+        "starbucks": ("☕", "Starbucks", "Get me a Starbucks gift card", True),
+        "chipotle": ("🌯", "Chipotle", "I want a Chipotle gift card", True),
+        "grubhub": ("🍔", "Grubhub", "Show me Grubhub gift cards", True),
+        # Streaming
+        "netflix": ("📺", "Netflix", "I want a Netflix gift card", True),
+        "spotify": ("🎵", "Spotify", "Get me a Spotify gift card", True),
+        "disney": ("🏰", "Disney+", "I want a Disney+ gift card", False),
+        "hulu": ("📡", "Hulu", "Show me Hulu gift cards", False),
+        "appletv": ("🍎", "Apple TV+", "I want an Apple TV+ subscription", False),
+        # Gaming
+        "playstation": ("🎮", "PlayStation", "Show me PlayStation gift cards", True),
+        "xbox": ("🎯", "Xbox", "I want an Xbox gift card", True),
+        "steam": ("🎲", "Steam", "Get me a Steam gift card", True),
+        "nintendo": ("🍄", "Nintendo", "I want a Nintendo eShop card", True),
+        "roblox": ("🧱", "Roblox", "Show me Roblox gift cards", True),
     }
 
-    # Create tabs
-    tabs = st.tabs(list(categories.keys()))
+    # Categories with action IDs (order matters)
+    CATEGORIES = {
+        "💸 Send & Pay": ["send_usdc", "pay_bills", "phone_topup", "schedule"],
+        "💰 Earn": ["earn_yield", "swap_eth", "stack_sats"],
+        "🔧 Tools": ["domain", "vpn", "esim", "alerts"],
+        "🛒 Shopping": ["amazon", "target", "walmart", "bestbuy", "sephora"],
+        "🍔 Food": ["doordash", "ubereats", "starbucks", "chipotle", "grubhub"],
+        "📺 Streaming": ["netflix", "spotify", "disney", "hulu", "appletv"],
+        "🎮 Gaming": ["playstation", "xbox", "steam", "nintendo", "roblox"],
+    }
 
-    for tab_idx, (category_name, items) in enumerate(categories.items()):
-        with tabs[tab_idx]:
-            # Render pills in rows
+    # Get user favorites
+    favorites = SettingsManager.get_favorites(user_id) if user_id else []
+
+    # Build tab list - Favorites first if populated
+    tab_names = list(CATEGORIES.keys())
+    if favorites:
+        tab_names = ["⭐ Favorites"] + tab_names
+
+    tabs = st.tabs(tab_names)
+    tab_offset = 1 if favorites else 0
+
+    # Render Favorites tab if populated
+    if favorites:
+        with tabs[0]:
+            fav_actions = [(aid, ALL_ACTIONS[aid]) for aid in favorites if aid in ALL_ACTIONS]
+            if fav_actions:
+                cols = st.columns(min(len(fav_actions), 4))
+                for i, (action_id, (emoji, label, prompt, is_live)) in enumerate(fav_actions):
+                    col_idx = i % 4
+                    with cols[col_idx]:
+                        col1, col2 = st.columns([4, 1])
+                        with col1:
+                            if is_live:
+                                if st.button(f"{emoji} {label}", key=f"fav_{action_id}", use_container_width=True):
+                                    st.session_state.messages.append({"role": "user", "content": prompt})
+                                    st.session_state._quick_action_triggered = True
+                                    st.rerun()
+                            else:
+                                st.button(f"{emoji} {label}", key=f"fav_{action_id}", disabled=True,
+                                          use_container_width=True, help=prompt)
+                        with col2:
+                            if st.button("✕", key=f"unfav_{action_id}", help="Remove from favorites"):
+                                SettingsManager.remove_favorite(user_id, action_id)
+                                st.rerun()
+
+    # Render category tabs
+    for tab_idx, (category_name, action_ids) in enumerate(CATEGORIES.items()):
+        with tabs[tab_idx + tab_offset]:
+            items = [(aid, ALL_ACTIONS[aid]) for aid in action_ids if aid in ALL_ACTIONS]
             cols = st.columns(min(len(items), 4))
-            for i, (emoji, label, prompt, is_live) in enumerate(items):
+            for i, (action_id, (emoji, label, prompt, is_live)) in enumerate(items):
                 col_idx = i % 4
                 with cols[col_idx]:
-                    if is_live:
-                        if st.button(f"{emoji} {label}", key=f"cap_{tab_idx}_{i}", use_container_width=True):
-                            st.session_state.messages.append({"role": "user", "content": prompt})
-                            st.session_state._quick_action_triggered = True
-                            st.rerun()
-                    else:
-                        st.button(f"{emoji} {label}", key=f"cap_{tab_idx}_{i}", disabled=True,
-                                  use_container_width=True, help=prompt)
+                    is_fav = action_id in favorites
+                    col1, col2 = st.columns([4, 1])
+                    with col1:
+                        if is_live:
+                            if st.button(f"{emoji} {label}", key=f"cap_{tab_idx}_{action_id}", use_container_width=True):
+                                st.session_state.messages.append({"role": "user", "content": prompt})
+                                st.session_state._quick_action_triggered = True
+                                st.rerun()
+                        else:
+                            st.button(f"{emoji} {label}", key=f"cap_{tab_idx}_{action_id}", disabled=True,
+                                      use_container_width=True, help=prompt)
+                    with col2:
+                        star = "★" if is_fav else "☆"
+                        help_text = "Remove from favorites" if is_fav else "Add to favorites"
+                        if st.button(star, key=f"star_{tab_idx}_{action_id}", help=help_text):
+                            if user_id:
+                                SettingsManager.toggle_favorite(user_id, action_id)
+                                st.rerun()
+                            else:
+                                st.toast("Create an account to save favorites")
 
 
 def chat_interface():

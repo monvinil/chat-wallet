@@ -405,3 +405,90 @@ class SettingsManager:
         except Exception as e:
             logger.error(f"Failed to disconnect OAuth accounts: {e}")
             return False
+
+    # =====================
+    # Favorites Management
+    # =====================
+
+    @staticmethod
+    def get_favorites(user_id: str) -> List[str]:
+        """Get user's favorite action IDs"""
+        if not user_id:
+            return []
+
+        # Guest users - store in session state
+        if user_id.startswith("guest_"):
+            return st.session_state.get(f"favorites_{user_id}", [])
+
+        try:
+            settings = SettingsManager.get_user_settings(user_id)
+            if settings and settings.get("favorites"):
+                import json
+                favorites = settings.get("favorites")
+                if isinstance(favorites, str):
+                    return json.loads(favorites)
+                return favorites if isinstance(favorites, list) else []
+            return []
+        except Exception as e:
+            logger.error(f"Error getting favorites: {e}")
+            return []
+
+    @staticmethod
+    def add_favorite(user_id: str, action_id: str) -> bool:
+        """Add an action to favorites"""
+        if not user_id or not action_id:
+            return False
+
+        favorites = SettingsManager.get_favorites(user_id)
+        if action_id not in favorites:
+            favorites.append(action_id)
+
+        return SettingsManager._save_favorites(user_id, favorites)
+
+    @staticmethod
+    def remove_favorite(user_id: str, action_id: str) -> bool:
+        """Remove an action from favorites"""
+        if not user_id or not action_id:
+            return False
+
+        favorites = SettingsManager.get_favorites(user_id)
+        if action_id in favorites:
+            favorites.remove(action_id)
+
+        return SettingsManager._save_favorites(user_id, favorites)
+
+    @staticmethod
+    def toggle_favorite(user_id: str, action_id: str) -> bool:
+        """Toggle favorite status, returns new state (True=favorited)"""
+        favorites = SettingsManager.get_favorites(user_id)
+        if action_id in favorites:
+            SettingsManager.remove_favorite(user_id, action_id)
+            return False
+        else:
+            SettingsManager.add_favorite(user_id, action_id)
+            return True
+
+    @staticmethod
+    def _save_favorites(user_id: str, favorites: List[str]) -> bool:
+        """Save favorites list"""
+        import json
+
+        # Guest users - store in session state
+        if user_id.startswith("guest_"):
+            st.session_state[f"favorites_{user_id}"] = favorites
+            return True
+
+        try:
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return False
+
+            result = supabase.table("user_settings").upsert({
+                "user_id": user_id,
+                "favorites": json.dumps(favorites)
+            }).execute()
+
+            return True
+        except Exception as e:
+            logger.error(f"Error saving favorites: {e}")
+            return False
