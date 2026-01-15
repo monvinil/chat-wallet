@@ -130,9 +130,15 @@ MOCK_EMAILS = [
 
 def _get_solana_address_from_session() -> str:
     """Get Solana address from wallet data in session"""
+    # Try from decrypted wallet data first
     wallet_data = WalletManager.get_wallet_from_session()
     if wallet_data and wallet_data.get("solana"):
         return wallet_data["solana"].get("address")
+
+    # Fallback: check session state directly (for guest wallets)
+    if st.session_state.get("solana_address"):
+        return st.session_state.solana_address
+
     return None
 
 
@@ -430,6 +436,10 @@ def wallet_setup_ui():
                                 st.session_state.user_email = email
                                 st.session_state.user_id = user["id"]
                                 st.session_state.show_auth_modal = False
+
+                                # Store Solana address if available
+                                if wallet_info.get("solana_address"):
+                                    st.session_state.solana_address = wallet_info["solana_address"]
 
                                 # Create persistent session (cookie)
                                 SessionManager.login(user["id"], email, wallet_info["address"])
@@ -841,6 +851,11 @@ def deposit_modal():
     wallet_data = WalletManager.get_wallet_from_session()
     has_solana = wallet_data and wallet_data.get("solana")
     solana_address = wallet_data.get("solana", {}).get("address") if has_solana else None
+
+    # Fallback: check session state directly (for guest wallets before decryption)
+    if not solana_address and st.session_state.get("solana_address"):
+        solana_address = st.session_state.solana_address
+        has_solana = True
 
     # Chain selector - include Solana if wallet has it
     chain_options = {
