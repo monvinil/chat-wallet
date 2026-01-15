@@ -1208,9 +1208,15 @@ def sidebar():
             return
 
         if st.session_state.wallet_address and not st.session_state.get("wallet_locked", True):
-            # Wallet info
+            # Wallet info - EVM address
             address = st.session_state.wallet_address
             st.code(ChainUtils.format_address(address, 8))
+
+            # Show Solana address if available
+            solana_addr = _get_solana_address_from_session()
+            if solana_addr:
+                st.caption("Solana")
+                st.code(ChainUtils.format_address(solana_addr, 8))
 
             # Action buttons in row
             col1, col2 = st.columns(2)
