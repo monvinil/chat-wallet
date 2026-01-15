@@ -1453,37 +1453,22 @@ def chat_interface():
     st.title("Chat Wallet")
     st.caption("Manage your wallet through conversation")
 
-    # Quick Start mode - create guest wallet if no wallet exists
+    # No wallet - show welcome and prompt to sign in/up
     if not st.session_state.wallet_address:
-        from quick_start import create_guest_wallet
-
-        # Show clean intro with quick start button
         with st.chat_message("assistant"):
-            st.markdown("""**Your crypto wallet that speaks your language.**
+            st.markdown("""**Welcome to Chat Wallet**
 
-Buy gift cards, pay bills, and send money—all through simple conversation.
+Your crypto wallet that speaks your language. Buy gift cards, pay bills, and send money—all through simple conversation.
 
-**Popular requests:**
+**Things you can do:**
 - "Buy a $50 Amazon gift card"
 - "Send $25 to vitalik.eth"
 - "Pay my phone bill"
+- "Get a Mullvad VPN subscription"
+- "Register mydomain.com"
 
-Click **Quick Start** to create your wallet in seconds.
+Sign up or log in to get started.
 """)
-
-            _, col_center, _ = st.columns([1, 2, 1])
-            with col_center:
-                if st.button("Quick Start", type="primary", use_container_width=True, key="quick_start_btn"):
-                    with st.spinner("Creating wallet..."):
-                        if create_guest_wallet():
-                            st.session_state.quick_start_active = True
-                            st.success("Wallet created")
-                            st.rerun()
-                        else:
-                            st.error("Could not create wallet. Please try again.")
-
-            st.divider()
-            st.caption("Or create an account to save your wallet across devices")
 
         # Disabled chat input
         st.chat_input("Message...", disabled=True, key="preview_input")
