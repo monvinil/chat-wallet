@@ -43,7 +43,7 @@ def show_onboarding():
 
 def show_step_1_welcome():
     """Step 1: Warm wallet confirmation - educational, flowing"""
-    st.markdown("### You're all set")
+    st.markdown("### Your wallet is ready")
     st.progress(0.5, text="Step 1 of 2")
 
     # Show wallet address as accessible detail
@@ -51,12 +51,12 @@ def show_step_1_welcome():
     if address:
         with st.expander("Your wallet address", expanded=False):
             st.code(address)
-            st.caption("Works on Base, Arbitrum, Polygon, and Solana")
+            st.caption("This is your payment address")
 
     st.markdown("""
-Your wallet is ready. It's **self-custodial**—you hold the keys, and only you can access your funds.
+Great! Your wallet is secured and only you can access it.
 
-One more step: connect an AI brain so you can start chatting.
+One more step: connect an AI assistant to start chatting.
 """)
 
     if st.button("Continue", type="primary", use_container_width=True):
@@ -67,7 +67,7 @@ def show_step_2_connect_ai(user_id: str):
     """Step 2: Connect AI - flowing, educational"""
     from api_key_setup import show_api_key_setup_modal, check_api_key_status
 
-    st.markdown("### Connect your AI")
+    st.markdown("### Almost there!")
     st.progress(1.0, text="Step 2 of 2")
 
     # Check if already configured
@@ -88,7 +88,7 @@ def show_step_2_connect_ai(user_id: str):
             st.balloons()
             st.session_state._api_setup_celebration_shown = True
 
-        st.markdown("You're ready! Start typing and I'll help you buy gift cards, pay bills, send money, and more.")
+        st.markdown("You're all set! Start typing to buy gift cards, pay bills, send money, and more.")
 
         col1, col2 = st.columns([1, 1])
         with col1:
@@ -102,19 +102,19 @@ def show_step_2_connect_ai(user_id: str):
         return True
 
     st.markdown("""
-Chat02 needs an AI to understand you. **Google Gemini is free** and takes 30 seconds to set up:
+To chat with your wallet, you need a free AI key from Google:
 
-1. Visit [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 2. Click **Get API Key** → **Create in new project**
-3. Copy the key and paste it below
+3. Come back and paste it here
 """)
 
     if st.button("Add my API key", type="primary", use_container_width=True, key="connect_ai_main"):
         show_api_key_setup_modal()
 
-    with st.expander("Other AI providers"):
-        st.caption("**Claude** — Highest quality responses (paid)")
-        st.caption("**GPT** — Most widely used (paid)")
-        st.caption("You can switch providers anytime in Settings.")
+    with st.expander("Other options"):
+        st.caption("**Claude** — Best quality (paid)")
+        st.caption("**GPT** — Popular choice (paid)")
+        st.caption("You can change this anytime in Settings.")
 
     return False

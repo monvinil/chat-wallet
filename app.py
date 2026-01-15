@@ -339,9 +339,9 @@ def init_state():
 def wallet_setup_ui():
     """Show wallet setup screen with email/password account"""
     st.title("Chat02")
-    st.caption("Your money, your words")
+    st.caption("Pay for anything with a conversation")
 
-    st.info("Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.")
+    st.info("Your wallet is secured and backed up. Only you can access your funds.")
 
     tab1, tab2, tab3 = st.tabs(["Create Account", "Sign In", "Import Wallet"])
 
@@ -1190,7 +1190,7 @@ def _render_send_confirmation():
 def render_sidebar_footer():
     """Render footer - transparent, builds trust"""
     st.markdown("---")
-    st.caption("Self-custodial · You hold the keys")
+    st.caption("You control your wallet")
 
 
 def sidebar():
@@ -1198,10 +1198,9 @@ def sidebar():
     with st.sidebar:
         # Show login button if no wallet
         if not st.session_state.wallet_address:
-            st.markdown("#### Chat02")
-            st.caption("Sign in to access your wallet")
+            st.caption("Already have an account?")
 
-            if st.button("Sign In", use_container_width=True, type="primary"):
+            if st.button("Sign In", use_container_width=True):
                 st.session_state.show_auth_modal = True
                 st.rerun()
 
@@ -1357,18 +1356,17 @@ def render_transaction_history():
 def render_suggested_actions():
     """Render inspiration prompts - educational, show what's possible"""
 
-    # Inspiration prompts with plain English (no crypto jargon)
+    # Inspiration prompts with plain English
     prompts = [
         "Buy a $25 Amazon card",
-        "Register mysite.com",
         "Pay my AWS bill",
+        "Send $50 to a friend",
         "Get Mullvad VPN",
-        "Send $50 to Alex",
     ]
 
     st.caption("Try something like:")
 
-    # Horizontal row of prompts
+    # Horizontal row of prompts (4 columns works better on mobile)
     cols = st.columns(len(prompts))
     for i, prompt_text in enumerate(prompts):
         with cols[i]:
@@ -1380,34 +1378,35 @@ def render_suggested_actions():
 
 def chat_interface():
     """Main chat interface"""
-    st.title("Chat02")
-
     # Quick Start mode - create guest wallet if no wallet exists
     if not st.session_state.wallet_address:
         from quick_start import create_guest_wallet
 
+        st.markdown("## Chat02")
+        st.caption("Pay for anything with a conversation")
+
         # Clear value proposition with examples
         with st.chat_message("assistant"):
-            st.markdown("""**Chat02** — your wallet that speaks plain English.
+            st.markdown("""Hey! I'm your AI wallet assistant.
 
-Just tell me what you need:
+Tell me what you need and I'll make it happen:
 - "Buy a $50 Amazon gift card"
 - "Pay my AWS bill"
-- "Send $25 to alex.eth"
+- "Send $25 to a friend"
 - "Get a year of Mullvad VPN"
 
-I'll handle the blockchain stuff. You just chat.
+No apps. No forms. Just ask.
 """)
 
-            if st.button("Get Started", type="primary", use_container_width=True, key="quick_start_btn"):
-                with st.spinner("Creating wallet..."):
+            if st.button("Create My Wallet", type="primary", use_container_width=True, key="quick_start_btn"):
+                with st.spinner("Setting up..."):
                     if create_guest_wallet():
                         st.session_state.quick_start_active = True
                         st.rerun()
                     else:
-                        st.error("Oops, something went wrong. Let's try that again.")
+                        st.error("Something went wrong. Please try again.")
 
-            st.caption("Self-custodial · USDC on Base, Arbitrum, Polygon, Solana")
+            st.caption("Free · No signup required · You control your keys")
 
         # Disabled chat input
         st.chat_input("Message...", disabled=True, key="preview_input")
@@ -1533,17 +1532,17 @@ Wait a minute and try again, or switch providers in Settings if this keeps happe
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # Welcome message for logged in users - informative and actionable
+    # Welcome message for logged in users - warm and actionable
     if not st.session_state.messages:
-        welcome = f"""Ready to go! Your wallet: `{ChainUtils.format_address(st.session_state.wallet_address)}`
+        welcome = """Welcome back! What can I help you with today?
 
-**What can I do?**
-- Buy gift cards (Amazon, Uber, Netflix, etc.)
-- Pay bills (AWS, domain renewals, subscriptions)
-- Send money to any address or ENS name
-- Get VPN subscriptions, domains, and more
+Some things I can do:
+- Buy gift cards (Amazon, Uber, Netflix...)
+- Pay bills and subscriptions
+- Send money to friends
+- Get domains, VPNs, and more
 
-Just type what you need—or try the suggestions below.
+Just type what you need, or tap a suggestion below.
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
 

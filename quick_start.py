@@ -96,15 +96,15 @@ def show_quick_start_banner():
     if st.session_state.get("guest_mode") and not st.session_state.get("quick_start_banner_dismissed"):
         with st.container():
             st.info("""
-**You're using a guest wallet**
+**One quick step to start chatting**
 
-To start chatting, you'll need a free AI key:
+You need a free AI key from Google:
 
 1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 2. Click **Get API Key** → **Create in new project**
-3. Come back and add your key
+3. Come back and paste it in Settings
 
-Want to access this wallet from other devices? Create an account anytime.
+Create an account anytime to access your wallet from other devices.
 """)
 
             if st.button("Got it", key="dismiss_quick_start_banner"):
