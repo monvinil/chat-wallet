@@ -1448,6 +1448,72 @@ def render_suggested_actions():
                                   use_container_width=True, help=prompt)
 
 
+def render_suggested_actions_preview():
+    """
+    Render capability preview for pre-login users.
+    All buttons disabled - just for exploration.
+    """
+    # Same categories as render_suggested_actions
+    categories = {
+        "💸 Send & Pay": [
+            ("📤", "Send USDC"),
+            ("💡", "Pay Bills"),
+            ("📱", "Phone Top-up"),
+            ("⏰", "Schedule"),
+        ],
+        "💰 Earn": [
+            ("💰", "Earn Yield"),
+            ("📈", "Swap to ETH"),
+            ("₿", "Stack Sats"),
+        ],
+        "🔧 Tools": [
+            ("🌐", "Get Domain"),
+            ("🔐", "VPN"),
+            ("📶", "eSIM"),
+            ("🔔", "Alerts"),
+        ],
+        "🛒 Shopping": [
+            ("🛒", "Amazon"),
+            ("🎯", "Target"),
+            ("🏪", "Walmart"),
+            ("💻", "Best Buy"),
+            ("💅", "Sephora"),
+        ],
+        "🍔 Food": [
+            ("🍕", "DoorDash"),
+            ("🚗", "Uber Eats"),
+            ("☕", "Starbucks"),
+            ("🌯", "Chipotle"),
+            ("🍔", "Grubhub"),
+        ],
+        "📺 Streaming": [
+            ("📺", "Netflix"),
+            ("🎵", "Spotify"),
+            ("🏰", "Disney+"),
+            ("📡", "Hulu"),
+            ("🍎", "Apple TV+"),
+        ],
+        "🎮 Gaming": [
+            ("🎮", "PlayStation"),
+            ("🎯", "Xbox"),
+            ("🎲", "Steam"),
+            ("🍄", "Nintendo"),
+            ("🧱", "Roblox"),
+        ],
+    }
+
+    tabs = st.tabs(list(categories.keys()))
+
+    for tab_idx, (category_name, items) in enumerate(categories.items()):
+        with tabs[tab_idx]:
+            cols = st.columns(min(len(items), 4))
+            for i, (emoji, label) in enumerate(items):
+                col_idx = i % 4
+                with cols[col_idx]:
+                    st.button(f"{emoji} {label}", key=f"preview_{tab_idx}_{i}", disabled=True,
+                              use_container_width=True, help="Sign up to use")
+
+
 def chat_interface():
     """Main chat interface"""
     st.title("Chat Wallet")
@@ -1460,15 +1526,12 @@ def chat_interface():
 
 Your crypto wallet that speaks your language. Buy gift cards, pay bills, and send money—all through simple conversation.
 
-**Things you can do:**
-- "Buy a $50 Amazon gift card"
-- "Send $25 to vitalik.eth"
-- "Pay my phone bill"
-- "Get a Mullvad VPN subscription"
-- "Register mydomain.com"
-
 Sign up or log in to get started.
 """)
+
+        # Show preview of capabilities (all disabled for exploration)
+        st.divider()
+        render_suggested_actions_preview()
 
         # Disabled chat input
         st.chat_input("Message...", disabled=True, key="preview_input")
