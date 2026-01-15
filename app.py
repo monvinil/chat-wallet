@@ -1200,7 +1200,7 @@ def sidebar():
         if not st.session_state.wallet_address:
             st.metric("Balance", "$0.00")
 
-            if st.button("Connect", use_container_width=True, type="primary"):
+            if st.button("Get Started", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
                 st.rerun()
 
