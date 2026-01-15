@@ -346,3 +346,55 @@ class SettingsManager:
                 del st.session_state[cache_key]
 
         return success
+
+    @staticmethod
+    def clear_all_settings(user_id: str) -> bool:
+        """Clear all user settings (reset to defaults)"""
+        try:
+            # Handle guest users
+            if user_id and user_id.startswith("guest_"):
+                guest_key = f"guest_settings_{user_id}"
+                if guest_key in st.session_state:
+                    del st.session_state[guest_key]
+                # Clear LLM config cache
+                cache_key = f"_llm_config_{user_id}"
+                if cache_key in st.session_state:
+                    del st.session_state[cache_key]
+                return True
+
+            # For database users, delete from Supabase
+            supabase = get_supabase_client()
+            if not supabase:
+                return False
+
+            supabase.table("user_settings").delete().eq("user_id", user_id).execute()
+
+            # Clear cache
+            cache_key = f"_llm_config_{user_id}"
+            if cache_key in st.session_state:
+                del st.session_state[cache_key]
+
+            return True
+        except Exception as e:
+            logger.error(f"Failed to clear settings: {e}")
+            return False
+
+    @staticmethod
+    def disconnect_all_oauth(user_id: str) -> bool:
+        """Disconnect all OAuth accounts for a user"""
+        try:
+            # Handle guest users - they don't have OAuth
+            if user_id and user_id.startswith("guest_"):
+                return True
+
+            supabase = get_supabase_client()
+            if not supabase:
+                return False
+
+            # Delete all OAuth connections
+            supabase.table("oauth_connections").delete().eq("user_id", user_id).execute()
+
+            return True
+        except Exception as e:
+            logger.error(f"Failed to disconnect OAuth accounts: {e}")
+            return False

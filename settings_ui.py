@@ -52,48 +52,59 @@ def settings_page():
     # ============================================================================
     with tab1:
         st.subheader("Connect Your AI")
-        st.caption("Choose which AI brain powers your conversations")
+        st.caption("Choose which AI powers your assistant")
 
         # Current model display with friendly messaging
         llm_config = SettingsManager.get_llm_config(user_id)
 
         if llm_config["using_default"]:
-            st.warning("⚠️ No AI connected yet - add your API key below to start chatting", icon="🤖")
+            st.warning("No AI connected yet. Add your API key below to start.")
         else:
-            st.success(f"✓ Connected: {llm_config['provider'].title()} - {llm_config['model']}", icon="🤖")
+            st.success(f"Connected: {llm_config['provider'].title()} - {llm_config['model']}")
 
         st.divider()
 
         # LLM Provider selection with friendly descriptions
         st.markdown("**Which AI do you want to use?**")
+        provider_options = ["google", "anthropic", "openai"]
+        provider_labels = {
+            "google": "Google Gemini - Free tier available (Recommended)",
+            "anthropic": "Anthropic Claude - Conversational & helpful",
+            "openai": "OpenAI GPT - You might already have this"
+        }
+        existing_provider = existing_settings.get("llm_provider", "google") if existing_settings else "google"
+        if existing_provider not in provider_options:
+            existing_provider = "google"
         provider = st.selectbox(
             "AI Provider",
-            ["anthropic", "openai"],
-            format_func=lambda x: {
-                "anthropic": "🧠 Anthropic (Claude) - Conversational & helpful",
-                "openai": "🤖 OpenAI (GPT) - You might already have this"
-            }[x],
-            index=0 if not existing_settings else
-                  ["anthropic", "openai"].index(existing_settings.get("llm_provider", "anthropic")),
+            provider_options,
+            format_func=lambda x: provider_labels[x],
+            index=provider_options.index(existing_provider),
             label_visibility="collapsed"
         )
 
         # Model selection based on provider
         st.markdown("**Which version?**")
-        if provider == "anthropic":
+        if provider == "google":
             model_options = {
-                "claude-opus-4-20250514": "💎 Opus - Most capable (best for complex tasks)",
-                "claude-sonnet-4-20250514": "⚡ Sonnet - Balanced (recommended)",
-                "claude-haiku-4-20250514": "🚀 Haiku - Fastest (cheapest)"
+                "gemini-2.0-flash": "Gemini 2.0 Flash - Fast & free (Recommended)",
+                "gemini-1.5-pro": "Gemini 1.5 Pro - More capable",
+                "gemini-1.5-flash": "Gemini 1.5 Flash - Balanced"
+            }
+        elif provider == "anthropic":
+            model_options = {
+                "claude-sonnet-4-20250514": "Sonnet - Balanced (Recommended)",
+                "claude-opus-4-20250514": "Opus - Most capable",
+                "claude-haiku-4-20250514": "Haiku - Fastest"
             }
         else:
             model_options = {
-                "gpt-4-turbo": "⚡ GPT-4 Turbo - Fast and capable",
-                "gpt-4": "💎 GPT-4 - Most capable",
-                "gpt-3.5-turbo": "🚀 GPT-3.5 - Fast and cheap"
+                "gpt-4-turbo": "GPT-4 Turbo - Fast and capable",
+                "gpt-4": "GPT-4 - Most capable",
+                "gpt-3.5-turbo": "GPT-3.5 - Fast and cheap"
             }
 
-        default_model = existing_settings.get("llm_model") if existing_settings else list(model_options.keys())[1]
+        default_model = existing_settings.get("llm_model") if existing_settings else list(model_options.keys())[0]
         selected_model = st.selectbox(
             "AI Model",
             list(model_options.keys()),
@@ -105,13 +116,13 @@ def settings_page():
         st.divider()
 
         # API Key input - always shown, required for production
-        st.markdown("**🔑 Your API Key**")
-        st.caption("This is like a password that lets you use the AI")
+        st.markdown("**Your API Key**")
+        st.caption("Required to use the AI assistant")
 
         # Show if key is already configured
         has_existing_key = bool(existing_settings and existing_settings.get("llm_api_key_encrypted"))
         if has_existing_key:
-            st.success("✓ You're all set! Key is saved securely", icon="🔒")
+            st.success("Key saved securely")
             st.caption("Paste a new key below to change it")
 
         api_key = st.text_input(
@@ -302,15 +313,35 @@ def settings_page():
 
         st.divider()
 
-        # Danger zone
+        # Danger zone - these actions are available
         st.markdown("**Danger Zone**")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Delete Settings", type="secondary", use_container_width=True):
-                st.warning("Coming soon")
+            if st.button("Clear Settings", type="secondary", use_container_width=True):
+                # Actually clear the settings
+                user_id = st.session_state.get("user_id")
+                if user_id:
+                    try:
+                        SettingsManager.clear_all_settings(user_id)
+                        st.success("Settings cleared")
+                        st.rerun()
+                    except Exception as e:
+                        st.error("Could not clear settings")
+                else:
+                    st.warning("No active session")
         with col2:
-            if st.button("Revoke Accounts", type="secondary", use_container_width=True):
-                st.warning("Coming soon")
+            if st.button("Disconnect Accounts", type="secondary", use_container_width=True):
+                # Disconnect OAuth accounts
+                user_id = st.session_state.get("user_id")
+                if user_id:
+                    try:
+                        SettingsManager.disconnect_all_oauth(user_id)
+                        st.success("Accounts disconnected")
+                        st.rerun()
+                    except Exception as e:
+                        st.error("Could not disconnect accounts")
+                else:
+                    st.warning("No active session")
 
 
 def show_settings_button():

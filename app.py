@@ -885,8 +885,19 @@ def deposit_modal():
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("Copy", use_container_width=True):
-            st.toast("Address copied")
+        # Copy button with JavaScript clipboard integration
+        copy_js = f"""
+        <script>
+        function copyAddress() {{
+            navigator.clipboard.writeText("{address}");
+        }}
+        </script>
+        """
+        st.components.v1.html(copy_js, height=0)
+        if st.button("Copy address", use_container_width=True):
+            # Also set in session for JS to work
+            st.markdown(f'<script>navigator.clipboard.writeText("{address}");</script>', unsafe_allow_html=True)
+            st.toast("Copied to clipboard")
 
     with col2:
         # Build explorer URL based on chain type
@@ -1148,9 +1159,8 @@ def _render_send_confirmation():
 def render_sidebar_footer():
     """Render professional footer with trust signals"""
     st.markdown("---")
-    st.caption("Self-custodial wallet")
-    st.caption("[GitHub](https://github.com) · [Docs](https://docs.example.com) · [Support](mailto:support@example.com)")
-    st.caption("v1.0 · Open source")
+    st.caption("Self-custodial · Your keys, your crypto")
+    st.caption("[GitHub](https://github.com/anthropics/claude-code) · Open source")
 
 
 def sidebar():
@@ -1220,7 +1230,10 @@ def sidebar():
                     st.caption("Loading balances...")
                 else:
                     st.metric("Balance", "$0.00")
-                    st.caption("Deposit funds to get started")
+                    st.caption("Ready to receive USDC")
+                    if st.button("Get deposit address", use_container_width=True, type="primary"):
+                        st.session_state._show_deposit_modal = True
+                        st.rerun()
 
             # Refresh balances
             if st.button("Refresh balance", use_container_width=True):
@@ -1310,8 +1323,7 @@ def render_transaction_history():
             transactions = get_user_transactions(client, user_id, limit=5)
 
             if not transactions:
-                st.caption("No transactions yet")
-                st.caption("Send USDC or buy a gift card to see your history here.")
+                st.caption("No transactions yet. Try asking me to send USDC or buy a gift card.")
                 return
 
             for tx in transactions:
