@@ -44,3 +44,4 @@ croniter>=1.4.0
 solders>=0.21.0
 solana>=0.34.0
 bip-utils>=2.9.0
+base58>=2.1.0

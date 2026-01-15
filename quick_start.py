@@ -45,9 +45,10 @@ def create_guest_wallet():
             # Store Solana address if available (multi-chain wallet)
             if wallet_info.get("solana_address"):
                 st.session_state.solana_address = wallet_info["solana_address"]
-                print(f"Solana address stored: {wallet_info['solana_address']}")
             else:
-                print("No Solana address in wallet_info - Solana libraries may not be installed")
+                # Log warning - Solana libraries may not be installed
+                import logging
+                logging.warning("No Solana address derived - check if solders, bip-utils, base58 are installed")
 
             return True
     except Exception as e:
