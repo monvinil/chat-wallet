@@ -13,6 +13,13 @@ except ImportError:
     SUPABASE_AVAILABLE = False
 
 from config import SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
+from utils.logger import logger
+
+
+def _safe_error(operation: str, e: Exception) -> None:
+    """Show generic error to user, log details server-side"""
+    logger.error(f"{operation}: {str(e)}")
+    st.error(f"Unable to {operation.lower()}. Please try again.")
 
 
 @st.cache_resource
@@ -106,7 +113,7 @@ def create_user(email: str, primary_wallet_address: str = None, auth_provider: s
 
         return None
     except Exception as e:
-        st.error(f"Failed to create user: {e}")
+        _safe_error("Create account", e)
         return None
 
 
@@ -123,9 +130,8 @@ def update_user_password_hash(user_id: str, password_hash: str) -> bool:
         }).eq("id", user_id).execute()
         return True
     except Exception as e:
-        # Column might not exist yet
-        if "password_hash" not in str(e):
-            st.error(f"Failed to update password: {e}")
+        # Column might not exist yet - log but don't show error
+        logger.error(f"Update password hash: {e}")
         return False
 
 
@@ -158,7 +164,7 @@ def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
             return result.data[0]
         return None
     except Exception as e:
-        st.error(f"Failed to fetch user: {e}")
+        _safe_error("Find account", e)
         return None
 
 
@@ -204,9 +210,9 @@ def save_wallet_address(user_id: str, address: str, chain: str = "evm",
                 client.table("wallets").upsert(data_minimal, on_conflict="user_id,chain").execute()
                 return True
             except Exception as e2:
-                st.error(f"Failed to save wallet: {e2}")
+                _safe_error("Save wallet", e2)
                 return False
-        st.error(f"Failed to save wallet address: {e}")
+        _safe_error("Save wallet", e)
         return False
 
 
@@ -253,7 +259,7 @@ def get_user_wallets(user_id: str) -> list:
 
         return wallets
     except Exception as e:
-        st.error(f"Failed to fetch wallets: {e}")
+        _safe_error("Load wallets", e)
         return []
 
 
@@ -276,7 +282,7 @@ def log_transaction(client: Client, user_id: str, wallet_id: str, tx_hash: str,
         }).execute()
         return True
     except Exception as e:
-        st.error(f"Failed to log transaction: {e}")
+        logger.error(f"Log transaction: {e}")
         return False
 
 
@@ -287,5 +293,5 @@ def get_user_transactions(client: Client, user_id: str, limit: int = 50) -> list
             .order("created_at", desc=True).limit(limit).execute()
         return result.data if result.data else []
     except Exception as e:
-        st.error(f"Failed to fetch transactions: {e}")
+        logger.error(f"Fetch transactions: {e}")
         return []

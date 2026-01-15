@@ -194,16 +194,34 @@ class SessionManager:
 
     @staticmethod
     def logout():
-        """Complete logout: clear session and cookie"""
+        """Complete logout: clear session, cookie, and all user caches"""
         session_token = st.session_state.get("session_token")
         if session_token:
             SessionManager.delete_session(session_token)
 
         SessionManager.clear_session_cookie()
 
-        # Clear session state
+        # Clear all user-specific caches (LLM config, balance cache, spending, etc.)
+        keys_to_clear = []
+        for key in st.session_state:
+            if any(prefix in key for prefix in [
+                "_llm_config_",
+                "_balance_cache",
+                "_daily_spending",
+                "_last_activity",
+                "guest_settings_",
+                "_send_",
+                "_seed_verify"
+            ]):
+                keys_to_clear.append(key)
+
+        for key in keys_to_clear:
+            del st.session_state[key]
+
+        # Clear core session state
         for key in ["user_id", "user_email", "wallet_address", "wallet_encrypted",
                     "wallet_salt", "wallet_key", "wallet_locked", "session_token",
-                    "balances", "agent", "messages"]:
+                    "balances", "agent", "messages", "guest_mode", "guest_wallet_address",
+                    "guest_mnemonic", "_guest_user_id"]:
             if key in st.session_state:
                 del st.session_state[key]

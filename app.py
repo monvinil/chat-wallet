@@ -464,68 +464,83 @@ def wallet_setup_ui():
                     if not user:
                         st.error("No account found with this email")
                     else:
-                        # Verify password
-                        stored_hash = get_user_password_hash(user["id"])
+                        # Check rate limiting before password verification
+                        from rate_limiter import RateLimiter
 
-                        if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
-                            st.error("Incorrect password")
+                        allowed, lockout_msg = RateLimiter.check_login_allowed(login_email)
+                        if not allowed:
+                            st.error(lockout_msg)
                         else:
-                            # Password verified (or no hash stored - legacy account)
-                            # Get user's wallet
-                            wallets = get_user_wallets(user["id"])
+                            # Verify password
+                            stored_hash = get_user_password_hash(user["id"])
 
-                            if wallets and len(wallets) > 0:
-                                wallet_address = wallets[0]["wallet_address"]
+                            if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
+                                RateLimiter.record_login_attempt(login_email, success=False)
+                                remaining = RateLimiter.get_remaining_attempts(login_email)
+                                if remaining > 0:
+                                    st.error(f"Incorrect password. {remaining} attempt(s) remaining.")
+                                else:
+                                    st.error("Incorrect password. Account temporarily locked.")
+                            else:
+                                # Record successful login
+                                RateLimiter.record_login_attempt(login_email, success=True)
 
-                                st.session_state.wallet_address = wallet_address
-                                st.session_state.user_email = login_email
-                                st.session_state.user_id = user["id"]
-                                st.session_state.show_auth_modal = False
+                                # Password verified (or no hash stored - legacy account)
+                                # Get user's wallet
+                                wallets = get_user_wallets(user["id"])
 
-                                # Create persistent session (cookie)
-                                SessionManager.login(user["id"], login_email, wallet_address)
+                                if wallets and len(wallets) > 0:
+                                    wallet_address = wallets[0]["wallet_address"]
 
-                                # If no password hash stored (legacy), update it now
-                                if not stored_hash:
-                                    new_hash = WalletManager.hash_password(login_password)
-                                    update_user_password_hash(user["id"], new_hash)
+                                    st.session_state.wallet_address = wallet_address
+                                    st.session_state.user_email = login_email
+                                    st.session_state.user_id = user["id"]
+                                    st.session_state.show_auth_modal = False
 
-                                # Try to restore encrypted wallet from cloud backup
-                                encrypted_wallet = get_encrypted_wallet(user["id"])
-                                if encrypted_wallet:
-                                    # Restore wallet to session
-                                    st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
-                                    st.session_state.wallet_salt = encrypted_wallet["salt"]
+                                    # Create persistent session (cookie)
+                                    SessionManager.login(user["id"], login_email, wallet_address)
 
-                                    # Decrypt with password
-                                    if WalletManager.unlock_wallet_with_password(login_password):
-                                        st.session_state.wallet_locked = False
-                                        st.success("Signed in. Wallet restored.")
+                                    # If no password hash stored (legacy), update it now
+                                    if not stored_hash:
+                                        new_hash = WalletManager.hash_password(login_password)
+                                        update_user_password_hash(user["id"], new_hash)
+
+                                    # Try to restore encrypted wallet from cloud backup
+                                    encrypted_wallet = get_encrypted_wallet(user["id"])
+                                    if encrypted_wallet:
+                                        # Restore wallet to session
+                                        st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
+                                        st.session_state.wallet_salt = encrypted_wallet["salt"]
+
+                                        # Decrypt with password
+                                        if WalletManager.unlock_wallet_with_password(login_password):
+                                            st.session_state.wallet_locked = False
+                                            st.success("Signed in. Wallet restored.")
+                                        else:
+                                            st.session_state.wallet_locked = True
+                                            st.success("Signed in")
+                                            st.warning("Could not decrypt wallet. Enter your password to unlock.")
                                     else:
+                                        # No cloud backup - need manual import (legacy account)
                                         st.session_state.wallet_locked = True
                                         st.success("Signed in")
-                                        st.warning("Could not decrypt wallet. Enter your password to unlock.")
+                                        st.info("Import your wallet using your recovery phrase to access your funds.")
+
+                                    # Check if onboarding was completed
+                                    from settings_manager import SettingsManager
+                                    user_settings = SettingsManager.get_llm_config(user["id"])
+                                    has_api_key = bool(user_settings.get("api_key"))
+
+                                    if not has_api_key:
+                                        # Resume onboarding at API setup step
+                                        st.session_state.onboarding_step = 2
+                                        st.session_state.onboarding_complete = False
+                                        st.info("Connect an AI provider to start chatting.")
+
+                                    # No animation delay - just rerun
+                                    st.rerun()
                                 else:
-                                    # No cloud backup - need manual import (legacy account)
-                                    st.session_state.wallet_locked = True
-                                    st.success("Signed in")
-                                    st.info("Import your wallet using your recovery phrase to access your funds.")
-
-                                # Check if onboarding was completed
-                                from settings_manager import SettingsManager
-                                user_settings = SettingsManager.get_llm_config(user["id"])
-                                has_api_key = bool(user_settings.get("api_key"))
-
-                                if not has_api_key:
-                                    # Resume onboarding at API setup step
-                                    st.session_state.onboarding_step = 2
-                                    st.session_state.onboarding_complete = False
-                                    st.info("Connect an AI provider to start chatting.")
-
-                                # No animation delay - just rerun
-                                st.rerun()
-                            else:
-                                st.error("No wallet found for this account")
+                                    st.error("No wallet found for this account")
 
     # ========== TAB 3: IMPORT WALLET ==========
     with tab3:
@@ -897,9 +912,10 @@ def send_modal():
             st.caption("Could not estimate fees")
             total = amount
 
-    # Validate inputs
+    # Validate inputs with EIP-55 checksum
     valid_recipient = False
     recipient_error = ""
+    checksummed_recipient = None
 
     if recipient:
         if not recipient.startswith("0x"):
@@ -907,10 +923,16 @@ def send_modal():
         elif len(recipient) != 42:
             recipient_error = "Address must be 42 characters"
         else:
-            # Check if valid hex
+            # Check if valid hex and validate/convert checksum
             try:
-                int(recipient, 16)
+                from web3 import Web3
+                # This validates the address and returns checksummed version
+                checksummed_recipient = Web3.to_checksum_address(recipient)
                 valid_recipient = True
+
+                # Warn if user entered non-checksummed address (potential typo risk)
+                if recipient != checksummed_recipient and recipient.lower() != recipient:
+                    st.warning("Address checksum mismatch. Please verify this is correct.")
             except ValueError:
                 recipient_error = "Invalid address format"
 
@@ -940,10 +962,10 @@ def send_modal():
 
     with col2:
         if st.button("Review", type="primary", use_container_width=True, disabled=not can_send):
-            # Store transaction details for confirmation step
+            # Store transaction details for confirmation step (use checksummed address)
             st.session_state._send_confirm_step = True
             st.session_state._send_details = {
-                "recipient": recipient,
+                "recipient": checksummed_recipient or recipient,
                 "amount": amount,
                 "total": total,
                 "gas_cost": gas_cost,
@@ -1843,9 +1865,17 @@ def main():
         try:
             SessionManager.get_cookie_manager()
             SessionManager.restore_session()
-        except Exception as e:
+        except Exception:
             # Cookie manager can fail on first load - this is OK
             pass
+
+    # Check session timeout and lock wallet if inactive
+    from rate_limiter import check_and_handle_timeout, RateLimiter
+    if not check_and_handle_timeout():
+        st.toast("Session timed out. Wallet locked for security.")
+
+    # Update activity timestamp on each interaction
+    RateLimiter.update_activity()
 
     # Handle OAuth callback (simplified - no blocking sleep)
     query_params = st.query_params
