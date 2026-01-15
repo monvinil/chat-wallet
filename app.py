@@ -1556,146 +1556,83 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # Get user theme preference
-    user_theme = st.session_state.get("user_theme", "dark")
-
-    # Chat02 Design System - Capable, transparent, balanced
-    theme_css = """
+    # Chat02 Design System - Professional dark theme with texture and depth
+    st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
-    /* === CHAT02 DESIGN SYSTEM === */
-    :root {
-        /* Core palette - Dark theme (default) */
-        --bg-primary: #0A0A0B;
-        --bg-elevated: rgba(255,255,255,0.03);
-        --bg-hover: rgba(255,255,255,0.06);
-        --bg-surface: rgba(255,255,255,0.02);
-        --border: rgba(255,255,255,0.08);
-        --border-hover: rgba(255,255,255,0.14);
-        --text-primary: #FAFAFA;
-        --text-secondary: #A1A1AA;
-        --text-muted: #6B6B76;
-
-        /* Blue accent */
-        --accent: #2563EB;
-        --accent-hover: #1D4ED8;
-        --accent-muted: rgba(37,99,235,0.15);
-        --accent-glow: rgba(37,99,235,0.2);
-
-        /* Secondary blue for links */
-        --link: #60A5FA;
-
-        /* Soft radius (8-12px) */
-        --radius-sm: 8px;
-        --radius-md: 10px;
-        --radius-lg: 12px;
-
-        /* Subtle elevation */
-        --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-        --shadow-md: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    """
-
-    # Light theme overrides
-    light_theme_css = """
-    :root {
-        --bg-primary: #FAFAFA;
-        --bg-elevated: rgba(0,0,0,0.02);
-        --bg-hover: rgba(0,0,0,0.04);
-        --bg-surface: rgba(0,0,0,0.01);
-        --border: rgba(0,0,0,0.08);
-        --border-hover: rgba(0,0,0,0.14);
-        --text-primary: #18181B;
-        --text-secondary: #52525B;
-        --text-muted: #A1A1AA;
-        --accent: #2563EB;
-        --accent-hover: #1D4ED8;
-        --accent-muted: rgba(37,99,235,0.1);
-        --accent-glow: rgba(37,99,235,0.15);
-        --link: #2563EB;
-        --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-        --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    """
-
-    if user_theme == "light":
-        theme_css += light_theme_css
-
-    st.markdown(theme_css + """
+    /* Clean, professional typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        -webkit-font-smoothing: antialiased;
     }
 
-    .stApp {
-        background: var(--bg-primary);
-    }
-
-    /* === TYPOGRAPHY === */
+    /* Dark theme header styling */
     h1 {
-        font-size: 1.25rem !important;
         font-weight: 600 !important;
         letter-spacing: -0.02em !important;
-        color: var(--text-primary) !important;
+        color: #F9FAFB !important;
     }
 
     h2, h3 {
         font-weight: 500 !important;
-        color: var(--text-secondary) !important;
+        color: #D1D5DB !important;
     }
 
-    p, li {
-        color: var(--text-secondary) !important;
-        line-height: 1.6;
-        font-size: 14px;
+    /* Professional card styling with texture */
+    [data-testid="stMetric"] {
+        background: linear-gradient(145deg, #1F1F2E 0%, #16161F 100%);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
-    /* Mono for data (addresses, amounts) */
-    .mono, code, [data-testid="stCode"] {
-        font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace !important;
+    [data-testid="stMetricValue"] {
+        font-weight: 700 !important;
+        font-size: 1.75rem !important;
+        color: #FFFFFF !important;
     }
 
-    /* === BUTTONS - Soft radius, green accent === */
+    [data-testid="stMetricLabel"] {
+        color: #9CA3AF !important;
+        font-size: 0.875rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Textured buttons with depth */
     .stButton > button {
-        border-radius: var(--radius-sm) !important;
+        border-radius: 10px !important;
         font-weight: 500 !important;
-        font-size: 13px !important;
-        padding: 10px 16px !important;
-        min-height: 40px !important;
-        transition: all 0.2s ease !important;
-        border: 1px solid var(--border) !important;
-        background: var(--bg-elevated) !important;
-        color: var(--text-primary) !important;
-        box-shadow: var(--shadow-sm) !important;
+        padding: 0.625rem 1.25rem !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%) !important;
+        color: #E5E7EB !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
     .stButton > button:hover {
-        background: var(--bg-hover) !important;
-        border-color: var(--border-hover) !important;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.12) !important;
+        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%) !important;
     }
 
     .stButton > button[kind="primary"],
     .stButton > button[data-testid="baseButton-primary"],
     button[kind="primary"] {
-        background: var(--accent) !important;
-        background-color: var(--accent) !important;
-        border-color: var(--accent) !important;
+        background: linear-gradient(145deg, #3B82F6 0%, #2563EB 100%) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
         color: #FFFFFF !important;
-        font-weight: 600 !important;
-        box-shadow: var(--shadow-md) !important;
+        box-shadow: 0 4px 16px rgba(59,130,246,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
     }
 
     .stButton > button[kind="primary"]:hover,
     .stButton > button[data-testid="baseButton-primary"]:hover,
     button[kind="primary"]:hover {
-        background: var(--accent-hover) !important;
-        background-color: var(--accent-hover) !important;
-        border-color: var(--accent-hover) !important;
-        color: #FFFFFF !important;
-        box-shadow: var(--shadow-md) !important;
+        background: linear-gradient(145deg, #4F8FFF 0%, #3B7BF6 100%) !important;
+        box-shadow: 0 8px 28px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
     }
 
     /* Force white text on primary buttons */
@@ -1711,217 +1648,228 @@ def main():
         transform: none !important;
     }
 
-    .stButton {
-        margin-bottom: 6px !important;
-    }
-
-    /* === SIDEBAR (collapsible) === */
+    /* Refined dark sidebar */
     [data-testid="stSidebar"] {
-        background: var(--bg-primary) !important;
-        backdrop-filter: blur(20px) !important;
-        border-right: 1px solid var(--border) !important;
+        background: linear-gradient(180deg, #141419 0%, #0F0F14 100%);
+        border-right: 1px solid rgba(255,255,255,0.04);
     }
 
     [data-testid="stSidebar"] h1 {
-        font-size: 1rem !important;
-        color: var(--text-secondary) !important;
-        padding-bottom: 12px !important;
+        font-size: 1.25rem !important;
+        margin-bottom: 1rem;
+        color: #F9FAFB !important;
     }
 
-    /* Sidebar collapse button */
-    [data-testid="stSidebar"] button[kind="header"] {
-        color: var(--text-muted) !important;
-    }
-
-    /* === INPUTS === */
+    /* Dark input fields with glow */
     .stTextInput > div > div > input,
-    .stTextArea > div > div > textarea,
-    .stNumberInput > div > div > input {
-        border-radius: var(--radius-sm) !important;
-        border: 1px solid var(--border) !important;
-        background: var(--bg-elevated) !important;
-        padding: 12px 14px !important;
+    .stTextArea > div > div > textarea {
+        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: #1A1A24 !important;
+        padding: 14px !important;
         font-size: 14px !important;
-        color: var(--text-primary) !important;
-        backdrop-filter: blur(8px) !important;
+        color: #E5E7EB !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus {
-        border-color: var(--accent) !important;
-        box-shadow: 0 0 0 3px rgba(0,102,255,0.1) !important;
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15), inset 0 2px 4px rgba(0,0,0,0.2) !important;
     }
 
-    .stTextInput > div > div > input::placeholder {
-        color: var(--text-muted) !important;
+    .stTextInput > div > div > input::placeholder,
+    .stTextArea > div > div > textarea::placeholder {
+        color: #6B7280 !important;
     }
 
-    .stSelectbox > div > div {
-        background: var(--bg-elevated) !important;
-        border: 1px solid var(--border) !important;
-        border-radius: var(--radius-sm) !important;
-    }
-
-    /* === TABS === */
+    /* Dark tabs with texture */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 0;
-        border-bottom: 1px solid var(--border);
-        background: transparent !important;
+        gap: 8px;
+        background: transparent;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        padding-bottom: 8px;
     }
 
     .stTabs [data-baseweb="tab"] {
-        padding: 12px 18px;
+        border-radius: 8px;
+        padding: 10px 18px;
         font-weight: 500;
-        font-size: 13px;
-        color: var(--text-muted);
-        background: transparent !important;
-        border: none !important;
-        border-radius: 0 !important;
-        transition: color 0.15s ease;
-    }
-
-    .stTabs [data-baseweb="tab"]:hover {
-        color: var(--text-secondary);
+        background: transparent;
+        color: #9CA3AF;
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: var(--text-primary);
-        box-shadow: inset 0 -2px 0 var(--accent);
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%);
+        color: #FFFFFF;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
-    /* === CARDS === */
-    [data-testid="stMetric"] {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 16px 18px;
-        backdrop-filter: blur(8px);
-    }
-
-    [data-testid="stMetricValue"] {
-        font-weight: 600 !important;
-        font-size: 1.5rem !important;
-        color: var(--text-primary) !important;
-        letter-spacing: -0.02em;
-    }
-
-    [data-testid="stMetricLabel"] {
-        color: var(--text-muted) !important;
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-    }
-
-    /* === CHAT === */
+    /* Dark chat messages with gradient */
     [data-testid="stChatMessage"] {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 16px 18px;
-        margin-bottom: 10px;
-        backdrop-filter: blur(8px);
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
     }
 
+    /* Chat input styling */
     [data-testid="stChatInput"] textarea {
-        border-radius: var(--radius-md) !important;
-        background: var(--bg-elevated) !important;
-        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        background: #1A1A24 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
         padding: 14px 16px !important;
         font-size: 14px !important;
-        backdrop-filter: blur(8px) !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
 
     [data-testid="stChatInput"] textarea:focus {
-        border-color: var(--accent) !important;
-        box-shadow: 0 0 0 3px rgba(0,102,255,0.1) !important;
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15), inset 0 2px 4px rgba(0,0,0,0.2) !important;
     }
 
-    /* === CODE (mono for addresses/data) === */
+    /* Dark code blocks */
     code {
-        background: var(--bg-surface) !important;
-        color: var(--text-primary) !important;
+        background: #252532 !important;
+        color: #A5B4FC !important;
         padding: 3px 8px !important;
         border-radius: 6px !important;
-        font-size: 12px !important;
-        font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace !important;
-        border: 1px solid var(--border) !important;
-        letter-spacing: -0.02em;
+        font-size: 13px !important;
+        border: 1px solid rgba(255,255,255,0.06);
     }
 
-    pre {
-        background: var(--bg-elevated) !important;
-        border: 1px solid var(--border) !important;
-        border-radius: var(--radius-sm) !important;
-        padding: 14px !important;
-        box-shadow: var(--shadow-sm) !important;
-    }
-
-    /* === ALERTS & EXPANDERS === */
+    /* Dark alert boxes */
     .stAlert {
-        border-radius: var(--radius-md) !important;
-        border: 1px solid var(--border) !important;
-        background: var(--bg-elevated) !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%) !important;
+    }
+
+    /* Dark dividers */
+    hr {
+        border-color: rgba(255,255,255,0.06) !important;
+        margin: 1.5rem 0 !important;
+    }
+
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+
+    /* Dark expander */
+    .streamlit-expanderHeader {
+        font-weight: 500 !important;
+        color: #9CA3AF !important;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
+        border-radius: 10px;
+        padding: 12px 16px !important;
     }
 
     details {
-        background: var(--bg-elevated) !important;
-        border: 1px solid var(--border) !important;
-        border-radius: var(--radius-md) !important;
+        background: transparent !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        border-radius: 12px !important;
     }
 
-    .streamlit-expanderHeader {
-        font-weight: 500 !important;
-        font-size: 13px !important;
-        color: var(--text-secondary) !important;
-        padding: 12px 14px !important;
+    /* Quick action chips */
+    .quick-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        color: #E5E7EB;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 4px;
     }
 
-    /* === UTILITY === */
-    hr {
-        border: none !important;
-        border-top: 1px solid var(--border) !important;
-        margin: 14px 0 !important;
+    .quick-action:hover {
+        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%);
+        border-color: rgba(255,255,255,0.12);
+        transform: translateY(-1px);
     }
 
+    .quick-action.active {
+        background: linear-gradient(145deg, #3B82F6 0%, #2563EB 100%);
+        border-color: rgba(255,255,255,0.15);
+        color: #FFFFFF;
+    }
+
+    /* Status indicator */
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-dot.connected {
+        background: #10B981;
+        box-shadow: 0 0 8px rgba(16,185,129,0.5);
+    }
+
+    .status-dot.disconnected {
+        background: #6B7280;
+    }
+
+    /* Section cards */
+    .section-card {
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    /* Number input styling */
+    .stNumberInput > div > div > input {
+        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: #1A1A24 !important;
+        color: #E5E7EB !important;
+    }
+
+    /* Select box styling */
+    .stSelectbox > div > div {
+        background: #1A1A24 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        border-radius: 10px !important;
+    }
+
+    /* Consistent caption styling */
     .stCaption, [data-testid="stCaptionContainer"] p {
-        color: var(--text-muted) !important;
-        font-size: 12px !important;
+        color: #6B7280 !important;
+        font-size: 0.8125rem !important;
+        line-height: 1.5;
     }
 
-    a {
-        color: var(--link) !important;
+    /* Footer link styling */
+    [data-testid="stSidebar"] a {
+        color: #6B7280 !important;
         text-decoration: none;
-        transition: opacity 0.15s ease;
+        transition: color 0.15s ease;
     }
 
-    a:hover {
-        opacity: 0.8;
+    [data-testid="stSidebar"] a:hover {
+        color: #9CA3AF !important;
     }
 
-    /* Hide chrome */
-    #MainMenu, footer, header {visibility: hidden;}
-
-    /* === ACTION BUTTONS ROW === */
+    /* Pill button styling for suggested actions */
     [data-testid="stHorizontalBlock"] .stButton > button {
-        border-radius: var(--radius-sm) !important;
-        font-size: 13px !important;
-        padding: 8px 12px !important;
-        min-height: 36px !important;
-        margin-bottom: 0 !important;
+        border-radius: 20px !important;
+        font-size: 0.8125rem !important;
+        padding: 0.5rem 1rem !important;
     }
 
-    [data-testid="stHorizontalBlock"] {
-        gap: 8px !important;
-    }
-
-    [data-testid="stHorizontalBlock"] > div {
-        padding: 0 2px !important;
-    }
-
-    /* === LINK BUTTONS === */
+    /* Link buttons */
     .stLinkButton > a {
-        border-radius: var(--radius-sm) !important;
+        border-radius: 10px !important;
         font-weight: 500 !important;
         font-size: 13px !important;
         padding: 10px 16px !important;
@@ -1929,56 +1877,24 @@ def main():
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        border: 1px solid var(--border) !important;
-        background: var(--bg-elevated) !important;
-        color: var(--text-primary) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%) !important;
+        color: #E5E7EB !important;
         text-decoration: none !important;
         transition: all 0.2s ease !important;
     }
 
     .stLinkButton > a:hover {
-        background: var(--bg-hover) !important;
-        border-color: var(--border-hover) !important;
+        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%) !important;
+        border-color: rgba(255,255,255,0.12) !important;
         text-decoration: none !important;
     }
 
-    /* === CHECKBOXES === */
-    .stCheckbox label span {
-        color: var(--text-secondary) !important;
-        font-size: 14px !important;
-    }
-
-    .stCheckbox [data-testid="stCheckbox"] > div:first-child {
-        background: var(--bg-elevated) !important;
-        border: 1px solid var(--border) !important;
-        border-radius: 4px !important;
-    }
-
-    /* === DIALOGS/MODALS === */
+    /* Dialogs/Modals */
     [data-testid="stModal"] > div {
-        background: var(--bg-primary) !important;
-        border: 1px solid var(--border) !important;
-        border-radius: var(--radius-lg) !important;
-    }
-
-    /* === SELECT/DROPDOWN === */
-    .stSelectbox [data-baseweb="select"] > div {
-        background: var(--bg-elevated) !important;
-        border-color: var(--border) !important;
-        color: var(--text-primary) !important;
-    }
-
-    /* === SPINNER === */
-    .stSpinner > div {
-        border-color: var(--accent) transparent transparent transparent !important;
-    }
-
-    /* === TOAST === */
-    [data-testid="stToast"] {
-        background: var(--bg-elevated) !important;
-        border: 1px solid var(--border) !important;
-        border-radius: var(--radius-md) !important;
-        color: var(--text-primary) !important;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%) !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        border-radius: 16px !important;
     }
     </style>
     """, unsafe_allow_html=True)
