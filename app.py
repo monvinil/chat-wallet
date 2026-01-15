@@ -1354,24 +1354,26 @@ def render_transaction_history():
 
 
 def render_suggested_actions():
-    """Render capability shortcuts as a clean grid"""
+    """Render inspiration prompts - show what's possible"""
 
-    # Examples showcasing creative ways to spend USDC
-    capabilities = [
-        ("Gift Card", "Buy a $25 Amazon gift card", True),
-        ("Domain", "Register a .com domain for my project", True),
-        ("VPN", "Get Mullvad VPN for a year", True),
-        ("Pay Bill", "Pay my AWS bill", True),
-        ("Transfer", "Send $50 USDC to a friend", True),
+    # Inspiration prompts - spark ideas, show the magic
+    prompts = [
+        ("Buy an Amazon gift card", True),
+        ("Register a domain", True),
+        ("Pay my AWS bill", True),
+        ("Get a year of VPN", True),
+        ("Send $100 to 0x...", True),
     ]
 
-    # Simple 5-column grid
-    cols = st.columns(5)
-    for i, (label, prompt, is_live) in enumerate(capabilities):
+    st.caption("Try asking:")
+
+    # Horizontal scrollable row
+    cols = st.columns(len(prompts))
+    for i, (prompt_text, is_live) in enumerate(prompts):
         with cols[i]:
-            if st.button(label, key=f"action_{i}", use_container_width=True):
+            if st.button(f'"{prompt_text}"', key=f"action_{i}", use_container_width=True):
                 if is_live:
-                    st.session_state.messages.append({"role": "user", "content": prompt})
+                    st.session_state.messages.append({"role": "user", "content": prompt_text})
                     st.session_state._quick_action_triggered = True
                     st.rerun()
 
@@ -1384,14 +1386,14 @@ def chat_interface():
     if not st.session_state.wallet_address:
         from quick_start import create_guest_wallet
 
-        # Show clean intro with quick start button
+        # Bold landing - power-focused, different
         with st.chat_message("assistant"):
-            st.markdown("""**Turn ideas into action with USDC.**
+            st.markdown("""**Financial superpowers.** Through conversation.
 
-Describe what you need—domains, services, subscriptions, payments—and your wallet handles the rest. Every creative strategy, powered by stablecoins.
+Say what you need. The wallet executes—gift cards, domains, subscriptions, transfers. No forms. No friction.
 """)
 
-            if st.button("Start", type="primary", use_container_width=True, key="quick_start_btn"):
+            if st.button("Get Started", type="primary", use_container_width=True, key="quick_start_btn"):
                 with st.spinner("Creating wallet..."):
                     if create_guest_wallet():
                         st.session_state.quick_start_active = True
@@ -1399,7 +1401,7 @@ Describe what you need—domains, services, subscriptions, payments—and your w
                     else:
                         st.error("Could not create wallet. Please try again.")
 
-            st.caption("Self-custodial · Base · Arbitrum · Solana")
+            st.caption("Multi-chain · Self-custodial")
 
         # Disabled chat input
         st.chat_input("Message...", disabled=True, key="preview_input")
@@ -1552,21 +1554,22 @@ def main():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-    /* === BASE === */
+    /* === BASE - Bold Fintech === */
     :root {
-        --bg-primary: #0C0C0E;
-        --bg-elevated: rgba(255,255,255,0.03);
-        --bg-hover: rgba(255,255,255,0.06);
-        --border: rgba(255,255,255,0.08);
-        --border-hover: rgba(255,255,255,0.12);
-        --text-primary: #FAFAFA;
-        --text-secondary: #A0A0A0;
-        --text-muted: #666;
-        --accent: #0066FF;
-        --accent-hover: #0052CC;
-        --radius-sm: 8px;
-        --radius-md: 12px;
-        --radius-lg: 16px;
+        --bg-primary: #09090B;
+        --bg-elevated: rgba(255,255,255,0.04);
+        --bg-hover: rgba(255,255,255,0.08);
+        --border: rgba(255,255,255,0.1);
+        --border-hover: rgba(255,255,255,0.18);
+        --text-primary: #FFFFFF;
+        --text-secondary: #A1A1AA;
+        --text-muted: #71717A;
+        --accent: #2563EB;
+        --accent-hover: #1D4ED8;
+        --accent-glow: rgba(37,99,235,0.25);
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 14px;
     }
 
     html, body, [class*="css"] {
@@ -1597,40 +1600,40 @@ def main():
         font-size: 14px;
     }
 
-    /* === BUTTONS === */
+    /* === BUTTONS - Bold Fintech === */
     .stButton > button {
         border-radius: var(--radius-sm) !important;
         font-weight: 500 !important;
         font-size: 13px !important;
-        padding: 10px 16px !important;
-        min-height: 38px !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        padding: 10px 18px !important;
+        min-height: 40px !important;
+        transition: all 0.15s ease !important;
         border: 1px solid var(--border) !important;
         background: var(--bg-elevated) !important;
         color: var(--text-primary) !important;
-        backdrop-filter: blur(8px) !important;
     }
 
     .stButton > button:hover {
         background: var(--bg-hover) !important;
         border-color: var(--border-hover) !important;
-        transform: translateY(-1px) !important;
     }
 
     .stButton > button[kind="primary"] {
         background: var(--accent) !important;
         border-color: var(--accent) !important;
-        color: #FFF !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        box-shadow: 0 0 20px var(--accent-glow) !important;
     }
 
     .stButton > button[kind="primary"]:hover {
         background: var(--accent-hover) !important;
         border-color: var(--accent-hover) !important;
+        box-shadow: 0 0 30px var(--accent-glow) !important;
     }
 
     .stButton > button:disabled {
-        opacity: 0.35 !important;
-        transform: none !important;
+        opacity: 0.4 !important;
     }
 
     .stButton {

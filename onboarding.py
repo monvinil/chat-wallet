@@ -42,24 +42,21 @@ def show_onboarding():
 
 
 def show_step_1_welcome():
-    """Step 1: Welcome the user and explain what's next"""
-    st.markdown("### Wallet ready")
-    st.progress(0.5, text="Step 1 of 2")
-    st.divider()
+    """Step 1: Bold wallet creation confirmation"""
+    st.markdown("### Your wallet is live")
+    st.progress(0.5, text="1 of 2")
 
-    # Show wallet address
+    # Show wallet address prominently
     address = st.session_state.get("wallet_address", "")
     if address:
-        st.code(address[:6] + "..." + address[-4:])
+        st.code(address)
 
     st.markdown("""
-Your keys, your funds. This wallet works across:
+**Multi-chain.** Works on Base, Arbitrum, Polygon, and Solana from a single seed phrase.
 
-- **Base & Arbitrum** — Low fees, fast transactions
-- **Polygon** — Widely supported
-- **Solana** — High throughput
+**Self-custodial.** You hold the keys. No one else can access your funds.
 
-Next: Connect an AI to power the chat interface.
+One step left: connect an AI to unlock the chat.
 """)
 
     if st.button("Continue", type="primary", use_container_width=True):
@@ -67,37 +64,34 @@ Next: Connect an AI to power the chat interface.
 
 
 def show_step_2_connect_ai(user_id: str):
-    """Step 2: Connect AI provider"""
+    """Step 2: Connect AI - unlock the superpowers"""
     from api_key_setup import show_api_key_setup_modal, check_api_key_status
 
-    st.markdown("### Connect AI")
-    st.progress(1.0, text="Step 2 of 2")
-    st.divider()
+    st.markdown("### Power the chat")
+    st.progress(1.0, text="2 of 2")
 
     # Check if already configured
     has_key, provider = check_api_key_status()
 
     if has_key:
-        # Show success state
         provider_labels = {
-            "google": ("Gemini", "Google"),
-            "anthropic": ("Claude", "Anthropic"),
-            "openai": ("GPT", "OpenAI")
+            "google": "Gemini",
+            "anthropic": "Claude",
+            "openai": "GPT"
         }
-        model_name, company = provider_labels.get(provider, ("AI", "Provider"))
+        model_name = provider_labels.get(provider, "AI")
 
-        st.success(f"Connected to {company} {model_name}")
+        st.success(f"Connected to {model_name}")
 
-        # Show celebration once
         if not st.session_state.get("_api_setup_celebration_shown"):
             st.balloons()
             st.session_state._api_setup_celebration_shown = True
 
-        st.markdown("You're all set. Describe what you need and your wallet handles the rest.")
+        st.markdown("**Ready.** Start typing—your wallet listens.")
 
         col1, col2 = st.columns([1, 1])
         with col1:
-            if st.button("Change", use_container_width=True):
+            if st.button("Change provider", use_container_width=True):
                 st.session_state._api_setup_celebration_shown = False
                 show_api_key_setup_modal()
         with col2:
@@ -106,22 +100,19 @@ def show_step_2_connect_ai(user_id: str):
 
         return True
 
-    # Show API key setup prompt
     st.markdown("""
-**Google Gemini** (recommended)
+The chat needs an AI brain. **Google Gemini is free** and works great.
 
-Free tier includes 1,500 requests/day.
-
-1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+1. [Get a key here](https://aistudio.google.com/apikey) (takes 30 seconds)
 2. Click **Get API Key** → **Create in new project**
-3. Copy and paste the key below
+3. Paste below
 """)
 
-    if st.button("Connect", type="primary", use_container_width=True, key="connect_ai_main"):
+    if st.button("Connect AI", type="primary", use_container_width=True, key="connect_ai_main"):
         show_api_key_setup_modal()
 
-    with st.expander("Other providers"):
-        st.caption("**Anthropic Claude** — Best quality, paid ($)")
-        st.caption("**OpenAI GPT** — Widely used, paid ($)")
+    with st.expander("Use a different provider"):
+        st.caption("**Claude** — Best quality (paid)")
+        st.caption("**GPT** — Most popular (paid)")
 
     return False
