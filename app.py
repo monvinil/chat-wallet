@@ -1445,49 +1445,26 @@ def render_suggested_actions():
     - Creator economy
     """
 
-    # Capability library - diverse mix showing breadth
+    # Consolidated capability library - grouped by category
     # (emoji, label, chat_prompt_or_description, is_live)
-    # is_live=True triggers chat, is_live=False shows "coming soon" with description
+    # is_live=True triggers chat, is_live=False shows "coming soon"
 
     capabilities = [
-        # === EVERYDAY REWARDS & TREATS ===
-        ("🎁", "Amazon", "I want to buy an Amazon gift card", True),
-        ("☕", "Starbucks", "Get me a Starbucks gift card", True),
-        ("🍕", "DoorDash", "I want a DoorDash gift card", True),
-        ("🛍️", "Target", "Show me Target gift cards", True),
-
-        # === TRAVEL WITH PERKS ===
-        ("✈️", "Book Flight", "Earn 5% back in crypto on flights via Travala", False),
-        ("🏨", "Hotel + Bonus", "Book hotels, get bonus gift card rewards", False),
-        ("🚗", "Uber Credits", "I want Uber gift card credits", True),
-
-        # === SUBSCRIPTIONS & LIFESTYLE ===
-        ("🎵", "Apple Music", "Gift an Apple Music subscription", False),
-        ("📺", "Netflix", "I want a Netflix gift card", True),
-        ("🎮", "PlayStation", "Show me PlayStation gift cards", True),
-        ("💅", "Sephora", "Get a Sephora gift card", True),
-
-        # === DEFI & EARNING ===
-        ("💰", "Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
-        ("📈", "Swap to ETH", "Swap USDC to ETH at best rates", False),
-        ("₿", "Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
+        # === CORE ACTIONS ===
+        ("📤", "Send", "Help me send USDC to someone", True),
+        ("🎁", "Gift Cards", "Show me available gift cards", True),
+        ("📱", "Top-up", "I need to add minutes to my phone", True),
+        ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
 
         # === CRYPTO NATIVE ===
-        ("🌐", "Get Domain", "I want to register a domain", True),
-        ("🔐", "VPN Access", "I want a Mullvad VPN subscription", True),
-        ("📤", "Send USDC", "Help me send USDC to someone", True),
-
-        # === AUTOMATION & SCHEDULING ===
+        ("🌐", "Domain", "I want to register a domain", True),
+        ("🔐", "VPN", "I want a Mullvad VPN subscription", True),
         ("⏰", "Schedule", "I want to set up a recurring payment", True),
-        ("🔔", "Alerts", "Set up balance alerts and spending notifications", False),
 
-        # === CREATOR ECONOMY ===
-        ("📺", "Creator Payout", "Instant payouts for international creators", False),
-        ("💜", "Tip Creator", "Send a tip to your favorite creator", False),
-
-        # === BILLS & UTILITIES ===
-        ("📱", "Phone Top-up", "I need to add minutes to my phone", True),
-        ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
+        # === COMING SOON ===
+        ("📈", "Swap", "Swap USDC to ETH at best rates", False),
+        ("💰", "Earn", "Lend idle USDC, earn ~4% APY", False),
+        ("✈️", "Travel", "Book flights & hotels with crypto", False),
     ]
 
     # CSS for horizontal scrolling pills container
@@ -1520,25 +1497,21 @@ def render_suggested_actions():
     </style>
     """, unsafe_allow_html=True)
 
-    # Render pills in rows of 8 for better layout
-    PILLS_PER_ROW = 8
-    for row_start in range(0, len(capabilities), PILLS_PER_ROW):
-        row_caps = capabilities[row_start:row_start + PILLS_PER_ROW]
-        cols = st.columns(len(row_caps))
+    # Render all pills in a single row (10 items fits well)
+    cols = st.columns(len(capabilities))
 
-        for i, (emoji, label, prompt_or_desc, is_live) in enumerate(row_caps):
-            cap_idx = row_start + i
-            with cols[i]:
-                if is_live:
-                    # Live capability - triggers chat
-                    if st.button(f"{emoji} {label}", key=f"cap_{cap_idx}"):
-                        st.session_state.messages.append({"role": "user", "content": prompt_or_desc})
-                        st.session_state._quick_action_triggered = True
-                        st.rerun()
-                else:
-                    # Roadmap capability - show what's coming with tooltip
-                    if st.button(f"{emoji} {label} ✨", key=f"cap_{cap_idx}", help=prompt_or_desc):
-                        st.toast(f"**{label}** — {prompt_or_desc}. Coming soon.", icon="✨")
+    for i, (emoji, label, prompt_or_desc, is_live) in enumerate(capabilities):
+        with cols[i]:
+            if is_live:
+                # Live capability - triggers chat
+                if st.button(f"{emoji} {label}", key=f"cap_{i}"):
+                    st.session_state.messages.append({"role": "user", "content": prompt_or_desc})
+                    st.session_state._quick_action_triggered = True
+                    st.rerun()
+            else:
+                # Roadmap capability - show what's coming with tooltip
+                if st.button(f"{emoji} {label}", key=f"cap_{i}", help=f"Coming soon: {prompt_or_desc}"):
+                    st.toast(f"**{label}** — {prompt_or_desc}. Coming soon.")
 
 
 def chat_interface():
@@ -1897,7 +1870,7 @@ def main():
         box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
-    /* Dark chat messages - base styling */
+    /* Dark chat messages - unified styling for all messages */
     [data-testid="stChatMessage"] {
         background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
         border: 1px solid rgba(255,255,255,0.04);
@@ -1905,18 +1878,6 @@ def main():
         padding: 18px;
         margin-bottom: 14px;
         box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-    }
-
-    /* User messages - slightly different styling */
-    [data-testid="stChatMessage"][data-testid*="user"],
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
-        background: linear-gradient(145deg, #1E1E2A 0%, #18181F 100%);
-        border-color: rgba(59, 130, 246, 0.1);
-    }
-
-    /* Assistant messages - keep base styling */
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
-        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
     }
 
     /* Dark code blocks */
