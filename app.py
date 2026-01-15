@@ -338,10 +338,10 @@ def init_state():
 
 def wallet_setup_ui():
     """Show wallet setup screen with email/password account"""
-    st.title("Chat02")
-    st.caption("Pay for anything with a conversation")
+    st.title("Chat Wallet")
+    st.caption("Self-custodial wallet with AI-powered transactions")
 
-    st.info("Your wallet is secured and backed up. Only you can access your funds.")
+    st.info("Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.")
 
     tab1, tab2, tab3 = st.tabs(["Create Account", "Sign In", "Import Wallet"])
 
@@ -1353,60 +1353,165 @@ def render_transaction_history():
             st.caption("Unable to load transactions")
 
 
-def render_suggested_actions():
-    """Render inspiration prompts - educational, show what's possible"""
+def render_quick_actions():
+    """Render quick action chips above chat"""
+    col1, col2, col3 = st.columns(3)
 
-    # Inspiration prompts with plain English
-    prompts = [
-        "Buy a $25 Amazon card",
-        "Pay my AWS bill",
-        "Send $50 to a friend",
-        "Get Mullvad VPN",
+    with col1:
+        if st.button("Send", key="quick_send", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "I want to send money"})
+            st.session_state._quick_action_triggered = True
+            st.rerun()
+
+    with col2:
+        if st.button("Gift Card", key="quick_giftcard", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "Show me gift cards"})
+            st.session_state._quick_action_triggered = True
+            st.rerun()
+
+    with col3:
+        if st.button("Pay Bill", key="quick_bill", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
+            st.session_state._quick_action_triggered = True
+            st.rerun()
+
+
+def render_suggested_actions():
+    """
+    Render capability library - horizontally scrollable pills showing what's possible.
+    These aren't just shortcuts, they're a discovery mechanism.
+    """
+
+    # Capability library - diverse mix showing breadth
+    # (emoji, label, chat_prompt_or_description, is_live)
+    capabilities = [
+        # === EVERYDAY REWARDS & TREATS ===
+        ("🎁", "Amazon", "I want to buy an Amazon gift card", True),
+        ("☕", "Starbucks", "Get me a Starbucks gift card", True),
+        ("🍕", "DoorDash", "I want a DoorDash gift card", True),
+        ("🛍️", "Target", "Show me Target gift cards", True),
+
+        # === TRAVEL WITH PERKS ===
+        ("✈️", "Book Flight", "Earn 5% back in crypto on flights via Travala", False),
+        ("🏨", "Hotel + Bonus", "Book hotels, get bonus gift card rewards", False),
+        ("🚗", "Uber Credits", "I want Uber gift card credits", True),
+
+        # === SUBSCRIPTIONS & LIFESTYLE ===
+        ("🎵", "Apple Music", "Gift an Apple Music subscription", False),
+        ("📺", "Netflix", "I want a Netflix gift card", True),
+        ("🎮", "PlayStation", "Show me PlayStation gift cards", True),
+        ("💅", "Sephora", "Get a Sephora gift card", True),
+
+        # === DEFI & EARNING ===
+        ("💰", "Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
+        ("📈", "Swap to ETH", "Swap USDC to ETH at best rates", False),
+        ("₿", "Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
+
+        # === CRYPTO NATIVE ===
+        ("🌐", "Get Domain", "I want to register a domain", True),
+        ("🔐", "VPN Access", "I want a Mullvad VPN subscription", True),
+        ("📤", "Send USDC", "Help me send USDC to someone", True),
+
+        # === AUTOMATION & SCHEDULING ===
+        ("⏰", "Schedule", "I want to set up a recurring payment", True),
+        ("🔔", "Alerts", "Set up balance alerts and spending notifications", False),
+
+        # === BILLS & UTILITIES ===
+        ("📱", "Phone Top-up", "I need to add minutes to my phone", True),
+        ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
     ]
 
-    st.caption("Try something like:")
+    # CSS for horizontal scrolling pills container
+    st.markdown("""
+    <style>
+    /* Horizontal scroll container for capability pills */
+    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        padding-bottom: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"])::-webkit-scrollbar {
+        height: 4px;
+    }
+    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"])::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+        border-radius: 2px;
+    }
+    /* Make pill buttons compact and non-wrapping */
+    div[data-testid="stHorizontalBlock"] .stButton {
+        min-width: fit-content !important;
+        flex-shrink: 0 !important;
+    }
+    div[data-testid="stHorizontalBlock"] .stButton button {
+        white-space: nowrap !important;
+        min-width: max-content !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    # Horizontal row of prompts (4 columns works better on mobile)
-    cols = st.columns(len(prompts))
-    for i, prompt_text in enumerate(prompts):
-        with cols[i]:
-            if st.button(prompt_text, key=f"action_{i}", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": prompt_text})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
+    # Render pills in rows of 8 for better layout
+    PILLS_PER_ROW = 8
+    for row_start in range(0, len(capabilities), PILLS_PER_ROW):
+        row_caps = capabilities[row_start:row_start + PILLS_PER_ROW]
+        cols = st.columns(len(row_caps))
+
+        for i, (emoji, label, prompt_or_desc, is_live) in enumerate(row_caps):
+            cap_idx = row_start + i
+            with cols[i]:
+                if is_live:
+                    # Live capability - triggers chat
+                    if st.button(f"{emoji} {label}", key=f"cap_{cap_idx}"):
+                        st.session_state.messages.append({"role": "user", "content": prompt_or_desc})
+                        st.session_state._quick_action_triggered = True
+                        st.rerun()
+                else:
+                    # Coming soon - show with tooltip
+                    st.button(f"{emoji} {label}", key=f"cap_{cap_idx}", disabled=True, help=prompt_or_desc)
 
 
 def chat_interface():
     """Main chat interface"""
+    st.title("Chat Wallet")
+    st.caption("Manage your wallet through conversation")
+
     # Quick Start mode - create guest wallet if no wallet exists
     if not st.session_state.wallet_address:
         from quick_start import create_guest_wallet
 
-        st.markdown("## Chat02")
-        st.caption("Pay for anything with a conversation")
-
-        # Clear value proposition with examples
+        # Show clean intro with quick start button
         with st.chat_message("assistant"):
-            st.markdown("""Hey! I'm your AI wallet assistant.
+            st.markdown("""**Chat Wallet** lets you manage crypto through conversation.
 
-Tell me what you need and I'll make it happen:
-- "Buy a $50 Amazon gift card"
-- "Pay my AWS bill"
-- "Send $25 to a friend"
-- "Get a year of Mullvad VPN"
+**What you can do:**
+- Check balances across Base, Arbitrum, and Polygon
+- Send USDC with zero gas fees
+- Buy gift cards from Amazon, Uber, Netflix, and more
+- Purchase domains, VPN subscriptions, and travel
+- Pay bills directly with crypto
 
-No apps. No forms. Just ask.
+**Get started:**
+1. Click **Quick Start** below to create a wallet
+2. Get a free API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+3. Start chatting
+
+Your wallet is self-custodial—you control the private keys.
 """)
 
-            if st.button("Create My Wallet", type="primary", use_container_width=True, key="quick_start_btn"):
-                with st.spinner("Setting up..."):
-                    if create_guest_wallet():
-                        st.session_state.quick_start_active = True
-                        st.rerun()
-                    else:
-                        st.error("Something went wrong. Please try again.")
+            _, col_center, _ = st.columns([1, 2, 1])
+            with col_center:
+                if st.button("Quick Start", type="primary", use_container_width=True, key="quick_start_btn"):
+                    with st.spinner("Creating wallet..."):
+                        if create_guest_wallet():
+                            st.session_state.quick_start_active = True
+                            st.success("Wallet created")
+                            st.rerun()
+                        else:
+                            st.error("Could not create wallet. Please try again.")
 
-            st.caption("Free · No signup required · You control your keys")
+            st.divider()
+            st.caption("Or create an account to save your wallet across devices")
 
         # Disabled chat input
         st.chat_input("Message...", disabled=True, key="preview_input")
@@ -1438,6 +1543,11 @@ No apps. No forms. Just ask.
         st.session_state.agent = None  # Force recreation
         st.session_state._agent_initializing = False
         st.session_state._api_key_just_saved = False  # Clear flag
+
+    # Quick action chips for logged-in users (only after onboarding complete)
+    render_quick_actions()
+
+    st.divider()
 
     # Normal logged-in chat interface
     # Show messages
@@ -1532,17 +1642,19 @@ Wait a minute and try again, or switch providers in Settings if this keeps happe
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # Welcome message for logged in users - warm and actionable
+    # Welcome message for logged in users (only shown after onboarding complete)
     if not st.session_state.messages:
-        welcome = """Welcome back! What can I help you with today?
+        welcome = f"""Wallet connected: `{ChainUtils.format_address(st.session_state.wallet_address)}`
 
-Some things I can do:
-- Buy gift cards (Amazon, Uber, Netflix...)
-- Pay bills and subscriptions
-- Send money to friends
-- Get domains, VPNs, and more
+**Try these commands:**
+- "What's my balance?"
+- "Send $20 to 0x..."
+- "Show my deposit address"
+- "Buy a $25 Amazon gift card"
+- "Register mydomain.com"
+- "Get Mullvad VPN"
 
-Just type what you need, or tap a suggestion below.
+What would you like to do?
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
 
@@ -1550,8 +1662,8 @@ Just type what you need, or tap a suggestion below.
 def main():
     """Main app entry point"""
     st.set_page_config(
-        page_title="Chat02",
-        page_icon="○",
+        page_title="Chat Wallet",
+        page_icon="◈",
         layout="wide",
         initial_sidebar_state="expanded"
     )
