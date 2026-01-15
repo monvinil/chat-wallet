@@ -435,7 +435,6 @@ def wallet_setup_ui():
                                 st.session_state.wallet_locked = False
                                 st.session_state.user_email = email
                                 st.session_state.user_id = user["id"]
-                                st.session_state.show_auth_modal = False
 
                                 # Store Solana address if available
                                 if wallet_info.get("solana_address"):
@@ -446,17 +445,17 @@ def wallet_setup_ui():
 
                                 st.success("Account created")
 
-                                # Show seed phrase with verification
+                                # Store mnemonic for seed phrase modal and trigger it
                                 if wallet_info.get("mnemonic"):
-                                    _render_seed_phrase_verification(
-                                        wallet_info["mnemonic"],
-                                        on_complete=lambda: _complete_signup_after_verification()
-                                    )
+                                    st.session_state._pending_seed_phrase = wallet_info["mnemonic"]
+                                    st.session_state.show_auth_modal = False
+                                    st.session_state.show_seed_phrase_modal = True
+                                    st.rerun()
                                 else:
                                     # No seed phrase (shouldn't happen, but handle gracefully)
+                                    st.session_state.show_auth_modal = False
                                     st.session_state.onboarding_step = 1
                                     st.session_state.onboarding_complete = False
-                                    time.sleep(1)
                                     st.rerun()
                             else:
                                 st.error("Could not create account. Please try again.")
@@ -624,38 +623,56 @@ def wallet_setup_ui():
                     st.error("Invalid recovery phrase or private key")
 
 
-def _render_seed_phrase_verification(mnemonic: str, on_complete):
+def seed_phrase_modal():
     """
-    Render seed phrase with verification step requiring user to confirm 3 random words.
-    This ensures the user has actually written down their recovery phrase.
+    Full-page modal for seed phrase display and verification after signup.
+    User must verify 3 random words before proceeding.
     """
     import random
+
+    mnemonic = st.session_state.get("_pending_seed_phrase", "")
+    if not mnemonic:
+        st.session_state.show_seed_phrase_modal = False
+        st.rerun()
+        return
 
     words = mnemonic.split()
 
     # Initialize verification state if not set
     if "_seed_verify_indices" not in st.session_state:
-        # Pick 3 random word positions (1-indexed for user display)
         indices = sorted(random.sample(range(len(words)), 3))
         st.session_state._seed_verify_indices = indices
-        st.session_state._seed_verify_step = "show"  # "show" or "verify"
+        st.session_state._seed_verify_step = "show"
 
     indices = st.session_state._seed_verify_indices
 
+    st.title("Save Your Recovery Phrase")
+
     if st.session_state.get("_seed_verify_step") == "show":
-        # Step 1: Show the seed phrase
-        with st.expander("Save your recovery phrase", expanded=True):
-            st.warning("Write this down and store it securely. This is the only way to recover your wallet if you lose your password.")
+        st.warning("**Write this down and store it securely.** This is the only way to recover your wallet if you forget your password or lose access to your account.")
+
+        st.markdown("---")
+
+        # Display words in a grid
+        st.markdown("#### Your 12-word recovery phrase:")
+        cols = st.columns(3)
+        for i, word in enumerate(words):
+            with cols[i % 3]:
+                st.markdown(f"**{i+1}.** {word}")
+
+        st.markdown("---")
+
+        # Also show as copyable code block
+        with st.expander("Copy as text"):
             st.code(mnemonic, language=None)
 
-            st.caption("You'll need to verify 3 words in the next step.")
+        st.caption("You'll need to verify 3 words in the next step to confirm you've saved your phrase.")
 
-            if st.button("I've written it down", type="primary", use_container_width=True):
-                st.session_state._seed_verify_step = "verify"
-                st.rerun()
+        if st.button("I've written it down", type="primary", use_container_width=True):
+            st.session_state._seed_verify_step = "verify"
+            st.rerun()
 
     elif st.session_state.get("_seed_verify_step") == "verify":
-        # Step 2: Verify 3 words
         st.markdown("#### Verify your recovery phrase")
         st.caption("Enter the requested words to confirm you've saved your phrase.")
 
@@ -663,7 +680,7 @@ def _render_seed_phrase_verification(mnemonic: str, on_complete):
         user_inputs = []
 
         for i, idx in enumerate(indices):
-            word_num = idx + 1  # 1-indexed for display
+            word_num = idx + 1
             user_input = st.text_input(
                 f"Word #{word_num}",
                 key=f"seed_verify_{i}",
@@ -674,7 +691,6 @@ def _render_seed_phrase_verification(mnemonic: str, on_complete):
             if user_input and user_input != words[idx].lower():
                 all_correct = False
 
-        # Check if all filled and correct
         all_filled = all(u for u in user_inputs)
 
         col1, col2 = st.columns([1, 1])
@@ -682,26 +698,26 @@ def _render_seed_phrase_verification(mnemonic: str, on_complete):
         with col1:
             if st.button("Show phrase again", use_container_width=True):
                 st.session_state._seed_verify_step = "show"
+                # Clear inputs
+                for i in range(3):
+                    if f"seed_verify_{i}" in st.session_state:
+                        del st.session_state[f"seed_verify_{i}"]
                 st.rerun()
 
         with col2:
             if st.button("Verify", type="primary", use_container_width=True, disabled=not all_filled):
                 if all_correct:
-                    # Clean up verification state
+                    # Clean up state
                     st.session_state._seed_verify_indices = None
                     st.session_state._seed_verify_step = None
-                    # Call completion callback
-                    on_complete()
+                    st.session_state._pending_seed_phrase = None
+                    st.session_state.show_seed_phrase_modal = False
+                    st.session_state.onboarding_step = 1
+                    st.session_state.onboarding_complete = False
+                    st.session_state.just_signed_up = True
+                    st.rerun()
                 else:
                     st.error("One or more words are incorrect. Please check your recovery phrase.")
-
-
-def _complete_signup_after_verification():
-    """Complete signup flow after seed phrase verification"""
-    st.session_state.onboarding_step = 1
-    st.session_state.onboarding_complete = False
-    st.session_state.just_signed_up = True
-    st.rerun()
 
 
 def show_success_animation():
@@ -1780,6 +1796,12 @@ def main():
         letter-spacing: 0.05em;
     }
 
+    /* Button container - allow overflow for hover animation */
+    .stButton {
+        overflow: visible !important;
+        padding-top: 4px;
+    }
+
     /* Textured buttons with depth */
     .stButton > button {
         border-radius: 10px !important;
@@ -1851,7 +1873,8 @@ def main():
         gap: 8px;
         background: transparent;
         border-bottom: 1px solid rgba(255,255,255,0.06);
-        padding-bottom: 8px;
+        padding: 4px 0 8px 0;
+        overflow: visible !important;
     }
 
     .stTabs [data-baseweb="tab"] {
@@ -1860,6 +1883,12 @@ def main():
         font-weight: 500;
         background: transparent;
         color: #9CA3AF;
+        transition: all 0.2s ease;
+    }
+
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(255,255,255,0.04);
+        color: #E5E7EB;
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
@@ -1868,7 +1897,7 @@ def main():
         box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
-    /* Dark chat messages */
+    /* Dark chat messages - base styling */
     [data-testid="stChatMessage"] {
         background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
         border: 1px solid rgba(255,255,255,0.04);
@@ -1876,6 +1905,18 @@ def main():
         padding: 18px;
         margin-bottom: 14px;
         box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+
+    /* User messages - slightly different styling */
+    [data-testid="stChatMessage"][data-testid*="user"],
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+        background: linear-gradient(145deg, #1E1E2A 0%, #18181F 100%);
+        border-color: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Assistant messages - keep base styling */
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
     }
 
     /* Dark code blocks */
@@ -2092,6 +2133,11 @@ def main():
                 logger.error(f"Balance fetch error: {e}")
             finally:
                 st.session_state._balance_loading = False
+
+    # Show seed phrase modal after signup (must be shown before anything else)
+    if st.session_state.get("show_seed_phrase_modal") and st.session_state.get("_pending_seed_phrase"):
+        seed_phrase_modal()
+        return
 
     # Show deposit modal if requested (only if logged in)
     if st.session_state.get("show_deposit_modal") and st.session_state.wallet_address:
