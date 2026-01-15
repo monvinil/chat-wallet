@@ -128,13 +128,22 @@ MOCK_EMAILS = [
 # TOOLS
 # ============================================================================
 
+def _get_solana_address_from_session() -> str:
+    """Get Solana address from wallet data in session"""
+    wallet_data = WalletManager.get_wallet_from_session()
+    if wallet_data and wallet_data.get("solana"):
+        return wallet_data["solana"].get("address")
+    return None
+
+
 def get_wallet_balance() -> str:
     """Get current wallet balances across all chains. No arguments needed."""
     if "wallet_address" not in st.session_state:
         return json.dumps({"error": "No wallet connected"})
 
     address = st.session_state.wallet_address
-    balances = ChainUtils.get_all_balances(address)
+    solana_address = _get_solana_address_from_session()
+    balances = ChainUtils.get_all_balances(address, solana_address)
     total_usdc = ChainUtils.calculate_total_usdc(balances)
 
     # Build a clean, dollar-first response
@@ -143,6 +152,10 @@ def get_wallet_balance() -> str:
         "address": ChainUtils.format_address(address),
         "breakdown_by_network": {}
     }
+
+    # Add Solana address if available
+    if solana_address:
+        result["solana_address"] = ChainUtils.format_address(solana_address)
 
     for network_key, chain_balances in balances.items():
         network_name = NETWORKS[network_key]["name"]
@@ -821,10 +834,15 @@ def generate_qr(data: str):
 
 
 def deposit_modal():
-    """Show deposit address modal"""
+    """Show deposit address modal with multi-chain support"""
     st.markdown("### Deposit")
 
-    # Chain selector
+    # Get wallet data to check for Solana address
+    wallet_data = WalletManager.get_wallet_from_session()
+    has_solana = wallet_data and wallet_data.get("solana")
+    solana_address = wallet_data.get("solana", {}).get("address") if has_solana else None
+
+    # Chain selector - include Solana if wallet has it
     chain_options = {
         "Base Sepolia (Testnet)": "base-sepolia",
         "Base Mainnet": "base-mainnet",
@@ -832,16 +850,34 @@ def deposit_modal():
         "Polygon Amoy (Testnet)": "polygon-amoy",
     }
 
+    # Add Solana options if wallet supports it
+    if has_solana:
+        chain_options["Solana Devnet (Testnet)"] = "solana-devnet"
+        chain_options["Solana Mainnet"] = "solana-mainnet"
+
     selected_chain_name = st.selectbox("Network", list(chain_options.keys()))
     selected_chain = chain_options[selected_chain_name]
 
     network = NETWORKS[selected_chain]
-    address = st.session_state.wallet_address
 
+    # Get the correct address based on chain type
+    if network["type"] == "solana":
+        address = solana_address
+        if not address:
+            st.error("Solana address not available. Try importing your wallet with a seed phrase.")
+            return
+    else:
+        address = st.session_state.wallet_address
+
+    # Network indicator
     if network['testnet']:
         st.caption(f"{network['name']} (Testnet)")
     else:
         st.caption(f"{network['name']} (Mainnet)")
+
+    # Show chain type badge
+    chain_type = network["type"].upper()
+    st.markdown(f"**Chain:** {chain_type}")
 
     # Address
     st.code(address)
@@ -853,7 +889,12 @@ def deposit_modal():
             st.toast("Address copied")
 
     with col2:
-        explorer_url = ChainUtils.get_explorer_url(selected_chain, address)
+        # Build explorer URL based on chain type
+        if network["type"] == "solana":
+            cluster_param = "?cluster=devnet" if network["testnet"] else ""
+            explorer_url = f"{network['explorer']}/address/{address}{cluster_param}"
+        else:
+            explorer_url = ChainUtils.get_explorer_url(selected_chain, address)
         st.link_button("View on explorer", explorer_url, use_container_width=True)
 
     # QR Code
@@ -861,7 +902,7 @@ def deposit_modal():
     qr_img = generate_qr(address)
     st.image(qr_img, width=180)
 
-    # Instructions
+    # Instructions based on network
     if "sepolia" in selected_chain or "amoy" in selected_chain:
         with st.expander("Get testnet funds"):
             st.markdown("""
@@ -869,8 +910,23 @@ Get testnet tokens from these faucets:
 - [Coinbase Faucet](https://portal.cdp.coinbase.com/products/faucet)
 - [Alchemy Faucet](https://sepoliafaucet.com/)
 """)
+    elif "solana-devnet" in selected_chain:
+        with st.expander("Get testnet SOL"):
+            st.markdown("""
+Get testnet SOL from:
+- [Solana Faucet](https://faucet.solana.com/)
+- Or use CLI: `solana airdrop 2`
+""")
     else:
         st.warning("This is mainnet. Only deposit real funds.")
+
+    # Show both addresses if multi-chain wallet
+    if has_solana:
+        with st.expander("All deposit addresses"):
+            st.markdown("**EVM (Base, Arbitrum, Polygon):**")
+            st.code(st.session_state.wallet_address)
+            st.markdown("**Solana:**")
+            st.code(solana_address)
 
 
 def send_modal():
@@ -1169,7 +1225,8 @@ def sidebar():
             # Refresh balances
             if st.button("Refresh balance", use_container_width=True):
                 with st.spinner("Updating..."):
-                    balances = ChainUtils.get_all_balances(st.session_state.wallet_address)
+                    solana_addr = _get_solana_address_from_session()
+                    balances = ChainUtils.get_all_balances(st.session_state.wallet_address, solana_addr)
                     st.session_state.balances = balances
                     st.toast("Updated")
 
@@ -1994,7 +2051,8 @@ def main():
         # Only fetch if not locked
         if not st.session_state.get("wallet_locked", True):
             try:
-                balances = ChainUtils.get_all_balances(st.session_state.wallet_address)
+                solana_addr = _get_solana_address_from_session()
+                balances = ChainUtils.get_all_balances(st.session_state.wallet_address, solana_addr)
                 st.session_state.balances = balances
             except Exception as e:
                 from utils.logger import logger

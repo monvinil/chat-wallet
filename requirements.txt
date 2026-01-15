@@ -39,3 +39,8 @@ extra-streamlit-components>=0.1.60
 
 # Scheduler
 croniter>=1.4.0
+
+# Solana support
+solders>=0.21.0
+solana>=0.34.0
+bip-utils>=2.9.0

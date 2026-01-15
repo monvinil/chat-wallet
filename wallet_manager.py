@@ -59,8 +59,46 @@ class WalletManager:
             return None
 
     @staticmethod
+    def _derive_solana_keypair(mnemonic_phrase: str) -> Optional[Dict[str, str]]:
+        """
+        Derive Solana keypair from mnemonic using BIP44 derivation path.
+        Path: m/44'/501'/0'/0' (Solana standard)
+        """
+        try:
+            from bip_utils import (
+                Bip39SeedGenerator, Bip44, Bip44Coins, Bip44Changes
+            )
+            from solders.keypair import Keypair
+            import base58
+
+            # Generate seed from mnemonic
+            seed = Bip39SeedGenerator(mnemonic_phrase).Generate()
+
+            # Derive Solana key using BIP44
+            # Path: m/44'/501'/0'/0'
+            bip44_ctx = Bip44.FromSeed(seed, Bip44Coins.SOLANA)
+            derived = bip44_ctx.Purpose().Coin().Account(0).Change(Bip44Changes.CHAIN_EXT)
+
+            # Get the raw private key bytes (32 bytes)
+            private_key_bytes = derived.PrivateKey().Raw().ToBytes()
+
+            # Create Solana keypair from seed
+            keypair = Keypair.from_seed(private_key_bytes)
+
+            return {
+                "private_key": base58.b58encode(bytes(keypair)).decode(),
+                "address": str(keypair.pubkey())
+            }
+        except ImportError as e:
+            logger.warning(f"Solana libraries not installed: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to derive Solana keypair: {e}")
+            return None
+
+    @staticmethod
     def create_new_wallet() -> Optional[Dict[str, Any]]:
-        """Create a new EVM wallet with mnemonic seed phrase"""
+        """Create a new multi-chain wallet with mnemonic seed phrase"""
         try:
             from eth_account import Account
             from mnemonic import Mnemonic
@@ -72,28 +110,41 @@ class WalletManager:
             # Enable HD wallet functionality
             Account.enable_unaudited_hdwallet_features()
 
-            # Derive account from mnemonic (first address: m/44'/60'/0'/0/0)
+            # Derive EVM account from mnemonic (first address: m/44'/60'/0'/0/0)
             account = Account.from_mnemonic(mnemonic_phrase)
-            private_key = account.key.hex()
-            if not private_key.startswith("0x"):
-                private_key = "0x" + private_key
-            address = account.address
+            evm_private_key = account.key.hex()
+            if not evm_private_key.startswith("0x"):
+                evm_private_key = "0x" + evm_private_key
+            evm_address = account.address
 
-            # Wallet data to encrypt
+            # Derive Solana keypair from same mnemonic
+            solana_keys = WalletManager._derive_solana_keypair(mnemonic_phrase)
+
+            # Build multi-chain wallet data
             wallet_data = {
-                "private_key": private_key,
                 "mnemonic": mnemonic_phrase,
-                "address": address,
+                "evm": {
+                    "private_key": evm_private_key,
+                    "address": evm_address
+                },
+                # Legacy fields for backwards compatibility
+                "private_key": evm_private_key,
+                "address": evm_address,
                 "network": "base-sepolia",
-                "type": "evm"
+                "type": "multi-chain"
             }
 
+            # Add Solana if derivation succeeded
+            if solana_keys:
+                wallet_data["solana"] = solana_keys
+
             return {
-                "address": address,
+                "address": evm_address,  # Primary address is EVM
+                "solana_address": solana_keys["address"] if solana_keys else None,
                 "mnemonic": mnemonic_phrase,
                 "wallet_data": json.dumps(wallet_data),
                 "network": "base-sepolia",
-                "type": "evm"
+                "type": "multi-chain"
             }
         except Exception as e:
             st.error(f"Failed to create wallet: {e}")
@@ -101,7 +152,7 @@ class WalletManager:
 
     @staticmethod
     def import_wallet(private_key_or_mnemonic: str) -> Optional[Dict[str, Any]]:
-        """Import wallet from private key or seed phrase"""
+        """Import wallet from private key or seed phrase (multi-chain if mnemonic)"""
         try:
             from eth_account import Account
             from mnemonic import Mnemonic
@@ -122,23 +173,43 @@ class WalletManager:
                 # Enable HD wallet functionality
                 Account.enable_unaudited_hdwallet_features()
 
-                # Derive account from mnemonic
+                # Derive EVM account from mnemonic
                 account = Account.from_mnemonic(input_str)
-                private_key = account.key.hex()
-                if not private_key.startswith("0x"):
-                    private_key = "0x" + private_key
-                address = account.address
+                evm_private_key = account.key.hex()
+                if not evm_private_key.startswith("0x"):
+                    evm_private_key = "0x" + evm_private_key
+                evm_address = account.address
 
-                # Wallet data to encrypt
+                # Derive Solana keypair from same mnemonic
+                solana_keys = WalletManager._derive_solana_keypair(input_str)
+
+                # Build multi-chain wallet data
                 wallet_data = {
-                    "private_key": private_key,
                     "mnemonic": input_str,
-                    "address": address,
+                    "evm": {
+                        "private_key": evm_private_key,
+                        "address": evm_address
+                    },
+                    # Legacy fields for backwards compatibility
+                    "private_key": evm_private_key,
+                    "address": evm_address,
                     "network": "base-sepolia",
-                    "type": "evm"
+                    "type": "multi-chain"
+                }
+
+                # Add Solana if derivation succeeded
+                if solana_keys:
+                    wallet_data["solana"] = solana_keys
+
+                return {
+                    "address": evm_address,
+                    "solana_address": solana_keys["address"] if solana_keys else None,
+                    "wallet_data": json.dumps(wallet_data),
+                    "network": "base-sepolia",
+                    "type": "multi-chain"
                 }
             else:
-                # Treat as private key
+                # Treat as private key (EVM only - can't derive Solana)
                 private_key = input_str
                 if not private_key.startswith("0x"):
                     private_key = "0x" + private_key
@@ -147,20 +218,26 @@ class WalletManager:
                 account = Account.from_key(private_key)
                 address = account.address
 
-                # Wallet data to encrypt
+                # Wallet data to encrypt (EVM only)
                 wallet_data = {
+                    "evm": {
+                        "private_key": private_key,
+                        "address": address
+                    },
+                    # Legacy fields
                     "private_key": private_key,
                     "address": address,
                     "network": "base-sepolia",
                     "type": "evm"
                 }
 
-            return {
-                "address": address,
-                "wallet_data": json.dumps(wallet_data),
-                "network": "base-sepolia",
-                "type": "evm"
-            }
+                return {
+                    "address": address,
+                    "solana_address": None,  # Can't derive Solana from EVM private key
+                    "wallet_data": json.dumps(wallet_data),
+                    "network": "base-sepolia",
+                    "type": "evm"
+                }
         except Exception as e:
             st.error(f"Failed to import wallet: {e}")
             return None

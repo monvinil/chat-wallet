@@ -168,17 +168,65 @@ class ChainUtils:
             return {"eth": 0.0, "usdc": 0.0}
 
     @staticmethod
-    def get_solana_balance(address: str) -> Dict[str, float]:
-        """Get SOL and USDC balance for Solana address (mocked for now)"""
-        # TODO: Implement real Solana balance fetching
-        # Would use solana-py library
-        return {
-            "sol": 0.0,
-            "usdc": 0.0
-        }
+    def get_solana_balance(address: str, network_key: str = "solana-mainnet") -> Dict[str, float]:
+        """Get SOL and USDC balance for Solana address"""
+        try:
+            from solana.rpc.api import Client
+            from solders.pubkey import Pubkey
+
+            network = NETWORKS.get(network_key)
+            if not network or network["type"] != "solana":
+                return {"sol": 0.0, "usdc": 0.0}
+
+            client = Client(network["rpc_url"])
+
+            # Get SOL balance
+            pubkey = Pubkey.from_string(address)
+            sol_balance_resp = client.get_balance(pubkey)
+
+            if sol_balance_resp.value is not None:
+                sol_balance = sol_balance_resp.value / 1e9  # Lamports to SOL
+            else:
+                sol_balance = 0.0
+
+            # Get USDC balance (SPL token)
+            usdc_balance = 0.0
+            usdc_mint = network.get("usdc_address")
+
+            if usdc_mint:
+                try:
+                    from solana.rpc.types import TokenAccountOpts
+                    usdc_pubkey = Pubkey.from_string(usdc_mint)
+
+                    # Get token accounts for USDC
+                    token_accounts = client.get_token_accounts_by_owner(
+                        pubkey,
+                        TokenAccountOpts(mint=usdc_pubkey)
+                    )
+
+                    if token_accounts.value:
+                        for account in token_accounts.value:
+                            # Parse token account data
+                            account_info = client.get_token_account_balance(account.pubkey)
+                            if account_info.value:
+                                usdc_balance += float(account_info.value.ui_amount or 0)
+                except Exception as e:
+                    print(f"Error fetching USDC balance: {e}")
+
+            return {
+                "sol": round(sol_balance, 6),
+                "usdc": round(usdc_balance, 2)
+            }
+
+        except ImportError as e:
+            print(f"Solana libraries not installed: {e}")
+            return {"sol": 0.0, "usdc": 0.0}
+        except Exception as e:
+            print(f"Error fetching Solana balance: {e}")
+            return {"sol": 0.0, "usdc": 0.0}
 
     @staticmethod
-    def get_all_balances(address: str) -> Dict[str, Dict[str, float]]:
+    def get_all_balances(address: str, solana_address: Optional[str] = None) -> Dict[str, Dict[str, float]]:
         """Get balances across all supported chains (parallelized for speed)"""
         import concurrent.futures
 
@@ -187,26 +235,41 @@ class ChainUtils:
         # Prepare list of EVM networks to fetch
         evm_networks = [(key, info) for key, info in NETWORKS.items() if info["type"] == "evm"]
 
-        # Fetch all EVM balances in parallel (4x faster)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        # Prepare list of Solana networks if address provided
+        solana_networks = []
+        if solana_address:
+            solana_networks = [(key, info) for key, info in NETWORKS.items() if info["type"] == "solana"]
+
+        # Fetch all balances in parallel
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            # Submit EVM balance fetches
             future_to_network = {
-                executor.submit(ChainUtils.get_evm_balance, network_key, address): network_key
+                executor.submit(ChainUtils.get_evm_balance, network_key, address): (network_key, "evm")
                 for network_key, network_info in evm_networks
             }
 
-            for future in concurrent.futures.as_completed(future_to_network, timeout=10):
-                network_key = future_to_network[future]
+            # Submit Solana balance fetches
+            for network_key, network_info in solana_networks:
+                future = executor.submit(ChainUtils.get_solana_balance, solana_address, network_key)
+                future_to_network[future] = (network_key, "solana")
+
+            for future in concurrent.futures.as_completed(future_to_network, timeout=15):
+                network_key, chain_type = future_to_network[future]
                 try:
-                    balances[network_key] = future.result(timeout=5)
+                    balances[network_key] = future.result(timeout=8)
                 except Exception as e:
                     print(f"Balance fetch error for {network_key}: {e}")
-                    # Return zero balances on error instead of crashing
-                    balances[network_key] = {"eth": 0.0, "usdc": 0.0}
+                    # Return zero balances on error
+                    if chain_type == "solana":
+                        balances[network_key] = {"sol": 0.0, "usdc": 0.0}
+                    else:
+                        balances[network_key] = {"eth": 0.0, "usdc": 0.0}
 
-        # Handle Solana (mock for now)
-        for network_key, network_info in NETWORKS.items():
-            if network_info["type"] == "solana":
-                balances[network_key] = {"sol": 0.0, "usdc": 0.0}
+        # Add placeholder for Solana networks without address
+        if not solana_address:
+            for network_key, network_info in NETWORKS.items():
+                if network_info["type"] == "solana":
+                    balances[network_key] = {"sol": 0.0, "usdc": 0.0}
 
         return balances
 

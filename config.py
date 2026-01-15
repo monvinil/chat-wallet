@@ -64,6 +64,14 @@ NETWORKS = {
         "rpc_url": "https://api.devnet.solana.com",
         "explorer": "https://explorer.solana.com/?cluster=devnet",
         "usdc_address": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+    },
+    "solana-mainnet": {
+        "name": "Solana",
+        "type": "solana",
+        "testnet": False,
+        "rpc_url": "https://api.mainnet-beta.solana.com",
+        "explorer": "https://explorer.solana.com",
+        "usdc_address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
     }
 }
 
