@@ -1378,97 +1378,62 @@ def render_quick_actions():
 
 def render_suggested_actions():
     """
-    Render capability library - horizontally scrollable pills showing what's possible.
-    These aren't just shortcuts, they're a discovery mechanism.
+    Render capability library with tabbed categories.
+    Clean navigation, organized by use case.
     """
 
-    # Capability library - diverse mix showing breadth
-    # (emoji, label, chat_prompt_or_description, is_live)
-    capabilities = [
-        # === EVERYDAY REWARDS & TREATS ===
-        ("🎁", "Amazon", "I want to buy an Amazon gift card", True),
-        ("☕", "Starbucks", "Get me a Starbucks gift card", True),
-        ("🍕", "DoorDash", "I want a DoorDash gift card", True),
-        ("🛍️", "Target", "Show me Target gift cards", True),
-
-        # === TRAVEL WITH PERKS ===
-        ("✈️", "Book Flight", "Earn 5% back in crypto on flights via Travala", False),
-        ("🏨", "Hotel + Bonus", "Book hotels, get bonus gift card rewards", False),
-        ("🚗", "Uber Credits", "I want Uber gift card credits", True),
-
-        # === SUBSCRIPTIONS & LIFESTYLE ===
-        ("🎵", "Apple Music", "Gift an Apple Music subscription", False),
-        ("📺", "Netflix", "I want a Netflix gift card", True),
-        ("🎮", "PlayStation", "Show me PlayStation gift cards", True),
-        ("💅", "Sephora", "Get a Sephora gift card", True),
-
-        # === DEFI & EARNING ===
-        ("💰", "Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
-        ("📈", "Swap to ETH", "Swap USDC to ETH at best rates", False),
-        ("₿", "Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
-
-        # === CRYPTO NATIVE ===
-        ("🌐", "Get Domain", "I want to register a domain", True),
-        ("🔐", "VPN Access", "I want a Mullvad VPN subscription", True),
-        ("📤", "Send USDC", "Help me send USDC to someone", True),
-
-        # === AUTOMATION & SCHEDULING ===
-        ("⏰", "Schedule", "I want to set up a recurring payment", True),
-        ("🔔", "Alerts", "Set up balance alerts and spending notifications", False),
-
-        # === BILLS & UTILITIES ===
-        ("📱", "Phone Top-up", "I need to add minutes to my phone", True),
-        ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
-    ]
-
-    # CSS for horizontal scrolling pills container
-    st.markdown("""
-    <style>
-    /* Horizontal scroll container for capability pills */
-    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"]) {
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        padding-bottom: 8px;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(255,255,255,0.1) transparent;
+    # Capabilities organized by category
+    # (emoji, label, chat_prompt, is_live)
+    categories = {
+        "🎁 Gift Cards": [
+            ("🎁", "Amazon", "I want to buy an Amazon gift card", True),
+            ("☕", "Starbucks", "Get me a Starbucks gift card", True),
+            ("🍕", "DoorDash", "I want a DoorDash gift card", True),
+            ("🛍️", "Target", "Show me Target gift cards", True),
+            ("🚗", "Uber", "I want Uber gift card credits", True),
+            ("📺", "Netflix", "I want a Netflix gift card", True),
+            ("🎮", "PlayStation", "Show me PlayStation gift cards", True),
+            ("💅", "Sephora", "Get a Sephora gift card", True),
+        ],
+        "💸 Bills & Send": [
+            ("📤", "Send USDC", "Help me send USDC to someone", True),
+            ("💡", "Pay Bills", "Help me pay a bill with crypto", True),
+            ("📱", "Phone Top-up", "I need to add minutes to my phone", True),
+            ("⏰", "Schedule", "I want to set up a recurring payment", True),
+        ],
+        "🔧 Crypto Tools": [
+            ("🌐", "Get Domain", "I want to register a domain", True),
+            ("🔐", "VPN Access", "I want a Mullvad VPN subscription", True),
+        ],
+        "🚀 Coming Soon": [
+            ("✈️", "Book Flight", "Earn 5% back in crypto on flights via Travala", False),
+            ("🏨", "Hotels", "Book hotels, get bonus gift card rewards", False),
+            ("🎵", "Apple Music", "Gift an Apple Music subscription", False),
+            ("💰", "Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
+            ("📈", "Swap to ETH", "Swap USDC to ETH at best rates", False),
+            ("₿", "Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
+            ("🔔", "Alerts", "Set up balance alerts and spending notifications", False),
+        ],
     }
-    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"])::-webkit-scrollbar {
-        height: 4px;
-    }
-    div[data-testid="stHorizontalBlock"]:has(button[kind="secondary"])::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.1);
-        border-radius: 2px;
-    }
-    /* Make pill buttons compact and non-wrapping */
-    div[data-testid="stHorizontalBlock"] .stButton {
-        min-width: fit-content !important;
-        flex-shrink: 0 !important;
-    }
-    div[data-testid="stHorizontalBlock"] .stButton button {
-        white-space: nowrap !important;
-        min-width: max-content !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
-    # Render pills in rows of 8 for better layout
-    PILLS_PER_ROW = 8
-    for row_start in range(0, len(capabilities), PILLS_PER_ROW):
-        row_caps = capabilities[row_start:row_start + PILLS_PER_ROW]
-        cols = st.columns(len(row_caps))
+    # Create tabs
+    tabs = st.tabs(list(categories.keys()))
 
-        for i, (emoji, label, prompt_or_desc, is_live) in enumerate(row_caps):
-            cap_idx = row_start + i
-            with cols[i]:
-                if is_live:
-                    # Live capability - triggers chat
-                    if st.button(f"{emoji} {label}", key=f"cap_{cap_idx}"):
-                        st.session_state.messages.append({"role": "user", "content": prompt_or_desc})
-                        st.session_state._quick_action_triggered = True
-                        st.rerun()
-                else:
-                    # Coming soon - show with tooltip
-                    st.button(f"{emoji} {label}", key=f"cap_{cap_idx}", disabled=True, help=prompt_or_desc)
+    for tab_idx, (category_name, items) in enumerate(categories.items()):
+        with tabs[tab_idx]:
+            # Render pills in rows
+            cols = st.columns(min(len(items), 4))
+            for i, (emoji, label, prompt, is_live) in enumerate(items):
+                col_idx = i % 4
+                with cols[col_idx]:
+                    if is_live:
+                        if st.button(f"{emoji} {label}", key=f"cap_{tab_idx}_{i}", use_container_width=True):
+                            st.session_state.messages.append({"role": "user", "content": prompt})
+                            st.session_state._quick_action_triggered = True
+                            st.rerun()
+                    else:
+                        st.button(f"{emoji} {label}", key=f"cap_{tab_idx}_{i}", disabled=True,
+                                  use_container_width=True, help=prompt)
 
 
 def chat_interface():
