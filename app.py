@@ -1316,44 +1316,82 @@ def render_quick_actions():
 
 
 def render_suggested_actions():
-    """Render horizontally scrollable action pills above chat input - all functional"""
+    """Render horizontally scrollable action pills - mix of live features and roadmap capabilities"""
 
-    # Only show actions that actually work via chat
-    # Each pill triggers a real chat command
-    actions = [
-        ("🎁", "Amazon Gift Card", "I want to buy an Amazon gift card"),
-        ("💳", "Check Balance", "What's my balance?"),
-        ("📤", "Send USDC", "Help me send USDC"),
-        ("🌐", "Buy Domain", "I want to register a domain"),
-        ("🔐", "Get VPN", "I want to buy a VPN subscription"),
-        ("🎮", "Gaming Card", "Show me gaming gift cards"),
+    # Two categories: functional now, and advanced capabilities (the muscle flex)
+    # Functional actions trigger chat commands
+    # Advanced actions show what's possible with a "coming soon" indicator
+
+    live_actions = [
+        ("🎁", "Amazon Gift Card", "I want to buy an Amazon gift card", True),
+        ("📤", "Send USDC", "Help me send USDC", True),
+        ("🌐", "Buy Domain", "I want to register a domain", True),
+        ("🔐", "Get VPN", "I want to buy a VPN subscription", True),
     ]
 
-    # CSS for horizontal scrolling pills
+    # Advanced capabilities - the vision/muscle flex
+    # These show the app's ambition and where it's heading
+    advanced_actions = [
+        ("📺", "YouTube Vault", "Instant payouts for international creators", False),
+        ("💰", "Lend on Aave", "Earn yield on idle USDC", False),
+        ("₿", "Buy Bitcoin", "Stack sats directly from chat", False),
+        ("🎵", "Apple Music", "Gift subscriptions globally", False),
+    ]
+
+    all_actions = live_actions + advanced_actions
+
+    # CSS for horizontal scrolling pills with visual distinction
     st.markdown("""
     <style>
-    .suggested-pills-container {
+    .action-pills-row {
         display: flex;
         gap: 8px;
         overflow-x: auto;
-        padding: 12px 0;
+        padding: 8px 0;
         scrollbar-width: none;
         -ms-overflow-style: none;
     }
-    .suggested-pills-container::-webkit-scrollbar {
+    .action-pills-row::-webkit-scrollbar {
         display: none;
+    }
+    .pill-live {
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%) !important;
+        border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    }
+    .pill-advanced {
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        opacity: 0.85;
+    }
+    .pill-advanced:hover {
+        border-color: rgba(139, 92, 246, 0.4) !important;
+    }
+    .coming-badge {
+        font-size: 9px;
+        background: rgba(139, 92, 246, 0.2);
+        color: #A78BFA;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 4px;
+        font-weight: 600;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Use Streamlit buttons in columns for functional pills
-    cols = st.columns(len(actions))
-    for i, (emoji, label, prompt) in enumerate(actions):
+    # Build pills with visual distinction between live and advanced
+    cols = st.columns(len(all_actions))
+    for i, (emoji, label, prompt_or_desc, is_live) in enumerate(all_actions):
         with cols[i]:
-            if st.button(f"{emoji} {label}", key=f"pill_{i}", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": prompt})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
+            if is_live:
+                # Live feature - triggers chat
+                if st.button(f"{emoji} {label}", key=f"pill_{i}", use_container_width=True):
+                    st.session_state.messages.append({"role": "user", "content": prompt_or_desc})
+                    st.session_state._quick_action_triggered = True
+                    st.rerun()
+            else:
+                # Advanced capability - show vision with tooltip
+                if st.button(f"{emoji} {label} ✨", key=f"pill_{i}", use_container_width=True, help=prompt_or_desc):
+                    st.toast(f"**{label}** — {prompt_or_desc}. Coming in v2.", icon="✨")
 
 
 def chat_interface():
