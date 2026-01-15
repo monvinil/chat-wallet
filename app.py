@@ -377,8 +377,9 @@ def wallet_setup_ui():
                                     password_hash=password_hash
                                 )
                             except Exception as e:
-                                st.error(f"Database error: {str(e)}")
-                                st.info("💡 Tip: Make sure you've run the Supabase migrations")
+                                from utils.logger import logger
+                                logger.error(f"Create user failed: {str(e)}")
+                                st.error("Could not create account. Please try again in a moment.")
                                 user = None
 
                             if user:
@@ -1075,7 +1076,17 @@ def _render_send_confirmation():
                         st.error(f"Transaction failed: {result['error']}")
 
                 except Exception as e:
-                    st.error(f"Something went wrong: {str(e)}")
+                    from utils.logger import logger
+                    logger.error(f"Send transaction failed: {str(e)}")
+                    st.error("Transaction could not be completed. Please try again.")
+
+
+def render_sidebar_footer():
+    """Render professional footer with trust signals"""
+    st.markdown("---")
+    st.caption("Self-custodial wallet")
+    st.caption("[GitHub](https://github.com) · [Docs](https://docs.example.com) · [Support](mailto:support@example.com)")
+    st.caption("v1.0 · Open source")
 
 
 def sidebar():
@@ -1104,6 +1115,7 @@ def sidebar():
             st.button("Deposit", use_container_width=True, disabled=True)
             st.button("Send", use_container_width=True, disabled=True)
 
+            render_sidebar_footer()
             return
 
         if st.session_state.wallet_address and not st.session_state.get("wallet_locked", True):
@@ -1138,7 +1150,13 @@ def sidebar():
                         if usdc > 0:
                             st.caption(f"{network_name}: ${usdc:.2f}")
             else:
-                st.metric("Balance", "$0.00")
+                # Show loading indicator on first load
+                if st.session_state.get("_balance_loading"):
+                    st.metric("Balance", "...")
+                    st.caption("Loading balances...")
+                else:
+                    st.metric("Balance", "$0.00")
+                    st.caption("Deposit funds to get started")
 
             # Refresh balances
             if st.button("Refresh balance", use_container_width=True):
@@ -1167,6 +1185,8 @@ def sidebar():
                     SessionManager.logout()
                     st.rerun()
 
+            render_sidebar_footer()
+
         else:
             # Wallet is locked or doesn't exist
             if "wallet_encrypted" in st.session_state:
@@ -1180,6 +1200,7 @@ def sidebar():
                             st.rerun()
                         else:
                             st.error("Incorrect password")
+                            st.caption("Forgot? Use your recovery phrase to restore.")
 
                 st.divider()
 
@@ -1192,12 +1213,16 @@ def sidebar():
                     SessionManager.logout()
                     st.rerun()
 
+                render_sidebar_footer()
+
             elif st.session_state.get("wallet_address"):
                 st.caption("Import your wallet to continue")
                 st.code(ChainUtils.format_address(st.session_state.wallet_address))
                 if st.button("Import Wallet", use_container_width=True, type="primary"):
                     st.session_state.show_auth_modal = True
                     st.rerun()
+
+                render_sidebar_footer()
 
 
 def render_transaction_history():
@@ -1221,6 +1246,7 @@ def render_transaction_history():
 
             if not transactions:
                 st.caption("No transactions yet")
+                st.caption("Send USDC or buy a gift card to see your history here.")
                 return
 
             for tx in transactions:
@@ -1290,23 +1316,23 @@ def render_quick_actions():
 
 
 def render_suggested_actions():
-    """Render horizontally scrollable action pills above chat input"""
+    """Render horizontally scrollable action pills above chat input - all functional"""
 
-    # Suggested actions data
+    # Only show actions that actually work via chat
+    # Each pill triggers a real chat command
     actions = [
-        ("🎵", "Apple Music 1mo"),
-        ("🎁", "Amazon Gift Card"),
-        ("📺", "YouTube Vault"),
-        ("💰", "Lend to Aave"),
-        ("₿", "Buy Bitcoin"),
-        ("🎧", "Spotify Premium"),
-        ("☕", "Starbucks Card"),
+        ("🎁", "Amazon Gift Card", "I want to buy an Amazon gift card"),
+        ("💳", "Check Balance", "What's my balance?"),
+        ("📤", "Send USDC", "Help me send USDC"),
+        ("🌐", "Buy Domain", "I want to register a domain"),
+        ("🔐", "Get VPN", "I want to buy a VPN subscription"),
+        ("🎮", "Gaming Card", "Show me gaming gift cards"),
     ]
 
     # CSS for horizontal scrolling pills
     st.markdown("""
     <style>
-    .suggested-pills {
+    .suggested-pills-container {
         display: flex;
         gap: 8px;
         overflow-x: auto;
@@ -1314,80 +1340,20 @@ def render_suggested_actions():
         scrollbar-width: none;
         -ms-overflow-style: none;
     }
-    .suggested-pills::-webkit-scrollbar {
+    .suggested-pills-container::-webkit-scrollbar {
         display: none;
-    }
-    .pill-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        border-radius: 20px;
-        color: #93C5FD;
-        font-size: 13px;
-        font-weight: 500;
-        white-space: nowrap;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        flex-shrink: 0;
-        text-decoration: none;
-    }
-    .pill-btn:hover {
-        background: rgba(59, 130, 246, 0.2);
-        border-color: rgba(59, 130, 246, 0.5);
-        color: #BFDBFE;
-        transform: translateY(-1px);
-    }
-    .pill-btn:active {
-        transform: translateY(0);
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Build HTML pills with data attributes for click handling
-    pills_html = '<div class="suggested-pills">'
-    for emoji, label in actions:
-        pills_html += f'<button class="pill-btn" onclick="showComingSoon(\'{label}\')">{emoji} {label}</button>'
-    pills_html += '</div>'
-
-    # JavaScript for click handling (shows toast via Streamlit's native toast styling)
-    pills_html += """
-    <script>
-    function showComingSoon(label) {
-        // Create toast notification
-        const toast = document.createElement('div');
-        toast.innerHTML = '🚧 ' + label + ' — Coming soon!';
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1f2937;
-            color: #f3f4f6;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 9999;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            animation: fadeInOut 2.5s ease forwards;
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2500);
-    }
-    </script>
-    <style>
-    @keyframes fadeInOut {
-        0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
-        15% { opacity: 1; transform: translateX(-50%) translateY(0); }
-        85% { opacity: 1; transform: translateX(-50%) translateY(0); }
-        100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-    }
-    </style>
-    """
-
-    st.markdown(pills_html, unsafe_allow_html=True)
+    # Use Streamlit buttons in columns for functional pills
+    cols = st.columns(len(actions))
+    for i, (emoji, label, prompt) in enumerate(actions):
+        with cols[i]:
+            if st.button(f"{emoji} {label}", key=f"pill_{i}", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": prompt})
+                st.session_state._quick_action_triggered = True
+                st.rerun()
 
 
 def chat_interface():
@@ -1854,6 +1820,31 @@ def main():
         border: 1px solid rgba(255,255,255,0.08) !important;
         border-radius: 10px !important;
     }
+
+    /* Consistent caption styling */
+    .stCaption, [data-testid="stCaptionContainer"] p {
+        color: #6B7280 !important;
+        font-size: 0.8125rem !important;
+        line-height: 1.5;
+    }
+
+    /* Footer link styling */
+    [data-testid="stSidebar"] a {
+        color: #6B7280 !important;
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+
+    [data-testid="stSidebar"] a:hover {
+        color: #9CA3AF !important;
+    }
+
+    /* Pill button styling for suggested actions */
+    [data-testid="stHorizontalBlock"] .stButton > button {
+        border-radius: 20px !important;
+        font-size: 0.8125rem !important;
+        padding: 0.5rem 1rem !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -1920,6 +1911,7 @@ def main():
     # Fetch balances once (don't block, just set empty if not loaded)
     if st.session_state.wallet_address and not st.session_state.get("balances"):
         st.session_state.balances = {}
+        st.session_state._balance_loading = True
         # Only fetch if not locked
         if not st.session_state.get("wallet_locked", True):
             try:
@@ -1928,6 +1920,8 @@ def main():
             except Exception as e:
                 from utils.logger import logger
                 logger.error(f"Balance fetch error: {e}")
+            finally:
+                st.session_state._balance_loading = False
 
     # Show deposit modal if requested (only if logged in)
     if st.session_state.get("show_deposit_modal") and st.session_state.wallet_address:
