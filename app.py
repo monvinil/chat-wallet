@@ -1215,9 +1215,15 @@ def sidebar():
             else:
                 st.metric("Balance", "$0.00")
 
-            # Address
-            address = st.session_state.wallet_address
-            st.code(ChainUtils.format_address(address, 8))
+            # Addresses - show both EVM and Solana if available
+            solana_addr = _get_solana_address_from_session()
+
+            with st.expander("Addresses", expanded=False):
+                st.caption("EVM (Base, Arbitrum, Polygon)")
+                st.code(ChainUtils.format_address(st.session_state.wallet_address, 8))
+                if solana_addr:
+                    st.caption("Solana")
+                    st.code(ChainUtils.format_address(solana_addr, 8))
 
             # Primary actions
             col1, col2 = st.columns(2)
@@ -1347,38 +1353,16 @@ def render_transaction_history():
             st.caption("Unable to load transactions")
 
 
-def render_quick_actions():
-    """Render quick action chips above chat"""
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        if st.button("Send", key="quick_send", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "I want to send money"})
-            st.session_state._quick_action_triggered = True
-            st.rerun()
-
-    with col2:
-        if st.button("Gift Card", key="quick_giftcard", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Show me gift cards"})
-            st.session_state._quick_action_triggered = True
-            st.rerun()
-
-    with col3:
-        if st.button("Pay Bill", key="quick_bill", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
-            st.session_state._quick_action_triggered = True
-            st.rerun()
-
-
 def render_suggested_actions():
-    """Render capability buttons as a clean grid"""
+    """Render capability shortcuts as a clean grid"""
 
+    # Examples showcasing creative ways to spend USDC
     capabilities = [
-        ("Send", "Send $50 USDC to someone", True),
         ("Gift Card", "Buy a $25 Amazon gift card", True),
+        ("Domain", "Register a .com domain for my project", True),
+        ("VPN", "Get Mullvad VPN for a year", True),
         ("Pay Bill", "Pay my AWS bill", True),
-        ("Domain", "Register a .com domain", True),
-        ("VPN", "Get Mullvad VPN", True),
+        ("Transfer", "Send $50 USDC to a friend", True),
     ]
 
     # Simple 5-column grid
@@ -1402,11 +1386,9 @@ def chat_interface():
 
         # Show clean intro with quick start button
         with st.chat_message("assistant"):
-            st.markdown("""**USDC goes everywhere.**
+            st.markdown("""**Turn ideas into action with USDC.**
 
-Your stablecoins connect to the real world. Pay any invoice, buy from any merchant, automate any payment—through conversation.
-
-One wallet. Every chain. Zero friction.
+Describe what you need—domains, services, subscriptions, payments—and your wallet handles the rest. Every creative strategy, powered by stablecoins.
 """)
 
             if st.button("Start", type="primary", use_container_width=True, key="quick_start_btn"):
@@ -1449,11 +1431,6 @@ One wallet. Every chain. Zero friction.
         st.session_state.agent = None  # Force recreation
         st.session_state._agent_initializing = False
         st.session_state._api_key_just_saved = False  # Clear flag
-
-    # Quick action chips for logged-in users (only after onboarding complete)
-    render_quick_actions()
-
-    st.divider()
 
     # Normal logged-in chat interface
     # Show messages
@@ -1854,6 +1831,68 @@ def main():
 
     [data-testid="stHorizontalBlock"] > div {
         padding: 0 2px !important;
+    }
+
+    /* === LINK BUTTONS === */
+    .stLinkButton > a {
+        border-radius: var(--radius-sm) !important;
+        font-weight: 500 !important;
+        font-size: 13px !important;
+        padding: 10px 16px !important;
+        min-height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 1px solid var(--border) !important;
+        background: var(--bg-elevated) !important;
+        color: var(--text-primary) !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .stLinkButton > a:hover {
+        background: var(--bg-hover) !important;
+        border-color: var(--border-hover) !important;
+        text-decoration: none !important;
+    }
+
+    /* === CHECKBOXES === */
+    .stCheckbox label span {
+        color: var(--text-secondary) !important;
+        font-size: 14px !important;
+    }
+
+    .stCheckbox [data-testid="stCheckbox"] > div:first-child {
+        background: var(--bg-elevated) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 4px !important;
+    }
+
+    /* === DIALOGS/MODALS === */
+    [data-testid="stModal"] > div {
+        background: var(--bg-primary) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-lg) !important;
+    }
+
+    /* === SELECT/DROPDOWN === */
+    .stSelectbox [data-baseweb="select"] > div {
+        background: var(--bg-elevated) !important;
+        border-color: var(--border) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* === SPINNER === */
+    .stSpinner > div {
+        border-color: var(--accent) transparent transparent transparent !important;
+    }
+
+    /* === TOAST === */
+    [data-testid="stToast"] {
+        background: var(--bg-elevated) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-md) !important;
+        color: var(--text-primary) !important;
     }
     </style>
     """, unsafe_allow_html=True)

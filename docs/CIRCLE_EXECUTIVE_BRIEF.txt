@@ -1,0 +1,71 @@
+CHAT WALLET - Executive Overview
+
+PROBLEM
+USDC adoption is limited by UX complexity. Most consumers can't use stablecoins for everyday purchases without crypto expertise. Chat Wallet removes this barrier with a conversational interface.
+
+WHAT IT DOES
+A self-custodial wallet where users manage USDC through natural language. "Send $50 to Alice" or "Pay my AWS bill" become executable commands.
+
+Core capabilities:
+- Multi-chain balances (Base, Arbitrum, Polygon) in one view
+- Gasless transfers via meta-transactions (fee in USDC, no ETH needed)
+- Gift card purchases for 1000+ merchants through Bitrefill
+- Direct crypto payments to Porkbun, Namecheap, Mullvad, Travala
+- Gmail integration for invoice detection and recurring payments
+
+USDC COMMERCE TIERS
+
+1. Direct Merchant Payments
+   Crypto-native merchants (domains, VPN, travel, hosting) paid directly in USDC.
+
+2. Gift Card Bridge
+   Amazon, Uber, Netflix, AWS - any merchant accepting gift cards becomes USDC-accessible.
+   Example: "Pay my AWS bill" → purchases Amazon gift card → applies to billing.
+
+3. Recurring Automation
+   AI scans Gmail for invoices, creates payment schedules, executes with configurable approval thresholds.
+
+4. B2B Workflows
+   Invoicing with QR codes, batch contractor payments, cross-border transfers without SWIFT delays.
+
+5. DeFi Yield
+   Idle USDC deposited to Aave/Compound, auto-withdrawn before scheduled payments.
+
+6. Treasury Management
+   Multi-sig integration, spending policies, role-based access, accounting exports.
+
+TECHNICAL APPROACH
+- Self-custodial (HD wallet, user controls keys)
+- LangChain agent with structured tool calling
+- Meta-transactions for gasless UX
+- Encrypted storage (PBKDF2 + Fernet)
+- Supabase backend with row-level security
+
+WHY CIRCLE SHOULD CARE
+
+USDC Velocity: Users transact more when friction is removed. Gift card bridge unlocks mainstream merchants.
+
+New User Channel: 30-second onboarding vs traditional exchange → KYC → transfer flow.
+
+Regulatory Position: Self-custodial architecture avoids money transmission licensing.
+
+CIRCLE INTEGRATION OPPORTUNITIES
+- CCTP for seamless cross-chain transfers
+- Circle Yield for idle balance optimization
+- On/off ramp via Circle APIs
+- Compliance toolkit (TRM Labs, OFAC screening)
+- Joint merchant BD for direct USDC acceptance
+
+CURRENT STATE
+- Multi-chain support live (Base, Arbitrum, Polygon)
+- 1000+ merchants via Bitrefill
+- AI providers: Gemini (free), Anthropic, OpenAI
+- 30-second wallet creation
+
+ASK
+1. Technical integration (CCTP SDK, Circle APIs)
+2. Go-to-market support (co-marketing, merchant introductions)
+3. Optional: seed investment for alignment
+
+Contact: [Your details]
+Demo: [URL]

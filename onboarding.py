@@ -43,18 +43,23 @@ def show_onboarding():
 
 def show_step_1_welcome():
     """Step 1: Welcome the user and explain what's next"""
-    st.markdown("### Almost there")
-    st.progress(0.5, text="Step 1 of 2: Wallet created")
+    st.markdown("### Wallet ready")
+    st.progress(0.5, text="Step 1 of 2")
     st.divider()
 
+    # Show wallet address
+    address = st.session_state.get("wallet_address", "")
+    if address:
+        st.code(address[:6] + "..." + address[-4:])
+
     st.markdown("""
-#### Your wallet is ready
+Your keys, your funds. This wallet works across:
 
-Your self-custodial wallet has been created and encrypted. You control the private keys—no one else can access your funds.
+- **Base & Arbitrum** — Low fees, fast transactions
+- **Polygon** — Widely supported
+- **Solana** — High throughput
 
-**Supported networks:** Base, Arbitrum, Polygon
-
-**One more step:** Connect an AI provider to enable the chat assistant. We recommend Google Gemini—it's free and takes about 30 seconds to set up.
+Next: Connect an AI to power the chat interface.
 """)
 
     if st.button("Continue", type="primary", use_container_width=True):
@@ -65,8 +70,8 @@ def show_step_2_connect_ai(user_id: str):
     """Step 2: Connect AI provider"""
     from api_key_setup import show_api_key_setup_modal, check_api_key_status
 
-    st.markdown("### Connect AI provider")
-    st.progress(1.0, text="Step 2 of 2: AI setup")
+    st.markdown("### Connect AI")
+    st.progress(1.0, text="Step 2 of 2")
     st.divider()
 
     # Check if already configured
@@ -75,47 +80,48 @@ def show_step_2_connect_ai(user_id: str):
     if has_key:
         # Show success state
         provider_labels = {
-            "google": ("Google Gemini", "◆"),
-            "anthropic": ("Anthropic Claude", "◆"),
-            "openai": ("OpenAI GPT", "◆")
+            "google": ("Gemini", "Google"),
+            "anthropic": ("Claude", "Anthropic"),
+            "openai": ("GPT", "OpenAI")
         }
-        provider_name, icon = provider_labels.get(provider, ("AI Provider", "◆"))
+        model_name, company = provider_labels.get(provider, ("AI", "Provider"))
 
-        st.success(f"{icon} Connected to {provider_name}")
+        st.success(f"Connected to {company} {model_name}")
 
         # Show celebration once
         if not st.session_state.get("_api_setup_celebration_shown"):
             st.balloons()
             st.session_state._api_setup_celebration_shown = True
 
-        st.markdown("**Setup complete.** You can now manage your wallet through conversation.")
+        st.markdown("You're all set. Describe what you need and your wallet handles the rest.")
 
         col1, col2 = st.columns([1, 1])
         with col1:
-            if st.button("Change provider", use_container_width=True):
+            if st.button("Change", use_container_width=True):
                 st.session_state._api_setup_celebration_shown = False
                 show_api_key_setup_modal()
         with col2:
-            if st.button("Start chatting", type="primary", use_container_width=True):
+            if st.button("Start", type="primary", use_container_width=True):
                 st.session_state.onboarding_complete = True
 
         return True
 
     # Show API key setup prompt
     st.markdown("""
-#### Get a free Google Gemini API key
+**Google Gemini** (recommended)
 
-The chat assistant requires an AI provider. Google Gemini is free and works great:
+Free tier includes 1,500 requests/day.
 
-1. Visit [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-2. Sign in with your Google account
-3. Click **Get API Key** → **Create in new project**
-4. Copy the key and paste it below
-
-No credit card required. Includes 1,500 requests per day.
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Click **Get API Key** → **Create in new project**
+3. Copy and paste the key below
 """)
 
-    if st.button("Connect AI provider", type="primary", use_container_width=True, key="connect_ai_main"):
+    if st.button("Connect", type="primary", use_container_width=True, key="connect_ai_main"):
         show_api_key_setup_modal()
+
+    with st.expander("Other providers"):
+        st.caption("**Anthropic Claude** — Best quality, paid ($)")
+        st.caption("**OpenAI GPT** — Widely used, paid ($)")
 
     return False

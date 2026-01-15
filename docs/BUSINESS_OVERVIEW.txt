@@ -1,0 +1,190 @@
+================================================================================
+                    CHAT WALLET - BUSINESS OVERVIEW
+================================================================================
+
+EXECUTIVE SUMMARY
+-----------------
+Chat Wallet is a self-custodial crypto wallet that lets users manage USDC
+through natural language conversation. Instead of navigating complex DeFi
+interfaces, users simply chat: "Send $50 to Alice" or "Pay my AWS bill with
+crypto."
+
+
+================================================================================
+                         WHAT IT DOES WITH USDC
+================================================================================
+
+CORE CAPABILITIES
+-----------------
+Feature                 | Description
+------------------------|----------------------------------------------------
+Multi-Chain Balances    | View USDC across Base, Arbitrum, Polygon in one place
+Instant Transfers       | Send USDC via meta-transactions (gasless for users)
+Gift Card Purchases     | Buy 1000+ gift cards (Amazon, Uber, Netflix) via Bitrefill
+Bill Payments           | Pay AWS, subscriptions using USDC → gift card conversion
+Merchant Payments       | Direct crypto to Porkbun, Namecheap, Mullvad VPN, Travala
+
+
+TRANSACTION FLOW
+----------------
+User: "Send $20 to 0x123..."
+        ↓
+AI previews: Amount: $20, Fee: $0.04, Total: $20.04
+        ↓
+User confirms → Meta-transaction signed → Relayer executes → Done
+
+
+================================================================================
+                              ARCHITECTURE
+================================================================================
+
+                    ┌─────────────────────────────────────┐
+                    │      FRONTEND (Streamlit)           │
+                    │  Chat UI | Sidebar | Modals         │
+                    └─────────────────┬───────────────────┘
+                                      │
+                    ┌─────────────────┴───────────────────┐
+                    │        BUSINESS LOGIC               │
+                    │  WalletMgr | ChainUtils | Settings  │
+                    │  BitrefillAPI | MerchantAPI | Email │
+                    └─────────────────┬───────────────────┘
+                                      │
+                    ┌─────────────────┴───────────────────┐
+                    │       EXTERNAL SERVICES             │
+                    │  Supabase | EVM RPCs | AI Providers │
+                    └─────────────────────────────────────┘
+
+
+KEY TECHNICAL DECISIONS
+-----------------------
+Component       | Choice                    | Rationale
+----------------|---------------------------|----------------------------------
+Wallet          | Self-custodial (HD)       | User controls keys, no liability
+AI              | LangChain + Tool Calling  | Structured actions, not just chat
+Database        | Supabase + RLS            | Secure multi-tenant, real-time
+Encryption      | PBKDF2 + Fernet           | Industry-standard key derivation
+Auth            | Cookie sessions + OAuth   | Persistent login, Gmail integration
+
+
+================================================================================
+                      PROBLEM → SOLUTION MATRIX
+================================================================================
+
+BASIC SCENARIOS
+---------------
+Problem                  | Traditional              | Chat Wallet
+-------------------------|--------------------------|---------------------------
+"Check my balance"       | Open 3 block explorers   | "What's my balance?" → Done
+"Send money to friend"   | MetaMask → Switch → Send | "Send $50 to alice.eth"
+"Buy Amazon gift card"   | Exit to fiat → Buy → Wait| "Buy $100 Amazon card"
+
+
+INTERMEDIATE SCENARIOS
+----------------------
+Problem                     | Solution
+----------------------------|--------------------------------------------------
+Recurring AWS bills         | AI detects invoices → Suggests Amazon gift card
+                            | → Auto-applies to AWS billing
+Anonymous VPN subscription  | "Get Mullvad VPN" → Pays with USDC → No identity
+Domain registration         | "Register mydomain.com" → Direct crypto payment
+
+
+ADVANCED STRATEGIES
+-------------------
+Strategy                | How It Works
+------------------------|------------------------------------------------------
+Multi-step automation   | "Sign up for Porkbun, register example.com, set DNS"
+                        | → AI handles account creation, email verification,
+                        |   payment, and configuration automatically
+Bill consolidation      | Connect Gmail → AI scans invoices → Converts to
+                        | gift cards → Pays in batch
+Cross-chain optimization| AI checks balances across chains → Recommends
+                        | cheapest network for transaction
+
+
+================================================================================
+                        COMPETITIVE ADVANTAGES
+================================================================================
+
+Feature                  | Chat Wallet | MetaMask | Coinbase Wallet
+-------------------------|-------------|----------|----------------
+Natural language         | YES         | NO       | NO
+Self-custodial           | YES         | YES      | YES
+Built-in gift cards      | YES         | NO       | NO
+Email automation         | YES         | NO       | NO
+Gasless transactions     | YES         | NO       | Partial
+FREE AI tier             | YES (Gemini)| N/A      | N/A
+
+
+================================================================================
+                           REVENUE MODEL
+================================================================================
+
+TRANSACTION FEE STRUCTURE
+-------------------------
+Formula: $0.005 flat + 0.2% (max $3)
+
+Examples:
+- $100 transfer  → $0.005 + $0.20 = $0.205 fee
+- $1000 transfer → $0.005 + $2.00 = $2.005 fee
+- $5000 transfer → $3.00 fee (capped)
+
+
+ADDITIONAL REVENUE STREAMS
+--------------------------
+• Gift card affiliate commissions (Bitrefill)
+• Premium AI features (faster models, higher limits)
+• Enterprise API access
+
+
+================================================================================
+                           TECH STACK
+================================================================================
+
+Layer           | Technology
+----------------|----------------------------------
+Frontend        | Streamlit (Python)
+AI              | LangChain + Gemini/Claude/GPT
+Blockchain      | Web3.py + Multi-chain RPC
+Database        | Supabase (Postgres)
+Auth            | Cookie sessions + Google OAuth
+Encryption      | Fernet (AES-128-CBC)
+Deployment      | Railway (Docker)
+
+
+================================================================================
+                          TARGET USERS
+================================================================================
+
+1. CRYPTO BEGINNERS     → Simple chat interface, no DeFi complexity
+2. REMOTE WORKERS       → Pay international bills with USDC
+3. PRIVACY-CONSCIOUS    → Anonymous payments (VPN, domains)
+4. AUTOMATION SEEKERS   → Recurring payments, batch operations
+
+
+================================================================================
+                         FUTURE ROADMAP
+================================================================================
+
+[ ] Solana support
+[ ] Swap integration (Uniswap)
+[ ] Recurring payment schedules
+[ ] Mobile app (React Native)
+[ ] Team/business accounts
+
+
+================================================================================
+                            SUMMARY
+================================================================================
+
+Chat Wallet transforms complex crypto operations into simple conversations.
+
+Key Value Props:
+• "Send $50" instead of navigating MetaMask
+• Pay any bill with USDC via gift cards
+• Self-custodial security with consumer UX
+• FREE to start (Google Gemini AI tier)
+
+The future of crypto wallets is conversational.
+
+================================================================================

@@ -21,7 +21,16 @@
       "Bash(git rm:*)",
       "Bash(wc:*)",
       "Bash(grep:*)",
-      "Bash(./venv/bin/python:*)"
+      "Bash(./venv/bin/python:*)",
+      "Bash(npx create-react-app:*)",
+      "Bash(npx create-react-app .)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(tree:*)",
+      "Bash(npm start)",
+      "Bash(lsof:*)",
+      "Bash(PORT=3001 npm start:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }
