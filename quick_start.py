@@ -1,5 +1,5 @@
 """
-Quick Start Flow - Zero-friction onboarding
+Chat02 Quick Start - Zero-friction onboarding
 Users can start chatting immediately without any signup
 """
 
@@ -92,19 +92,19 @@ def setup_demo_gemini_key():
 
 
 def show_quick_start_banner():
-    """Show banner explaining guest mode"""
+    """Show banner explaining guest mode - educational, warm"""
     if st.session_state.get("guest_mode") and not st.session_state.get("quick_start_banner_dismissed"):
         with st.container():
             st.info("""
-**Guest wallet active**
+**You're using a guest wallet**
 
-Get a free Google Gemini API key to start chatting:
+To start chatting, you'll need a free AI key:
 
-1. Visit [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 2. Click **Get API Key** → **Create in new project**
-3. Return here and connect your key
+3. Come back and add your key
 
-Create an account anytime to save your wallet across devices.
+Want to access this wallet from other devices? Create an account anytime.
 """)
 
             if st.button("Got it", key="dismiss_quick_start_banner"):
@@ -112,7 +112,7 @@ Create an account anytime to save your wallet across devices.
 
 
 def show_save_account_prompt():
-    """Show prompt to encourage saving the guest wallet to an account"""
+    """Show prompt to encourage saving the guest wallet - educational, non-pushy"""
     if st.session_state.get("guest_mode"):
         message_count = len(st.session_state.get("messages", []))
 
@@ -120,14 +120,14 @@ def show_save_account_prompt():
         if message_count >= 6 and not st.session_state.get("save_prompt_dismissed"):
             with st.expander("Save your wallet", expanded=False):
                 st.markdown("""
-Create an account to access this wallet from any device.
+Create an account to keep this wallet safe and accessible everywhere.
 
-**With an account you can:**
-- Sync across all your devices
-- Securely backup your recovery phrase
-- Never lose access to your funds
+**What you get:**
+- Access from any device
+- Secure cloud backup
+- Never lose your funds
 
-You can continue using guest mode if you prefer.
+No pressure—guest mode works fine too.
 """)
 
                 col1, col2 = st.columns([1, 1])

@@ -1,6 +1,6 @@
 """
-Streamlined onboarding flow for Chat Wallet
-Clean, professional UX with minimal friction
+Chat02 Onboarding Flow
+Flowing, educational, warm - help users discover possibilities
 """
 
 import streamlit as st
@@ -42,21 +42,21 @@ def show_onboarding():
 
 
 def show_step_1_welcome():
-    """Step 1: Bold wallet creation confirmation"""
-    st.markdown("### Your wallet is live")
-    st.progress(0.5, text="1 of 2")
+    """Step 1: Warm wallet confirmation - educational, flowing"""
+    st.markdown("### You're all set")
+    st.progress(0.5, text="Step 1 of 2")
 
-    # Show wallet address prominently
+    # Show wallet address as accessible detail
     address = st.session_state.get("wallet_address", "")
     if address:
-        st.code(address)
+        with st.expander("Your wallet address", expanded=False):
+            st.code(address)
+            st.caption("Works on Base, Arbitrum, Polygon, and Solana")
 
     st.markdown("""
-**Multi-chain.** Works on Base, Arbitrum, Polygon, and Solana from a single seed phrase.
+Your wallet is ready. It's **self-custodial**—you hold the keys, and only you can access your funds.
 
-**Self-custodial.** You hold the keys. No one else can access your funds.
-
-One step left: connect an AI to unlock the chat.
+One more step: connect an AI brain so you can start chatting.
 """)
 
     if st.button("Continue", type="primary", use_container_width=True):
@@ -64,11 +64,11 @@ One step left: connect an AI to unlock the chat.
 
 
 def show_step_2_connect_ai(user_id: str):
-    """Step 2: Connect AI - unlock the superpowers"""
+    """Step 2: Connect AI - flowing, educational"""
     from api_key_setup import show_api_key_setup_modal, check_api_key_status
 
-    st.markdown("### Power the chat")
-    st.progress(1.0, text="2 of 2")
+    st.markdown("### Connect your AI")
+    st.progress(1.0, text="Step 2 of 2")
 
     # Check if already configured
     has_key, provider = check_api_key_status()
@@ -83,11 +83,12 @@ def show_step_2_connect_ai(user_id: str):
 
         st.success(f"Connected to {model_name}")
 
+        # Clear celebration - satisfying moment
         if not st.session_state.get("_api_setup_celebration_shown"):
             st.balloons()
             st.session_state._api_setup_celebration_shown = True
 
-        st.markdown("**Ready.** Start typing—your wallet listens.")
+        st.markdown("You're ready! Start typing and I'll help you buy gift cards, pay bills, send money, and more.")
 
         col1, col2 = st.columns([1, 1])
         with col1:
@@ -95,24 +96,25 @@ def show_step_2_connect_ai(user_id: str):
                 st.session_state._api_setup_celebration_shown = False
                 show_api_key_setup_modal()
         with col2:
-            if st.button("Start", type="primary", use_container_width=True):
+            if st.button("Start chatting", type="primary", use_container_width=True):
                 st.session_state.onboarding_complete = True
 
         return True
 
     st.markdown("""
-The chat needs an AI brain. **Google Gemini is free** and works great.
+Chat02 needs an AI to understand you. **Google Gemini is free** and takes 30 seconds to set up:
 
-1. [Get a key here](https://aistudio.google.com/apikey) (takes 30 seconds)
+1. Visit [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 2. Click **Get API Key** → **Create in new project**
-3. Paste below
+3. Copy the key and paste it below
 """)
 
-    if st.button("Connect AI", type="primary", use_container_width=True, key="connect_ai_main"):
+    if st.button("Add my API key", type="primary", use_container_width=True, key="connect_ai_main"):
         show_api_key_setup_modal()
 
-    with st.expander("Use a different provider"):
-        st.caption("**Claude** — Best quality (paid)")
-        st.caption("**GPT** — Most popular (paid)")
+    with st.expander("Other AI providers"):
+        st.caption("**Claude** — Highest quality responses (paid)")
+        st.caption("**GPT** — Most widely used (paid)")
+        st.caption("You can switch providers anytime in Settings.")
 
     return False

@@ -1,6 +1,6 @@
 """
-Chat-First Crypto Wallet - Non-Custodial Version
-User controls their own wallet, AI agent assists with transactions
+Chat02 - Your money, your words
+AI-powered wallet that turns conversation into action
 """
 
 import os
@@ -338,8 +338,8 @@ def init_state():
 
 def wallet_setup_ui():
     """Show wallet setup screen with email/password account"""
-    st.title("Chat Wallet")
-    st.caption("Self-custodial wallet with AI-powered transactions")
+    st.title("Chat02")
+    st.caption("Your money, your words")
 
     st.info("Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.")
 
@@ -1188,9 +1188,9 @@ def _render_send_confirmation():
 
 
 def render_sidebar_footer():
-    """Render professional footer"""
+    """Render footer - transparent, builds trust"""
     st.markdown("---")
-    st.caption("Self-custodial")
+    st.caption("Self-custodial · You hold the keys")
 
 
 def sidebar():
@@ -1354,54 +1354,53 @@ def render_transaction_history():
 
 
 def render_suggested_actions():
-    """Render inspiration prompts - show what's possible"""
+    """Render inspiration prompts - educational, show what's possible"""
 
-    # Inspiration prompts - spark ideas, show the magic
+    # Inspiration prompts with plain English (no crypto jargon)
     prompts = [
-        ("Buy an Amazon gift card", True),
-        ("Register a domain", True),
-        ("Pay my AWS bill", True),
-        ("Get a year of VPN", True),
-        ("Send $100 to 0x...", True),
+        "Buy a $25 Amazon card",
+        "Register mysite.com",
+        "Pay my AWS bill",
+        "Get Mullvad VPN",
+        "Send $50 to Alex",
     ]
 
-    st.caption("Try asking:")
+    st.caption("Try something like:")
 
-    # Horizontal scrollable row
+    # Horizontal row of prompts
     cols = st.columns(len(prompts))
-    for i, (prompt_text, is_live) in enumerate(prompts):
+    for i, prompt_text in enumerate(prompts):
         with cols[i]:
-            if st.button(f'"{prompt_text}"', key=f"action_{i}", use_container_width=True):
-                if is_live:
-                    st.session_state.messages.append({"role": "user", "content": prompt_text})
-                    st.session_state._quick_action_triggered = True
-                    st.rerun()
+            if st.button(prompt_text, key=f"action_{i}", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": prompt_text})
+                st.session_state._quick_action_triggered = True
+                st.rerun()
 
 
 def chat_interface():
     """Main chat interface"""
-    st.title("Chat Wallet")
+    st.title("Chat02")
 
     # Quick Start mode - create guest wallet if no wallet exists
     if not st.session_state.wallet_address:
         from quick_start import create_guest_wallet
 
-        # Bold landing - power-focused, different
+        # Warm welcome with educational hint at possibilities
         with st.chat_message("assistant"):
-            st.markdown("""**Financial superpowers.** Through conversation.
+            st.markdown("""Hey! I'm your wallet that understands plain English.
 
-Say what you need. The wallet executes—gift cards, domains, subscriptions, transfers. No forms. No friction.
+Tell me what you need—buy gift cards, pay bills, send money, grab a VPN—and I'll handle the rest. Your money, your words.
 """)
 
-            if st.button("Get Started", type="primary", use_container_width=True, key="quick_start_btn"):
-                with st.spinner("Creating wallet..."):
+            if st.button("Create my wallet", type="primary", use_container_width=True, key="quick_start_btn"):
+                with st.spinner("Setting up..."):
                     if create_guest_wallet():
                         st.session_state.quick_start_active = True
                         st.rerun()
                     else:
-                        st.error("Could not create wallet. Please try again.")
+                        st.error("Oops, something went wrong. Let's try that again.")
 
-            st.caption("Multi-chain · Self-custodial")
+            st.caption("Self-custodial · Multi-chain · No forms")
 
         # Disabled chat input
         st.chat_input("Message...", disabled=True, key="preview_input")
@@ -1512,30 +1511,26 @@ The assistant is still initializing. This usually takes a moment after logging i
                 except Exception as e:
                     error_msg = str(e)
 
-                    # Provide helpful guidance for API key errors
+                    # Casual/human error messages
                     if "API key" in error_msg or "credit" in error_msg.lower() or "authentication" in error_msg.lower():
-                        response = """**API key issue**
+                        response = """Hmm, looks like there's an issue with your AI connection.
 
-There's a problem with your AI provider. Please check your API key in **Settings** → **AI Provider**.
-
-Common fixes:
-- **Google Gemini:** Get a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-- **Anthropic/OpenAI:** Make sure you have credits in your account"""
+Head to **Settings** → **AI Provider** to check your API key. If you're using Google Gemini, you can grab a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)."""
                     elif "rate" in error_msg.lower() or "quota" in error_msg.lower():
-                        response = """**Rate limit reached**
+                        response = """Whoa, we're going too fast! The AI needs a breather.
 
-You've hit the API rate limit. Wait a minute and try again, or switch to a different AI provider in Settings."""
+Wait a minute and try again, or switch providers in Settings if this keeps happening."""
                     else:
-                        response = f"Something went wrong: {error_msg}"
+                        response = f"Oops, something went wrong: {error_msg}"
 
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # Welcome message for logged in users (only shown after onboarding complete)
+    # Welcome message for logged in users (warm, capable, active assistant)
     if not st.session_state.messages:
-        welcome = f"""Connected: `{ChainUtils.format_address(st.session_state.wallet_address)}`
+        welcome = f"""Welcome back! Your wallet is ready at `{ChainUtils.format_address(st.session_state.wallet_address)}`.
 
-What do you need?
+What would you like to do? I can help with gift cards, bill payments, transfers, domains, VPNs—just tell me what you need.
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
 
@@ -1543,34 +1538,79 @@ What do you need?
 def main():
     """Main app entry point"""
     st.set_page_config(
-        page_title="Chat Wallet",
-        page_icon="◈",
+        page_title="Chat02",
+        page_icon="○",
         layout="wide",
         initial_sidebar_state="expanded"
     )
 
-    # 2026 Design: Glass morphism, subtle depth, refined typography
-    st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    # Get user theme preference
+    user_theme = st.session_state.get("user_theme", "dark")
 
-    /* === BASE - Bold Fintech === */
+    # Chat02 Design System - Capable, transparent, balanced
+    theme_css = """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    /* === CHAT02 DESIGN SYSTEM === */
     :root {
-        --bg-primary: #09090B;
-        --bg-elevated: rgba(255,255,255,0.04);
-        --bg-hover: rgba(255,255,255,0.08);
-        --border: rgba(255,255,255,0.1);
-        --border-hover: rgba(255,255,255,0.18);
-        --text-primary: #FFFFFF;
+        /* Core palette - Dark theme (default) */
+        --bg-primary: #0A0A0B;
+        --bg-elevated: rgba(255,255,255,0.03);
+        --bg-hover: rgba(255,255,255,0.06);
+        --bg-surface: rgba(255,255,255,0.02);
+        --border: rgba(255,255,255,0.08);
+        --border-hover: rgba(255,255,255,0.14);
+        --text-primary: #FAFAFA;
         --text-secondary: #A1A1AA;
-        --text-muted: #71717A;
-        --accent: #2563EB;
-        --accent-hover: #1D4ED8;
-        --accent-glow: rgba(37,99,235,0.25);
-        --radius-sm: 6px;
+        --text-muted: #6B6B76;
+
+        /* Green accent (muted sage) */
+        --accent: #4ADE80;
+        --accent-hover: #22C55E;
+        --accent-muted: rgba(74,222,128,0.15);
+        --accent-glow: rgba(74,222,128,0.2);
+
+        /* Secondary blue for links */
+        --link: #60A5FA;
+
+        /* Soft radius (8-12px) */
+        --radius-sm: 8px;
         --radius-md: 10px;
-        --radius-lg: 14px;
+        --radius-lg: 12px;
+
+        /* Subtle elevation */
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+        --shadow-md: 0 2px 8px rgba(0,0,0,0.3);
     }
+    """
+
+    # Light theme overrides
+    light_theme_css = """
+    :root {
+        --bg-primary: #FAFAFA;
+        --bg-elevated: rgba(0,0,0,0.02);
+        --bg-hover: rgba(0,0,0,0.04);
+        --bg-surface: rgba(0,0,0,0.01);
+        --border: rgba(0,0,0,0.08);
+        --border-hover: rgba(0,0,0,0.14);
+        --text-primary: #18181B;
+        --text-secondary: #52525B;
+        --text-muted: #A1A1AA;
+        --accent: #16A34A;
+        --accent-hover: #15803D;
+        --accent-muted: rgba(22,163,74,0.1);
+        --accent-glow: rgba(22,163,74,0.15);
+        --link: #2563EB;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+        --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    """
+
+    if user_theme == "light":
+        theme_css += light_theme_css
+
+    st.markdown(theme_css + """
 
     html, body, [class*="css"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -1596,53 +1636,61 @@ def main():
 
     p, li {
         color: var(--text-secondary) !important;
-        line-height: 1.65;
+        line-height: 1.6;
         font-size: 14px;
     }
 
-    /* === BUTTONS - Bold Fintech === */
+    /* Mono for data (addresses, amounts) */
+    .mono, code, [data-testid="stCode"] {
+        font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace !important;
+    }
+
+    /* === BUTTONS - Soft radius, green accent === */
     .stButton > button {
         border-radius: var(--radius-sm) !important;
         font-weight: 500 !important;
         font-size: 13px !important;
-        padding: 10px 18px !important;
+        padding: 10px 16px !important;
         min-height: 40px !important;
-        transition: all 0.15s ease !important;
+        transition: all 0.2s ease !important;
         border: 1px solid var(--border) !important;
         background: var(--bg-elevated) !important;
         color: var(--text-primary) !important;
+        box-shadow: var(--shadow-sm) !important;
     }
 
     .stButton > button:hover {
         background: var(--bg-hover) !important;
         border-color: var(--border-hover) !important;
+        transform: translateY(-1px);
     }
 
     .stButton > button[kind="primary"] {
         background: var(--accent) !important;
         border-color: var(--accent) !important;
-        color: #FFFFFF !important;
+        color: #0A0A0B !important;
         font-weight: 600 !important;
-        box-shadow: 0 0 20px var(--accent-glow) !important;
+        box-shadow: var(--shadow-md), 0 0 20px var(--accent-glow) !important;
     }
 
     .stButton > button[kind="primary"]:hover {
         background: var(--accent-hover) !important;
         border-color: var(--accent-hover) !important;
-        box-shadow: 0 0 30px var(--accent-glow) !important;
+        box-shadow: var(--shadow-md), 0 0 28px var(--accent-glow) !important;
     }
 
     .stButton > button:disabled {
         opacity: 0.4 !important;
+        transform: none !important;
     }
 
     .stButton {
         margin-bottom: 6px !important;
     }
 
-    /* === SIDEBAR === */
+    /* === SIDEBAR (collapsible) === */
     [data-testid="stSidebar"] {
-        background: rgba(12,12,14,0.95) !important;
+        background: var(--bg-primary) !important;
         backdrop-filter: blur(20px) !important;
         border-right: 1px solid var(--border) !important;
     }
@@ -1651,6 +1699,11 @@ def main():
         font-size: 1rem !important;
         color: var(--text-secondary) !important;
         padding-bottom: 12px !important;
+    }
+
+    /* Sidebar collapse button */
+    [data-testid="stSidebar"] button[kind="header"] {
+        color: var(--text-muted) !important;
     }
 
     /* === INPUTS === */
@@ -1757,15 +1810,16 @@ def main():
         box-shadow: 0 0 0 3px rgba(0,102,255,0.1) !important;
     }
 
-    /* === CODE === */
+    /* === CODE (mono for addresses/data) === */
     code {
-        background: rgba(255,255,255,0.06) !important;
-        color: #93C5FD !important;
-        padding: 2px 7px !important;
-        border-radius: 5px !important;
+        background: var(--bg-surface) !important;
+        color: var(--text-primary) !important;
+        padding: 3px 8px !important;
+        border-radius: 6px !important;
         font-size: 12px !important;
-        font-family: 'SF Mono', Monaco, monospace !important;
-        border: none !important;
+        font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace !important;
+        border: 1px solid var(--border) !important;
+        letter-spacing: -0.02em;
     }
 
     pre {
@@ -1773,6 +1827,7 @@ def main():
         border: 1px solid var(--border) !important;
         border-radius: var(--radius-sm) !important;
         padding: 14px !important;
+        box-shadow: var(--shadow-sm) !important;
     }
 
     /* === ALERTS & EXPANDERS === */
@@ -1808,12 +1863,13 @@ def main():
     }
 
     a {
-        color: #60A5FA !important;
+        color: var(--link) !important;
         text-decoration: none;
+        transition: opacity 0.15s ease;
     }
 
     a:hover {
-        text-decoration: underline;
+        opacity: 0.8;
     }
 
     /* Hide chrome */
@@ -1908,6 +1964,14 @@ def main():
         try:
             SessionManager.get_cookie_manager()
             SessionManager.restore_session()
+
+            # Load user theme preference if logged in
+            user_id = st.session_state.get("user_id")
+            if user_id and not st.session_state.get("user_theme"):
+                from settings_manager import SettingsManager
+                user_settings = SettingsManager.get_user_settings(user_id)
+                if user_settings and user_settings.get("theme"):
+                    st.session_state.user_theme = user_settings["theme"]
         except Exception:
             # Cookie manager can fail on first load - this is OK
             pass

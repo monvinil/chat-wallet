@@ -40,8 +40,8 @@ def settings_page():
     settings_tab = st.session_state.get("settings_tab", None)
 
     # Tabs for different settings sections
-    tab_names = ["AI Provider", "Connected Accounts", "Limits", "Security"]
-    tab1, tab2, tab3, tab4 = st.tabs(tab_names)
+    tab_names = ["AI Provider", "Display", "Connected Accounts", "Limits", "Security"]
+    tab1, tab_display, tab2, tab3, tab4 = st.tabs(tab_names)
 
     # Auto-select tab if coming from quick action
     if settings_tab == "provider":
@@ -165,6 +165,41 @@ def settings_page():
                 st.rerun()
             else:
                 st.error("Failed to save")
+
+    # ============================================================================
+    # TAB: Display Settings
+    # ============================================================================
+    with tab_display:
+        st.subheader("Display")
+        st.caption("Customize how Chat02 looks")
+
+        # Theme selection (light/dark)
+        current_theme = existing_settings.get("theme", "dark") if existing_settings else "dark"
+        theme = st.radio(
+            "Theme",
+            ["dark", "light"],
+            format_func=lambda x: "Dark" if x == "dark" else "Light",
+            index=0 if current_theme == "dark" else 1,
+            horizontal=True
+        )
+
+        st.caption("Dark mode is easier on the eyes, especially at night.")
+
+        st.divider()
+
+        # Save display settings
+        if st.button("Save", type="primary", key="save_display"):
+            success = SettingsManager.save_user_settings(
+                user_id=user_id,
+                theme=theme
+            )
+
+            if success:
+                st.success("Display settings saved")
+                st.session_state.user_theme = theme
+                st.rerun()
+            else:
+                st.error("Oops, couldn't save. Try again?")
 
     # ============================================================================
     # TAB 2: Connected Accounts
