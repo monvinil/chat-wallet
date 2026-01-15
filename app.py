@@ -1565,11 +1565,11 @@ def main():
         --text-secondary: #A1A1AA;
         --text-muted: #6B6B76;
 
-        /* Green accent (muted sage) */
-        --accent: #4ADE80;
-        --accent-hover: #22C55E;
-        --accent-muted: rgba(74,222,128,0.15);
-        --accent-glow: rgba(74,222,128,0.2);
+        /* Green accent (true muted sage) */
+        --accent: #6B9B7A;
+        --accent-hover: #5A8A69;
+        --accent-muted: rgba(107,155,122,0.15);
+        --accent-glow: rgba(107,155,122,0.2);
 
         /* Secondary blue for links */
         --link: #60A5FA;
@@ -1597,10 +1597,10 @@ def main():
         --text-primary: #18181B;
         --text-secondary: #52525B;
         --text-muted: #A1A1AA;
-        --accent: #16A34A;
-        --accent-hover: #15803D;
-        --accent-muted: rgba(22,163,74,0.1);
-        --accent-glow: rgba(22,163,74,0.15);
+        --accent: #5A8A69;
+        --accent-hover: #4A7A59;
+        --accent-muted: rgba(90,138,105,0.1);
+        --accent-glow: rgba(90,138,105,0.15);
         --link: #2563EB;
         --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
         --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
@@ -1668,15 +1668,15 @@ def main():
     .stButton > button[kind="primary"] {
         background: var(--accent) !important;
         border-color: var(--accent) !important;
-        color: #0A0A0B !important;
+        color: #FFFFFF !important;
         font-weight: 600 !important;
-        box-shadow: var(--shadow-md), 0 0 20px var(--accent-glow) !important;
+        box-shadow: var(--shadow-md) !important;
     }
 
     .stButton > button[kind="primary"]:hover {
         background: var(--accent-hover) !important;
         border-color: var(--accent-hover) !important;
-        box-shadow: var(--shadow-md), 0 0 28px var(--accent-glow) !important;
+        box-shadow: var(--shadow-md) !important;
     }
 
     .stButton > button:disabled {
