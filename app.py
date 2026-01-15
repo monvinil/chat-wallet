@@ -1188,51 +1188,38 @@ def _render_send_confirmation():
 
 
 def render_sidebar_footer():
-    """Render professional footer with trust signals"""
+    """Render professional footer"""
     st.markdown("---")
-    st.caption("**Self-custodial** · We never hold your keys")
-    st.caption("Built on [Base](https://base.org) · [Arbitrum](https://arbitrum.io) · [Solana](https://solana.com)")
+    st.caption("Self-custodial")
 
 
 def sidebar():
     """Render sidebar"""
     with st.sidebar:
-        st.title("Wallet")
-
         # Show login button if no wallet
         if not st.session_state.wallet_address:
-            st.caption("Create or connect your wallet")
-            if st.button("Get Started", use_container_width=True, type="primary"):
-                st.session_state.show_auth_modal = True
-                st.rerun()
-
-            st.divider()
             st.metric("Balance", "$0.00")
 
-            with st.expander("Networks"):
-                st.caption("Base · Arbitrum · Polygon · Solana")
-
-            st.divider()
-
-            # Preview buttons (disabled)
-            st.button("Deposit", use_container_width=True, disabled=True)
-            st.button("Send", use_container_width=True, disabled=True)
+            if st.button("Connect", use_container_width=True, type="primary"):
+                st.session_state.show_auth_modal = True
+                st.rerun()
 
             render_sidebar_footer()
             return
 
         if st.session_state.wallet_address and not st.session_state.get("wallet_locked", True):
-            # Wallet info - EVM address
+            # Balance
+            if st.session_state.balances:
+                total_usdc = ChainUtils.calculate_total_usdc(st.session_state.balances)
+                st.metric("Balance", f"${total_usdc:.2f}")
+            else:
+                st.metric("Balance", "$0.00")
+
+            # Address
             address = st.session_state.wallet_address
             st.code(ChainUtils.format_address(address, 8))
 
-            # Show Solana address if available
-            solana_addr = _get_solana_address_from_session()
-            if solana_addr:
-                st.caption("Solana")
-                st.code(ChainUtils.format_address(solana_addr, 8))
-
-            # Action buttons in row
+            # Primary actions
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Deposit", use_container_width=True, type="primary"):
@@ -1245,58 +1232,14 @@ def sidebar():
 
             st.divider()
 
-            # Show balances
-            if st.session_state.balances:
-                total_usdc = ChainUtils.calculate_total_usdc(st.session_state.balances)
-                st.metric("Balance", f"${total_usdc:.2f}")
-
-                # Expandable breakdown
-                with st.expander("By network"):
-                    for network_key, chain_balances in st.session_state.balances.items():
-                        network_name = NETWORKS[network_key]["name"]
-                        usdc = chain_balances.get("usdc", 0.0)
-
-                        if usdc > 0:
-                            st.caption(f"{network_name}: ${usdc:.2f}")
-            else:
-                # Show loading indicator on first load
-                if st.session_state.get("_balance_loading"):
-                    st.metric("Balance", "...")
-                    st.caption("Loading balances...")
-                else:
-                    st.metric("Balance", "$0.00")
-                    st.caption("Ready to receive USDC")
-                    if st.button("Get deposit address", use_container_width=True, type="primary"):
-                        st.session_state._show_deposit_modal = True
-                        st.rerun()
-
-            # Refresh balances
-            if st.button("Refresh balance", use_container_width=True):
-                with st.spinner("Updating..."):
-                    solana_addr = _get_solana_address_from_session()
-                    balances = ChainUtils.get_all_balances(st.session_state.wallet_address, solana_addr)
-                    st.session_state.balances = balances
-                    st.toast("Updated")
-
-            # Transaction history section
-            render_transaction_history()
-
-            st.divider()
-
-            # Settings and account
+            # Secondary actions
             if st.button("Settings", use_container_width=True):
                 st.session_state.show_settings = True
                 st.rerun()
 
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Lock", use_container_width=True):
-                    WalletManager.lock_wallet()
-                    st.rerun()
-            with col2:
-                if st.button("Log out", use_container_width=True):
-                    SessionManager.logout()
-                    st.rerun()
+            if st.button("Lock", use_container_width=True):
+                WalletManager.lock_wallet()
+                st.rerun()
 
             render_sidebar_footer()
 
@@ -1428,64 +1371,30 @@ def render_quick_actions():
 
 
 def render_suggested_actions():
-    """
-    Render capability library - horizontally scrollable pills showing what's possible.
-
-    Philosophy: These aren't just shortcuts, they're a discovery mechanism.
-    User thinks: "I could do this myself, but why would I when this handles it?"
-
-    Mix of live features and roadmap capabilities across diverse categories:
-    - Everyday rewards & treats
-    - Travel with perks
-    - Subscriptions & lifestyle
-    - DeFi & earning
-    - Crypto native tools
-    - Creator economy
-    """
-
-    # Consolidated capability library - grouped by category
-    # (emoji, label, chat_prompt_or_description, is_live)
-    # is_live=True triggers chat, is_live=False shows "coming soon"
+    """Render capability buttons as a clean grid"""
 
     capabilities = [
-        # === INSTANT VALUE ===
-        ("💸", "Send", "Send $50 USDC to someone", True),
-        ("🎁", "Gift Cards", "Buy an Amazon gift card", True),
-        ("📱", "Top-up", "Add $10 to my phone", True),
-        ("💡", "Bills", "Pay my AWS bill with USDC", True),
-
-        # === CRYPTO NATIVE ===
-        ("🌐", "Domain", "Register a .com domain", True),
-        ("🔐", "VPN", "Get Mullvad VPN anonymously", True),
-        ("⏰", "Automate", "Set up weekly payments", True),
-
-        # === ROADMAP ===
-        ("📈", "Swap", "Swap USDC to ETH", False),
-        ("💰", "Earn", "Earn 4% APY on idle USDC", False),
-        ("✈️", "Travel", "Book flights with crypto", False),
+        ("Send", "Send $50 USDC to someone", True),
+        ("Gift Card", "Buy a $25 Amazon gift card", True),
+        ("Pay Bill", "Pay my AWS bill", True),
+        ("Domain", "Register a .com domain", True),
+        ("VPN", "Get Mullvad VPN", True),
     ]
 
-    # Render all pills in a single row (10 items fits well)
-    cols = st.columns(len(capabilities))
-
-    for i, (emoji, label, prompt_or_desc, is_live) in enumerate(capabilities):
+    # Simple 5-column grid
+    cols = st.columns(5)
+    for i, (label, prompt, is_live) in enumerate(capabilities):
         with cols[i]:
-            if is_live:
-                # Live capability - triggers chat
-                if st.button(f"{emoji} {label}", key=f"cap_{i}"):
-                    st.session_state.messages.append({"role": "user", "content": prompt_or_desc})
+            if st.button(label, key=f"action_{i}", use_container_width=True):
+                if is_live:
+                    st.session_state.messages.append({"role": "user", "content": prompt})
                     st.session_state._quick_action_triggered = True
                     st.rerun()
-            else:
-                # Roadmap capability - show what's coming with tooltip
-                if st.button(f"{emoji} {label}", key=f"cap_{i}", help=f"Coming soon: {prompt_or_desc}"):
-                    st.toast(f"**{label}** — {prompt_or_desc}. Coming soon.")
 
 
 def chat_interface():
     """Main chat interface"""
     st.title("Chat Wallet")
-    st.caption("The conversational interface for USDC")
 
     # Quick Start mode - create guest wallet if no wallet exists
     if not st.session_state.wallet_address:
@@ -1493,16 +1402,14 @@ def chat_interface():
 
         # Show clean intro with quick start button
         with st.chat_message("assistant"):
-            st.markdown("""**Spend USDC anywhere, just by asking.**
+            st.markdown("""**USDC goes everywhere.**
 
-Send money, buy gift cards, pay bills, register domains—all through natural conversation. No gas fees. No complexity.
+Your stablecoins connect to the real world. Pay any invoice, buy from any merchant, automate any payment—through conversation.
 
-**Works with 1000+ brands:** Amazon, Uber, Netflix, Starbucks, Airbnb, and more.
-
-**Powered by you:** Self-custodial wallet. Your keys, your crypto. We never touch your funds.
+One wallet. Every chain. Zero friction.
 """)
 
-            if st.button("Create Wallet — Free", type="primary", use_container_width=True, key="quick_start_btn"):
+            if st.button("Start", type="primary", use_container_width=True, key="quick_start_btn"):
                 with st.spinner("Creating wallet..."):
                     if create_guest_wallet():
                         st.session_state.quick_start_active = True
@@ -1510,7 +1417,7 @@ Send money, buy gift cards, pay bills, register domains—all through natural co
                     else:
                         st.error("Could not create wallet. Please try again.")
 
-            st.caption("30 seconds to start · No signup required")
+            st.caption("Self-custodial · Base · Arbitrum · Solana")
 
         # Disabled chat input
         st.chat_input("Message...", disabled=True, key="preview_input")
@@ -1647,14 +1554,9 @@ You've hit the API rate limit. Wait a minute and try again, or switch to a diffe
 
     # Welcome message for logged in users (only shown after onboarding complete)
     if not st.session_state.messages:
-        welcome = f"""Ready. Your wallet: `{ChainUtils.format_address(st.session_state.wallet_address)}`
+        welcome = f"""Connected: `{ChainUtils.format_address(st.session_state.wallet_address)}`
 
-Just tell me what you need:
-
-• "Send $50 to vitalik.eth"
-• "Buy a $25 Amazon gift card"
-• "Pay my $127 AWS bill"
-• "Get Mullvad VPN for a year"
+What do you need?
 """
         st.session_state.messages.append({"role": "assistant", "content": welcome})
 
@@ -1668,18 +1570,27 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # Design system: 8px grid, consistent radius (8px), unified color palette
+    # 2026 Design: Glass morphism, subtle depth, refined typography
     st.markdown("""
     <style>
-    /* ============================================
-       DESIGN TOKENS
-       - Spacing: 4px, 8px, 12px, 16px, 24px, 32px
-       - Radius: 8px (buttons, inputs), 12px (cards)
-       - Colors: #FFFFFF (text), #A1A1AA (muted), #52525B (subtle)
-       ============================================ */
-
-    /* Base reset and typography */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+    /* === BASE === */
+    :root {
+        --bg-primary: #0C0C0E;
+        --bg-elevated: rgba(255,255,255,0.03);
+        --bg-hover: rgba(255,255,255,0.06);
+        --border: rgba(255,255,255,0.08);
+        --border-hover: rgba(255,255,255,0.12);
+        --text-primary: #FAFAFA;
+        --text-secondary: #A0A0A0;
+        --text-muted: #666;
+        --accent: #0066FF;
+        --accent-hover: #0052CC;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+    }
 
     html, body, [class*="css"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -1687,287 +1598,253 @@ def main():
     }
 
     .stApp {
-        background: #09090B;
+        background: var(--bg-primary);
     }
 
-    /* Typography scale */
+    /* === TYPOGRAPHY === */
     h1 {
-        font-size: 1.5rem !important;
+        font-size: 1.25rem !important;
         font-weight: 600 !important;
-        letter-spacing: -0.025em !important;
-        color: #FAFAFA !important;
-        margin-bottom: 4px !important;
+        letter-spacing: -0.02em !important;
+        color: var(--text-primary) !important;
     }
 
-    h2 {
-        font-size: 1.125rem !important;
-        font-weight: 600 !important;
-        color: #FAFAFA !important;
-    }
-
-    h3 {
-        font-size: 0.875rem !important;
+    h2, h3 {
         font-weight: 500 !important;
-        color: #A1A1AA !important;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        color: var(--text-secondary) !important;
     }
 
     p, li {
-        color: #E4E4E7 !important;
-        line-height: 1.6;
+        color: var(--text-secondary) !important;
+        line-height: 1.65;
+        font-size: 14px;
     }
 
-    /* ============================================
-       BUTTONS - Unified 8px radius, 40px min height
-       ============================================ */
+    /* === BUTTONS === */
     .stButton > button {
-        border-radius: 8px !important;
+        border-radius: var(--radius-sm) !important;
         font-weight: 500 !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
         padding: 10px 16px !important;
-        min-height: 40px !important;
-        transition: all 0.15s ease !important;
-        border: 1px solid #27272A !important;
-        background: #18181B !important;
-        color: #E4E4E7 !important;
-        box-shadow: none !important;
+        min-height: 38px !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: 1px solid var(--border) !important;
+        background: var(--bg-elevated) !important;
+        color: var(--text-primary) !important;
+        backdrop-filter: blur(8px) !important;
     }
 
     .stButton > button:hover {
-        background: #27272A !important;
-        border-color: #3F3F46 !important;
-        color: #FAFAFA !important;
+        background: var(--bg-hover) !important;
+        border-color: var(--border-hover) !important;
+        transform: translateY(-1px) !important;
     }
 
     .stButton > button[kind="primary"] {
-        background: #2563EB !important;
-        border-color: #2563EB !important;
-        color: #FFFFFF !important;
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        color: #FFF !important;
     }
 
     .stButton > button[kind="primary"]:hover {
-        background: #1D4ED8 !important;
-        border-color: #1D4ED8 !important;
+        background: var(--accent-hover) !important;
+        border-color: var(--accent-hover) !important;
     }
 
     .stButton > button:disabled {
-        opacity: 0.4 !important;
-        cursor: not-allowed !important;
+        opacity: 0.35 !important;
+        transform: none !important;
     }
 
     .stButton {
-        margin-bottom: 8px !important;
+        margin-bottom: 6px !important;
     }
 
-    /* ============================================
-       SIDEBAR - Clean, organized
-       ============================================ */
+    /* === SIDEBAR === */
     [data-testid="stSidebar"] {
-        background: #0A0A0B !important;
-        border-right: 1px solid #27272A !important;
-        padding-top: 16px !important;
+        background: rgba(12,12,14,0.95) !important;
+        backdrop-filter: blur(20px) !important;
+        border-right: 1px solid var(--border) !important;
     }
 
     [data-testid="stSidebar"] h1 {
-        font-size: 1.125rem !important;
-        padding: 0 0 16px 0 !important;
-        margin: 0 !important;
+        font-size: 1rem !important;
+        color: var(--text-secondary) !important;
+        padding-bottom: 12px !important;
     }
 
-    [data-testid="stSidebar"] .stButton > button {
-        margin-bottom: 8px !important;
-    }
-
-    /* ============================================
-       INPUTS - Consistent 8px radius
-       ============================================ */
+    /* === INPUTS === */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stNumberInput > div > div > input {
-        border-radius: 8px !important;
-        border: 1px solid #27272A !important;
-        background: #18181B !important;
+        border-radius: var(--radius-sm) !important;
+        border: 1px solid var(--border) !important;
+        background: var(--bg-elevated) !important;
         padding: 12px 14px !important;
         font-size: 14px !important;
-        color: #FAFAFA !important;
+        color: var(--text-primary) !important;
+        backdrop-filter: blur(8px) !important;
     }
 
     .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus,
-    .stNumberInput > div > div > input:focus {
-        border-color: #2563EB !important;
-        box-shadow: 0 0 0 2px rgba(37,99,235,0.2) !important;
-        outline: none !important;
+    .stTextArea > div > div > textarea:focus {
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 0 3px rgba(0,102,255,0.1) !important;
     }
 
-    .stTextInput > div > div > input::placeholder,
-    .stTextArea > div > div > textarea::placeholder {
-        color: #52525B !important;
+    .stTextInput > div > div > input::placeholder {
+        color: var(--text-muted) !important;
     }
 
-    /* Select boxes */
     .stSelectbox > div > div {
-        background: #18181B !important;
-        border: 1px solid #27272A !important;
-        border-radius: 8px !important;
+        background: var(--bg-elevated) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-sm) !important;
     }
 
-    /* ============================================
-       TABS - Clean underline style
-       ============================================ */
+    /* === TABS === */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0;
-        border-bottom: 1px solid #27272A;
+        border-bottom: 1px solid var(--border);
         background: transparent !important;
     }
 
     .stTabs [data-baseweb="tab"] {
-        padding: 12px 20px;
+        padding: 12px 18px;
         font-weight: 500;
-        font-size: 14px;
-        color: #71717A;
+        font-size: 13px;
+        color: var(--text-muted);
         background: transparent !important;
         border: none !important;
         border-radius: 0 !important;
+        transition: color 0.15s ease;
     }
 
     .stTabs [data-baseweb="tab"]:hover {
-        color: #A1A1AA;
+        color: var(--text-secondary);
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #FAFAFA;
-        border-bottom: 2px solid #2563EB !important;
-        margin-bottom: -1px;
+        color: var(--text-primary);
+        box-shadow: inset 0 -2px 0 var(--accent);
     }
 
-    /* ============================================
-       CARDS & CONTAINERS - 12px radius
-       ============================================ */
+    /* === CARDS === */
     [data-testid="stMetric"] {
-        background: #18181B;
-        border: 1px solid #27272A;
-        border-radius: 12px;
-        padding: 16px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 16px 18px;
+        backdrop-filter: blur(8px);
     }
 
     [data-testid="stMetricValue"] {
         font-weight: 600 !important;
-        font-size: 1.75rem !important;
-        color: #FAFAFA !important;
-        letter-spacing: -0.025em;
+        font-size: 1.5rem !important;
+        color: var(--text-primary) !important;
+        letter-spacing: -0.02em;
     }
 
     [data-testid="stMetricLabel"] {
-        color: #71717A !important;
-        font-size: 0.75rem !important;
+        color: var(--text-muted) !important;
+        font-size: 11px !important;
         font-weight: 500 !important;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
     }
 
-    /* Chat messages */
+    /* === CHAT === */
     [data-testid="stChatMessage"] {
-        background: #18181B;
-        border: 1px solid #27272A;
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 12px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 16px 18px;
+        margin-bottom: 10px;
+        backdrop-filter: blur(8px);
     }
 
-    /* Alert boxes */
-    .stAlert {
-        border-radius: 12px !important;
-        border: 1px solid #27272A !important;
-        background: #18181B !important;
-    }
-
-    /* Expanders */
-    details {
-        background: #18181B !important;
-        border: 1px solid #27272A !important;
-        border-radius: 12px !important;
-    }
-
-    .streamlit-expanderHeader {
-        font-weight: 500 !important;
+    [data-testid="stChatInput"] textarea {
+        border-radius: var(--radius-md) !important;
+        background: var(--bg-elevated) !important;
+        border: 1px solid var(--border) !important;
+        padding: 14px 16px !important;
         font-size: 14px !important;
-        color: #A1A1AA !important;
-        padding: 12px 16px !important;
+        backdrop-filter: blur(8px) !important;
     }
 
-    /* ============================================
-       CODE & MONOSPACE
-       ============================================ */
+    [data-testid="stChatInput"] textarea:focus {
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 0 3px rgba(0,102,255,0.1) !important;
+    }
+
+    /* === CODE === */
     code {
-        background: #27272A !important;
-        color: #A5B4FC !important;
-        padding: 2px 6px !important;
-        border-radius: 4px !important;
-        font-size: 13px !important;
-        font-family: 'SF Mono', 'Fira Code', monospace !important;
+        background: rgba(255,255,255,0.06) !important;
+        color: #93C5FD !important;
+        padding: 2px 7px !important;
+        border-radius: 5px !important;
+        font-size: 12px !important;
+        font-family: 'SF Mono', Monaco, monospace !important;
         border: none !important;
     }
 
     pre {
-        background: #18181B !important;
-        border: 1px solid #27272A !important;
-        border-radius: 8px !important;
-        padding: 12px !important;
+        background: var(--bg-elevated) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-sm) !important;
+        padding: 14px !important;
     }
 
-    /* ============================================
-       UTILITY CLASSES
-       ============================================ */
+    /* === ALERTS & EXPANDERS === */
+    .stAlert {
+        border-radius: var(--radius-md) !important;
+        border: 1px solid var(--border) !important;
+        background: var(--bg-elevated) !important;
+    }
 
-    /* Dividers - subtle */
+    details {
+        background: var(--bg-elevated) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-md) !important;
+    }
+
+    .streamlit-expanderHeader {
+        font-weight: 500 !important;
+        font-size: 13px !important;
+        color: var(--text-secondary) !important;
+        padding: 12px 14px !important;
+    }
+
+    /* === UTILITY === */
     hr {
         border: none !important;
-        border-top: 1px solid #27272A !important;
-        margin: 16px 0 !important;
+        border-top: 1px solid var(--border) !important;
+        margin: 14px 0 !important;
     }
 
-    /* Captions - consistent muted style */
     .stCaption, [data-testid="stCaptionContainer"] p {
-        color: #71717A !important;
-        font-size: 13px !important;
-        line-height: 1.5;
+        color: var(--text-muted) !important;
+        font-size: 12px !important;
     }
 
-    /* Links */
     a {
         color: #60A5FA !important;
         text-decoration: none;
     }
 
     a:hover {
-        color: #93C5FD !important;
         text-decoration: underline;
     }
 
-    [data-testid="stSidebar"] a {
-        color: #71717A !important;
-    }
+    /* Hide chrome */
+    #MainMenu, footer, header {visibility: hidden;}
 
-    [data-testid="stSidebar"] a:hover {
-        color: #A1A1AA !important;
-    }
-
-    /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-
-    /* ============================================
-       CAPABILITY PILLS - Touch-friendly 40px
-       ============================================ */
+    /* === ACTION BUTTONS ROW === */
     [data-testid="stHorizontalBlock"] .stButton > button {
-        border-radius: 20px !important;
+        border-radius: var(--radius-sm) !important;
         font-size: 13px !important;
-        padding: 8px 16px !important;
+        padding: 8px 12px !important;
         min-height: 36px !important;
-        white-space: nowrap !important;
         margin-bottom: 0 !important;
     }
 
@@ -1976,28 +1853,7 @@ def main():
     }
 
     [data-testid="stHorizontalBlock"] > div {
-        padding: 0 !important;
-        flex: 0 0 auto !important;
-    }
-
-    /* ============================================
-       CHAT INPUT - Prominent
-       ============================================ */
-    [data-testid="stChatInput"] {
-        border-top: 1px solid #27272A;
-        padding-top: 16px;
-    }
-
-    [data-testid="stChatInput"] textarea {
-        border-radius: 12px !important;
-        background: #18181B !important;
-        border: 1px solid #27272A !important;
-        padding: 14px 16px !important;
-        font-size: 15px !important;
-    }
-
-    [data-testid="stChatInput"] textarea:focus {
-        border-color: #2563EB !important;
+        padding: 0 2px !important;
     }
     </style>
     """, unsafe_allow_html=True)
