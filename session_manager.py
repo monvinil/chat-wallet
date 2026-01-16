@@ -35,12 +35,16 @@ class SessionManager:
         from supabase_client import get_supabase_client
 
         try:
+            print(f"[Session] create_session called for user_id={user_id[:8]}...")
             supabase = get_supabase_client(use_service_key=True)
             if not supabase:
+                print("[Session] ERROR: Could not get Supabase client")
                 return None
 
             session_token = SessionManager.generate_session_token()
             expires_at = datetime.utcnow() + timedelta(days=SessionManager.SESSION_EXPIRY_DAYS)
+
+            print(f"[Session] Inserting session with token={session_token[:8]}...")
 
             # Store session in database
             result = supabase.table("sessions").upsert({
@@ -52,12 +56,18 @@ class SessionManager:
                 "wallet_address": wallet_address
             }, on_conflict="user_id").execute()
 
+            print(f"[Session] Upsert result: {result.data}")
+
             if result.data:
+                print(f"[Session] Session created successfully")
                 return session_token
+            print(f"[Session] No data returned from upsert")
             return None
 
         except Exception as e:
-            print(f"Error creating session: {e}")
+            print(f"[Session] ERROR creating session: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     @staticmethod
@@ -110,12 +120,19 @@ class SessionManager:
     @staticmethod
     def save_session_cookie(session_token: str):
         """Save session token to browser cookie"""
-        cookie_manager = SessionManager.get_cookie_manager()
-        cookie_manager.set(
-            SessionManager.COOKIE_NAME,
-            session_token,
-            expires_at=datetime.now() + timedelta(days=SessionManager.SESSION_EXPIRY_DAYS)
-        )
+        try:
+            print(f"[Session] Saving cookie with token={session_token[:8]}...")
+            cookie_manager = SessionManager.get_cookie_manager()
+            cookie_manager.set(
+                SessionManager.COOKIE_NAME,
+                session_token,
+                expires_at=datetime.now() + timedelta(days=SessionManager.SESSION_EXPIRY_DAYS)
+            )
+            print(f"[Session] Cookie save called successfully")
+        except Exception as e:
+            print(f"[Session] ERROR saving cookie: {e}")
+            import traceback
+            traceback.print_exc()
 
     @staticmethod
     def get_session_cookie() -> Optional[str]:
@@ -189,11 +206,15 @@ class SessionManager:
     @staticmethod
     def login(user_id: str, email: str, wallet_address: str) -> bool:
         """Complete login: create session and set cookie"""
+        print(f"[Session] Creating session for user {user_id[:8]}...")
         session_token = SessionManager.create_session(user_id, email, wallet_address)
         if session_token:
+            print(f"[Session] Session created, saving cookie...")
             SessionManager.save_session_cookie(session_token)
             st.session_state.session_token = session_token
+            print(f"[Session] Login complete")
             return True
+        print(f"[Session] Failed to create session")
         return False
 
     @staticmethod
