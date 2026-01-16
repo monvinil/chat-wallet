@@ -2,9 +2,14 @@
 Supabase client and database operations
 """
 
+import os
 import streamlit as st
 from typing import Optional, Dict, Any
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Reload env vars to get latest values (important after .env updates)
+load_dotenv(override=True)
 
 try:
     from supabase import create_client, Client
@@ -12,8 +17,22 @@ try:
 except ImportError:
     SUPABASE_AVAILABLE = False
 
-from config import SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
 from utils.logger import logger
+
+
+def _get_supabase_url() -> str:
+    """Get Supabase URL from environment (fresh read)"""
+    return os.getenv("SUPABASE_URL", "")
+
+
+def _get_supabase_anon_key() -> str:
+    """Get Supabase anon key from environment (fresh read)"""
+    return os.getenv("SUPABASE_ANON_KEY", "")
+
+
+def _get_supabase_service_key() -> str:
+    """Get Supabase service key from environment (fresh read)"""
+    return os.getenv("SUPABASE_SERVICE_KEY", "")
 
 
 def _safe_error(operation: str, e: Exception) -> None:
@@ -23,20 +42,25 @@ def _safe_error(operation: str, e: Exception) -> None:
 
 
 @st.cache_resource
-def _get_cached_supabase_client(use_service_key: bool = False) -> Optional[Client]:
+def _get_cached_supabase_client(_key_hash: str, use_service_key: bool = False) -> Optional[Client]:
     """
     Cached Supabase client instance (created once per session type)
     Internal function - use get_supabase_client() instead
+
+    Args:
+        _key_hash: Hash of the API key (used for cache invalidation when key changes)
+        use_service_key: Whether to use service key or anon key
     """
-    if not SUPABASE_AVAILABLE or not SUPABASE_URL:
+    url = _get_supabase_url()
+    if not SUPABASE_AVAILABLE or not url:
         return None
 
-    key = SUPABASE_SERVICE_KEY if use_service_key else SUPABASE_ANON_KEY
+    key = _get_supabase_service_key() if use_service_key else _get_supabase_anon_key()
     if not key:
         return None
 
     try:
-        return create_client(SUPABASE_URL, key)
+        return create_client(url, key)
     except Exception as e:
         print(f"Supabase connection failed: {e}")
         return None
@@ -50,24 +74,34 @@ def get_supabase_client(use_service_key: bool = False) -> Optional[Client]:
         use_service_key: If True, uses service role key (bypasses RLS, for admin operations)
                         If False, uses anon key (respects RLS, for user operations)
     """
+    import hashlib
+
     if not SUPABASE_AVAILABLE:
         st.error("⚠️ Supabase library not installed. Run: pip install supabase")
         return None
 
-    if not SUPABASE_URL:
+    url = _get_supabase_url()
+    service_key = _get_supabase_service_key()
+    anon_key = _get_supabase_anon_key()
+
+    if not url:
         st.error("⚠️ SUPABASE_URL environment variable missing.")
         return None
 
-    if use_service_key and not SUPABASE_SERVICE_KEY:
+    if use_service_key and not service_key:
         st.error("⚠️ SUPABASE_SERVICE_KEY environment variable missing.")
         return None
 
-    if not use_service_key and not SUPABASE_ANON_KEY:
+    if not use_service_key and not anon_key:
         st.error("⚠️ SUPABASE_ANON_KEY environment variable missing.")
         return None
 
+    # Generate a hash of the key for cache invalidation (if key changes, cache refreshes)
+    key = service_key if use_service_key else anon_key
+    key_hash = hashlib.md5(key.encode()).hexdigest()[:8]
+
     # Use cached client (50-100ms faster on subsequent calls)
-    return _get_cached_supabase_client(use_service_key)
+    return _get_cached_supabase_client(key_hash, use_service_key)
 
 
 def create_user(email: str, primary_wallet_address: str = None, auth_provider: str = "email", password_hash: str = None) -> Optional[Dict[str, Any]]:
