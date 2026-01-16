@@ -149,6 +149,7 @@ class SessionManager:
                     st.session_state._cookie_read_attempts = attempts + 1
                     # Cookie manager needs a rerun to read cookies from browser
                     st.rerun()
+                # After max attempts, no cookie found - user not logged in
                 return False
 
             # Reset attempts counter on successful read
@@ -157,6 +158,7 @@ class SessionManager:
             # Validate session in database
             session_data = SessionManager.get_session(session_token)
             if not session_data:
+                # Session invalid or expired - clear stale cookie
                 SessionManager.clear_session_cookie()
                 return False
 
@@ -180,6 +182,8 @@ class SessionManager:
             return True
         except Exception as e:
             print(f"Session restore error: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     @staticmethod

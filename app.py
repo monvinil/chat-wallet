@@ -2038,18 +2038,20 @@ def main():
     if not st.session_state.get("wallet_address"):
         try:
             SessionManager.get_cookie_manager()
-            SessionManager.restore_session()
+            restored = SessionManager.restore_session()
 
-            # Load user theme preference if logged in
-            user_id = st.session_state.get("user_id")
-            if user_id and not st.session_state.get("user_theme"):
-                from settings_manager import SettingsManager
-                user_settings = SettingsManager.get_user_settings(user_id)
-                if user_settings and user_settings.get("theme"):
-                    st.session_state.user_theme = user_settings["theme"]
-        except Exception:
-            # Cookie manager can fail on first load - this is OK
-            pass
+            if restored:
+                # Load user theme preference if logged in
+                user_id = st.session_state.get("user_id")
+                if user_id and not st.session_state.get("user_theme"):
+                    from settings_manager import SettingsManager
+                    user_settings = SettingsManager.get_user_settings(user_id)
+                    if user_settings and user_settings.get("theme"):
+                        st.session_state.user_theme = user_settings["theme"]
+        except Exception as e:
+            # Log session restore errors for debugging
+            from utils.logger import logger
+            logger.warning(f"Session restore error: {e}")
 
     # Check session timeout and lock wallet if inactive
     from rate_limiter import check_and_handle_timeout, RateLimiter
