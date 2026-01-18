@@ -2047,8 +2047,11 @@ def main():
             cookie_token = SessionManager.get_session_cookie()
             wallet_key_cookie = SessionManager.get_wallet_key()
             locked = st.session_state.get("wallet_locked", True)
+            all_cookies = SessionManager._get_all_cookies()
+            cookie_keys = list(all_cookies.keys()) if all_cookies else []
             st.sidebar.caption(f"[Debug] Session: {cookie_token[:8] + '...' if cookie_token else 'None'}")
             st.sidebar.caption(f"[Debug] WalletKey: {'Yes' if wallet_key_cookie else 'No'} | Locked: {locked}")
+            st.sidebar.caption(f"[Debug] Cookies: {cookie_keys}")
 
             if restored:
                 # Load user theme preference if logged in
