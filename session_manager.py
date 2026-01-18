@@ -149,35 +149,55 @@ class SessionManager:
     @staticmethod
     def restore_session() -> bool:
         """Try to restore session from cookie on page load"""
+        import os
+        debug = os.getenv("DEBUG_SESSION") == "true"
+
         # Skip if already logged in (with both user_id AND wallet_address set)
         # This prevents unnecessary restoration attempts after successful login
         if st.session_state.get("wallet_address") and st.session_state.get("user_id"):
+            if debug:
+                print(f"[Session] Already logged in, skipping restore")
             return True
 
         try:
             # Check for session cookie
             session_token = SessionManager.get_session_cookie()
 
+            if debug:
+                print(f"[Session] Cookie read attempt, token={session_token[:8] if session_token else 'None'}...")
+
             # Cookie manager may return None on first render - need rerun
             # Track attempts to prevent infinite rerun loops
             if session_token is None:
                 attempts = st.session_state.get("_cookie_read_attempts", 0)
+                if debug:
+                    print(f"[Session] Cookie is None, attempt {attempts + 1}/2")
                 if attempts < 2:
                     st.session_state._cookie_read_attempts = attempts + 1
                     # Cookie manager needs a rerun to read cookies from browser
                     st.rerun()
                 # After max attempts, no cookie found - user not logged in
+                if debug:
+                    print(f"[Session] No cookie after 2 attempts - user not logged in")
                 return False
 
             # Reset attempts counter on successful read
             st.session_state._cookie_read_attempts = 0
 
+            if debug:
+                print(f"[Session] Found cookie, validating in database...")
+
             # Validate session in database
             session_data = SessionManager.get_session(session_token)
             if not session_data:
                 # Session invalid or expired - clear stale cookie
+                if debug:
+                    print(f"[Session] Session not found in database - clearing stale cookie")
                 SessionManager.clear_session_cookie()
                 return False
+
+            if debug:
+                print(f"[Session] Session valid, restoring state for {session_data.get('email')}")
 
             # Restore session state
             st.session_state.user_id = session_data["user_id"]

@@ -2040,13 +2040,13 @@ def main():
             SessionManager.get_cookie_manager()
             restored = SessionManager.restore_session()
 
-            # DEBUG: Show session restore status (remove after fixing)
-            if os.getenv("DEBUG_SESSION") == "true":
-                cookie_token = SessionManager.get_session_cookie()
-                st.sidebar.caption(f"[Debug] Cookie: {'Found' if cookie_token else 'None'}")
-                st.sidebar.caption(f"[Debug] Restored: {restored}")
-                if st.session_state.get("user_id"):
-                    st.sidebar.caption(f"[Debug] User: {st.session_state.user_id[:8]}...")
+            # DEBUG: Show session restore status (TEMPORARY - remove after fixing)
+            # Always show for now to diagnose the issue
+            cookie_token = SessionManager.get_session_cookie()
+            attempts = st.session_state.get("_cookie_read_attempts", 0)
+            st.sidebar.caption(f"[Debug] Cookie: {cookie_token[:8] + '...' if cookie_token else 'None'}")
+            st.sidebar.caption(f"[Debug] Attempts: {attempts}")
+            st.sidebar.caption(f"[Debug] Restored: {restored}")
 
             if restored:
                 # Load user theme preference if logged in
@@ -2060,9 +2060,8 @@ def main():
             # Log session restore errors for debugging
             from utils.logger import logger
             logger.warning(f"Session restore error: {e}")
-            # DEBUG: Show error in UI
-            if os.getenv("DEBUG_SESSION") == "true":
-                st.sidebar.error(f"[Debug] Session error: {e}")
+            # TEMPORARY: Show error in UI
+            st.sidebar.error(f"[Debug] Session error: {e}")
 
     # Check session timeout and lock wallet if inactive
     from rate_limiter import check_and_handle_timeout, RateLimiter
