@@ -30,8 +30,8 @@ USDC_ABI = [
 # Module-level cache for Web3 instances (persists across requests)
 _web3_cache: Dict[str, Web3] = {}
 
-# Balance cache TTL in seconds
-BALANCE_CACHE_TTL = 30
+# Balance cache TTL in seconds (60s reduces RPC calls while keeping data reasonably fresh)
+BALANCE_CACHE_TTL = 60
 
 
 class ChainUtils:

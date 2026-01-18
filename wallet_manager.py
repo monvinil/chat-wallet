@@ -12,12 +12,6 @@ from typing import Optional, Dict, Any
 from utils.encryption import PasswordEncryption
 from utils.logger import logger
 
-try:
-    from cdp import Wallet
-    CDP_AVAILABLE = True
-except ImportError:
-    CDP_AVAILABLE = False
-
 
 class WalletManager:
     """Manages non-custodial wallet operations"""

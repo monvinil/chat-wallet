@@ -15,10 +15,6 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")  # For admin operat
 # Anthropic API
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
-# CDP Config
-CDP_API_KEY_NAME = os.getenv("CDP_API_KEY_NAME", "")
-CDP_API_KEY_PRIVATE_KEY = os.getenv("CDP_API_KEY_PRIVATE_KEY", "")
-
 # Supported Networks
 NETWORKS = {
     "base-sepolia": {
