@@ -363,9 +363,9 @@ class WalletManager:
                 st.session_state.wallet_locked = False
                 st.session_state.wallet_data = decrypted.decode()
 
-                # Save wallet key to cookie for auto-unlock on refresh
-                from session_manager import SessionManager
-                SessionManager.save_wallet_key(fernet_key)
+                # Defer wallet key save to next render cycle (to let JS execute)
+                # The JS component needs to render to set the cookie
+                st.session_state._pending_wallet_key_save = fernet_key
 
                 return True
             except Exception as e:
