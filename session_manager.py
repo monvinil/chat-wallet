@@ -224,6 +224,7 @@ class SessionManager:
         # Method 1: Direct JavaScript
         try:
             SessionManager._delete_cookie_js(SessionManager.COOKIE_NAME)
+            SessionManager._delete_cookie_js("chat_wallet_key")  # Also clear wallet key
         except Exception:
             pass
 
@@ -238,6 +239,48 @@ class SessionManager:
         # Clear session state backup
         if "_session_token_backup" in st.session_state:
             del st.session_state["_session_token_backup"]
+
+    @staticmethod
+    def save_wallet_key(wallet_key: str):
+        """Save wallet decryption key to session cookie (for auto-unlock on refresh)"""
+        # Use session cookie (no expiry) - cleared when browser closes
+        # This keeps wallet unlocked across page refreshes but not browser restarts
+        try:
+            import base64
+            # Encode key for cookie storage
+            encoded_key = base64.b64encode(wallet_key.encode()).decode()
+            # Set as session cookie (no expires = browser session only)
+            js_code = f"""
+            <script>
+            document.cookie = "chat_wallet_key={encoded_key};path=/;SameSite=Lax";
+            </script>
+            """
+            components.html(js_code, height=0)
+        except Exception as e:
+            print(f"[Session] Failed to save wallet key: {e}")
+
+    @staticmethod
+    def get_wallet_key() -> Optional[str]:
+        """Get wallet decryption key from cookie (for auto-unlock)"""
+        try:
+            cookie_manager = SessionManager.get_cookie_manager()
+            if cookie_manager:
+                import base64
+                all_cookies = cookie_manager.get_all(key="wallet_key_get_all")
+                encoded_key = all_cookies.get("chat_wallet_key")
+                if encoded_key:
+                    return base64.b64decode(encoded_key.encode()).decode()
+        except Exception as e:
+            print(f"[Session] Failed to get wallet key: {e}")
+        return None
+
+    @staticmethod
+    def clear_wallet_key():
+        """Clear wallet key cookie (when user explicitly locks wallet)"""
+        try:
+            SessionManager._delete_cookie_js("chat_wallet_key")
+        except Exception:
+            pass
 
     @staticmethod
     def restore_session() -> bool:
@@ -305,7 +348,20 @@ class SessionManager:
             if encrypted_wallet:
                 st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
                 st.session_state.wallet_salt = encrypted_wallet["salt"]
-                st.session_state.wallet_locked = True  # Will need password to unlock
+
+                # Try to auto-unlock with saved wallet key (from session cookie)
+                saved_key = SessionManager.get_wallet_key()
+                if saved_key:
+                    # Key was saved - auto-unlock wallet
+                    st.session_state.wallet_key = saved_key
+                    st.session_state.wallet_locked = False
+                    if debug:
+                        print(f"[Session] Auto-unlocked wallet with saved key")
+                else:
+                    # No saved key - wallet stays locked
+                    st.session_state.wallet_locked = True
+                    if debug:
+                        print(f"[Session] No saved key - wallet locked")
             else:
                 st.session_state.wallet_locked = True
 

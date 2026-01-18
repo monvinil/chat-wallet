@@ -42,6 +42,10 @@ def create_guest_wallet():
             st.session_state.user_id = guest_user_id
             st.session_state._guest_user_id = guest_user_id  # Preserve for conversion
 
+            # Save wallet key to cookie for auto-unlock on refresh
+            from session_manager import SessionManager
+            SessionManager.save_wallet_key(encrypted["key"])
+
             # Store Solana address if available (multi-chain wallet)
             if wallet_info.get("solana_address"):
                 st.session_state.solana_address = wallet_info["solana_address"]

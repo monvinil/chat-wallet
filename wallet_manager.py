@@ -280,10 +280,14 @@ class WalletManager:
 
     @staticmethod
     def lock_wallet():
-        """Lock wallet (clear decryption key from memory)"""
+        """Lock wallet (clear decryption key from memory and cookie)"""
         if "wallet_key" in st.session_state:
             del st.session_state.wallet_key
         st.session_state.wallet_locked = True
+
+        # Also clear wallet key cookie so it stays locked on refresh
+        from session_manager import SessionManager
+        SessionManager.clear_wallet_key()
 
     @staticmethod
     def is_wallet_unlocked() -> bool:
@@ -358,6 +362,11 @@ class WalletManager:
                 st.session_state.wallet_key = fernet_key
                 st.session_state.wallet_locked = False
                 st.session_state.wallet_data = decrypted.decode()
+
+                # Save wallet key to cookie for auto-unlock on refresh
+                from session_manager import SessionManager
+                SessionManager.save_wallet_key(fernet_key)
+
                 return True
             except Exception as e:
                 logger.debug(f"Wallet decryption failed: {type(e).__name__}")

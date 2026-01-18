@@ -422,6 +422,9 @@ def wallet_setup_ui():
                                 st.session_state.wallet_key = encrypted["key"]
                                 st.session_state.wallet_locked = False
 
+                                # Save wallet key to cookie for auto-unlock on refresh
+                                SessionManager.save_wallet_key(encrypted["key"])
+
                                 # Save encrypted wallet to Supabase for cloud backup
                                 save_wallet_address(
                                     user["id"],
