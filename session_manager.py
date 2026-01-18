@@ -205,7 +205,12 @@ class SessionManager:
         # Try stx cookie manager first (can read JS-set cookies)
         cookie_manager = SessionManager.get_cookie_manager()
         if cookie_manager:
-            token = cookie_manager.get(SessionManager.COOKIE_NAME)
+            # IMPORTANT: Must call get_all() to refresh cookies from browser!
+            # The CookieManager caches cookies on init, and get() uses the cache.
+            # On first render after refresh, the cache is empty (default={}).
+            # Calling get_all() fetches fresh cookies from the browser.
+            all_cookies = cookie_manager.get_all()
+            token = all_cookies.get(SessionManager.COOKIE_NAME)
             if token:
                 return token
 
