@@ -2042,14 +2042,12 @@ def main():
 
             # DEBUG: Show session restore status (TEMPORARY - remove after fixing)
             cookie_token = SessionManager.get_session_cookie()
-            backup_token = st.session_state.get("_session_token_backup")
             attempts = st.session_state.get("_cookie_read_attempts", 0)
-            # Show all cookies for debugging
+            # Show all cookies for debugging (use unique key to avoid duplicate key error)
             cm = SessionManager.get_cookie_manager()
-            all_cookies = cm.get_all() if cm else {}
+            all_cookies = cm.get_all(key="debug_get_all") if cm else {}
             cookie_count = len(all_cookies)
-            st.sidebar.caption(f"[Debug] Cookies found: {cookie_count}")
-            st.sidebar.caption(f"[Debug] Session: {cookie_token[:8] + '...' if cookie_token else 'None'}")
+            st.sidebar.caption(f"[Debug] Cookies: {cookie_count} | Session: {cookie_token[:8] + '...' if cookie_token else 'None'}")
             st.sidebar.caption(f"[Debug] Attempts: {attempts} | Restored: {restored}")
 
             if restored:

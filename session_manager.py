@@ -209,7 +209,8 @@ class SessionManager:
             # The CookieManager caches cookies on init, and get() uses the cache.
             # On first render after refresh, the cache is empty (default={}).
             # Calling get_all() fetches fresh cookies from the browser.
-            all_cookies = cookie_manager.get_all()
+            # Use unique key to avoid Streamlit duplicate key error
+            all_cookies = cookie_manager.get_all(key="session_get_all")
             token = all_cookies.get(SessionManager.COOKIE_NAME)
             if token:
                 return token
