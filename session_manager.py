@@ -1,12 +1,22 @@
 """
 Session Manager - Persistent sessions across page refreshes using cookies
+
+Uses direct JavaScript cookie manipulation for reliability in production.
+Falls back to extra_streamlit_components if needed.
 """
 
 import streamlit as st
-import extra_streamlit_components as stx
+import streamlit.components.v1 as components
 import secrets
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
+
+# Try to import extra_streamlit_components, but don't require it
+try:
+    import extra_streamlit_components as stx
+    STX_AVAILABLE = True
+except ImportError:
+    STX_AVAILABLE = False
 
 
 class SessionManager:
@@ -19,10 +29,50 @@ class SessionManager:
     @staticmethod
     def get_cookie_manager():
         """Get cookie manager instance (created once per session)"""
+        if not STX_AVAILABLE:
+            return None
         if "cookie_manager" not in st.session_state:
             st.session_state.cookie_manager = stx.CookieManager(key="chat_wallet_cookies")
             st.session_state._cookie_manager_init = True
         return st.session_state.cookie_manager
+
+    @staticmethod
+    def _set_cookie_js(name: str, value: str, days: int = 30):
+        """Set cookie using direct JavaScript injection (more reliable)"""
+        js_code = f"""
+        <script>
+        (function() {{
+            var date = new Date();
+            date.setTime(date.getTime() + ({days} * 24 * 60 * 60 * 1000));
+            var expires = "expires=" + date.toUTCString();
+            document.cookie = "{name}={value};" + expires + ";path=/;SameSite=Lax";
+            console.log("[Session] Cookie set via JS: {name}=" + "{value}".substring(0, 8) + "...");
+        }})();
+        </script>
+        """
+        components.html(js_code, height=0)
+
+    @staticmethod
+    def _get_cookie_js(name: str) -> Optional[str]:
+        """
+        Read cookie value. Note: JavaScript can't return values to Python,
+        so we use the stx cookie manager for reading (it's more reliable for reads).
+        """
+        cookie_manager = SessionManager.get_cookie_manager()
+        if cookie_manager:
+            return cookie_manager.get(name)
+        return None
+
+    @staticmethod
+    def _delete_cookie_js(name: str):
+        """Delete cookie using JavaScript"""
+        js_code = f"""
+        <script>
+        document.cookie = "{name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;";
+        console.log("[Session] Cookie deleted: {name}");
+        </script>
+        """
+        components.html(js_code, height=0)
 
     @staticmethod
     def generate_session_token() -> str:
@@ -119,32 +169,69 @@ class SessionManager:
 
     @staticmethod
     def save_session_cookie(session_token: str):
-        """Save session token to browser cookie"""
+        """Save session token to browser cookie using multiple methods for reliability"""
+        print(f"[Session] Saving cookie with token={session_token[:8]}...")
+
+        # Method 1: Direct JavaScript injection (most reliable in production)
         try:
-            print(f"[Session] Saving cookie with token={session_token[:8]}...")
-            cookie_manager = SessionManager.get_cookie_manager()
-            cookie_manager.set(
+            SessionManager._set_cookie_js(
                 SessionManager.COOKIE_NAME,
                 session_token,
-                expires_at=datetime.now() + timedelta(days=SessionManager.SESSION_EXPIRY_DAYS)
+                SessionManager.SESSION_EXPIRY_DAYS
             )
-            print(f"[Session] Cookie save called successfully")
+            print(f"[Session] Cookie set via JS successfully")
         except Exception as e:
-            print(f"[Session] ERROR saving cookie: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"[Session] JS cookie set failed: {e}")
+
+        # Method 2: stx cookie manager (backup)
+        try:
+            cookie_manager = SessionManager.get_cookie_manager()
+            if cookie_manager:
+                cookie_manager.set(
+                    SessionManager.COOKIE_NAME,
+                    session_token,
+                    expires_at=datetime.now() + timedelta(days=SessionManager.SESSION_EXPIRY_DAYS)
+                )
+                print(f"[Session] Cookie set via stx successfully")
+        except Exception as e:
+            print(f"[Session] stx cookie set failed: {e}")
+
+        # Also store in session state as ultimate fallback
+        st.session_state._session_token_backup = session_token
 
     @staticmethod
     def get_session_cookie() -> Optional[str]:
         """Get session token from browser cookie"""
+        # Try stx cookie manager first (can read JS-set cookies)
         cookie_manager = SessionManager.get_cookie_manager()
-        return cookie_manager.get(SessionManager.COOKIE_NAME)
+        if cookie_manager:
+            token = cookie_manager.get(SessionManager.COOKIE_NAME)
+            if token:
+                return token
+
+        # Fallback to session state backup (won't survive refresh, but useful for same session)
+        return st.session_state.get("_session_token_backup")
 
     @staticmethod
     def clear_session_cookie():
         """Clear session cookie from browser"""
-        cookie_manager = SessionManager.get_cookie_manager()
-        cookie_manager.delete(SessionManager.COOKIE_NAME)
+        # Method 1: Direct JavaScript
+        try:
+            SessionManager._delete_cookie_js(SessionManager.COOKIE_NAME)
+        except Exception:
+            pass
+
+        # Method 2: stx cookie manager
+        try:
+            cookie_manager = SessionManager.get_cookie_manager()
+            if cookie_manager:
+                cookie_manager.delete(SessionManager.COOKIE_NAME)
+        except Exception:
+            pass
+
+        # Clear session state backup
+        if "_session_token_backup" in st.session_state:
+            del st.session_state["_session_token_backup"]
 
     @staticmethod
     def restore_session() -> bool:
