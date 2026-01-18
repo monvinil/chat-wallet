@@ -1,6 +1,6 @@
 """
 Chat02 Onboarding Flow
-Flowing, educational, warm - help users discover possibilities
+Streamlined for instant chat access with free tier
 """
 
 import streamlit as st
@@ -11,19 +11,26 @@ def show_onboarding():
     """
     Check if onboarding is complete.
     Returns True if ready to chat, False if needs setup.
+
+    With free tier, users can chat immediately after signup.
     """
     user_id = st.session_state.get("user_id")
     if not user_id:
         return False
 
-    # Check if API key is configured
+    # Check if user has API access (own key OR free tier)
     llm_config = SettingsManager.get_llm_config(user_id)
     has_api_key = bool(llm_config.get("api_key"))
 
-    # If API key configured, onboarding complete
+    # If API key available (own or free tier), ready to chat
     if has_api_key:
+        # Show first-time welcome for new users (just signed up)
+        if st.session_state.get("just_signed_up") and not st.session_state.get("_welcome_shown"):
+            show_welcome_message(llm_config)
+            st.session_state._welcome_shown = True
         return True
 
+    # No API access - show setup flow
     # Quick start mode - skip welcome, go straight to API setup
     if st.session_state.get("quick_start_active"):
         st.session_state.onboarding_step = 2
@@ -39,6 +46,15 @@ def show_onboarding():
 
     # Step 2: API Key Setup
     return show_step_2_connect_ai(user_id)
+
+
+def show_welcome_message(llm_config: dict):
+    """Show brief welcome for users with free tier access"""
+    if llm_config.get("using_free_tier"):
+        remaining = llm_config.get("remaining_messages", 50)
+        st.success(f"You're ready to chat! ({remaining} free messages)")
+    else:
+        st.success("You're connected and ready to chat!")
 
 
 def show_step_1_welcome():

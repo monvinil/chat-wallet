@@ -208,13 +208,21 @@ Sign up or log in to get started.
         # User is still in onboarding, don't show chat
         return
 
-    # Check if API key is configured (show banner if missing)
+    # Check if API key is configured (own key or free tier)
     from api_key_setup import show_api_key_banner, check_api_key_status
-    has_api_key, _ = check_api_key_status()
+    from free_tier import FreeTier
+    from settings_manager import SettingsManager
+
+    user_id = st.session_state.get("user_id")
+    llm_config = SettingsManager.get_llm_config(user_id)
+    has_api_key = bool(llm_config.get("api_key"))
 
     if not has_api_key:
-        # Show prominent banner instead of showing error in chat
-        show_api_key_banner()
+        # No API access - check if free tier exhausted
+        if FreeTier.is_available() and not FreeTier.has_quota(user_id):
+            FreeTier.show_upgrade_prompt()
+        else:
+            show_api_key_banner()
         return
 
     # If API key was just configured, force agent re-initialization
@@ -222,6 +230,18 @@ Sign up or log in to get started.
         st.session_state.agent = None  # Force recreation
         st.session_state._agent_initializing = False
         st.session_state._api_key_just_saved = False  # Clear flag
+        # Clear LLM config cache to pick up new key
+        cache_key = f"_llm_config_{user_id}"
+        if cache_key in st.session_state:
+            del st.session_state[cache_key]
+
+    # Show free tier status if using it
+    if llm_config.get("using_free_tier"):
+        remaining = llm_config.get("remaining_messages", 0)
+        if remaining <= 10:
+            st.warning(f"{remaining} free messages left. Add your API key in Settings.")
+        else:
+            st.caption(f"{remaining} free messages remaining")
 
     # Quick action chips for logged-in users (only after onboarding complete)
     render_quick_actions()
@@ -257,6 +277,7 @@ Sign up or log in to get started.
     if prompt:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
+                message_success = False
                 try:
                     # Safety check: ensure agent is initialized
                     if not st.session_state.get("agent"):
@@ -302,6 +323,7 @@ The assistant is still initializing. This usually takes a moment after logging i
                         })
 
                         response = result.get("output", "Sorry, I couldn't process that.")
+                        message_success = True  # Only count successful agent responses
 
                 except Exception as e:
                     error_msg = str(e)
@@ -320,6 +342,10 @@ Wait a minute and try again, or switch providers in Settings if this keeps happe
 
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
+
+                # Increment free tier usage only on successful messages
+                if message_success and llm_config.get("using_free_tier"):
+                    FreeTier.increment_usage(user_id)
 
     # Welcome message for logged in users (only shown after onboarding complete)
     if not st.session_state.messages:

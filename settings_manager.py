@@ -138,36 +138,71 @@ class SettingsManager:
     def get_llm_config(user_id: Optional[str] = None, force_refresh: bool = False) -> Dict[str, Any]:
         """
         Get LLM configuration for user (cached per session for performance)
-        Falls back to env var only for development (production requires user API key)
-        """
-        # Default config - only uses env var if set (for development)
-        default_config = {
-            "provider": "anthropic",
-            "model": "claude-sonnet-4-20250514",
-            "api_key": os.getenv("ANTHROPIC_API_KEY"),  # Will be None in production
-            "using_default": True
-        }
 
+        Priority:
+        1. User's own API key (if configured)
+        2. Free tier (if quota remaining)
+        3. None (user must add key)
+        """
+        from free_tier import FreeTier
+
+        # No user - check if free tier available for anonymous use
         if not user_id:
-            return default_config
+            if FreeTier.is_available():
+                return {
+                    "provider": "anthropic",
+                    "model": "claude-sonnet-4-20250514",
+                    "api_key": FreeTier.get_app_api_key(),
+                    "using_free_tier": True,
+                    "using_default": True
+                }
+            return {
+                "provider": "anthropic",
+                "model": "claude-sonnet-4-20250514",
+                "api_key": None,
+                "using_default": True
+            }
 
         # Check session cache first (avoids repeated DB calls)
         cache_key = f"_llm_config_{user_id}"
         if not force_refresh and cache_key in st.session_state:
             return st.session_state[cache_key]
 
+        # Check if user has their own API key
         settings = SettingsManager.get_user_settings(user_id)
-        if not settings or not settings.get("llm_api_key"):
-            return default_config
+        if settings and settings.get("llm_api_key"):
+            config = {
+                "provider": settings.get("llm_provider", "anthropic"),
+                "model": settings.get("llm_model", "claude-sonnet-4-20250514"),
+                "api_key": settings.get("llm_api_key"),
+                "using_default": False,
+                "using_free_tier": False
+            }
+            st.session_state[cache_key] = config
+            return config
 
+        # No user key - check free tier
+        can_use_free, free_config = FreeTier.check_and_get_config(user_id)
+        if can_use_free and free_config:
+            config = {
+                "provider": free_config["provider"],
+                "model": free_config["model"],
+                "api_key": free_config["api_key"],
+                "using_default": False,
+                "using_free_tier": True,
+                "remaining_messages": free_config["remaining_messages"]
+            }
+            st.session_state[cache_key] = config
+            return config
+
+        # No key and no free tier - return empty config
         config = {
-            "provider": settings.get("llm_provider", "anthropic"),
-            "model": settings.get("llm_model", "claude-sonnet-4-20250514"),
-            "api_key": settings.get("llm_api_key"),
-            "using_default": False
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-20250514",
+            "api_key": None,
+            "using_default": True,
+            "using_free_tier": False
         }
-
-        # Cache for this session
         st.session_state[cache_key] = config
         return config
 
