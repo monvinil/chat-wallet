@@ -56,14 +56,20 @@ class SessionManager:
     @staticmethod
     def _set_cookie_js(name: str, value: str, days: int = 30):
         """Set cookie using direct JavaScript injection (more reliable)"""
+        import re
+        # Sanitize inputs to prevent XSS - only allow alphanumeric, underscore, hyphen, and base64 chars
+        if not re.match(r'^[a-zA-Z0-9_-]+$', name):
+            raise ValueError("Invalid cookie name")
+        if not re.match(r'^[a-zA-Z0-9_=-]+$', value):
+            raise ValueError("Invalid cookie value")
+
         js_code = f"""
         <script>
         (function() {{
             var date = new Date();
             date.setTime(date.getTime() + ({days} * 24 * 60 * 60 * 1000));
             var expires = "expires=" + date.toUTCString();
-            document.cookie = "{name}={value};" + expires + ";path=/;SameSite=Lax";
-            console.log("[Session] Cookie set via JS: {name}=" + "{value}".substring(0, 8) + "...");
+            document.cookie = "{name}={value};" + expires + ";path=/;SameSite=Lax;Secure";
         }})();
         </script>
         """
@@ -83,10 +89,14 @@ class SessionManager:
     @staticmethod
     def _delete_cookie_js(name: str):
         """Delete cookie using JavaScript"""
+        import re
+        # Sanitize name to prevent XSS
+        if not re.match(r'^[a-zA-Z0-9_-]+$', name):
+            raise ValueError("Invalid cookie name")
+
         js_code = f"""
         <script>
-        document.cookie = "{name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;";
-        console.log("[Session] Cookie deleted: {name}");
+        document.cookie = "{name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;Secure";
         </script>
         """
         components.html(js_code, height=0)
@@ -100,18 +110,16 @@ class SessionManager:
     def create_session(user_id: str, email: str, wallet_address: str) -> Optional[str]:
         """Create a new session and store in database"""
         from supabase_client import get_supabase_client
+        from utils.logger import logger
 
         try:
-            print(f"[Session] create_session called for user_id={user_id[:8]}...")
             supabase = get_supabase_client(use_service_key=True)
             if not supabase:
-                print("[Session] ERROR: Could not get Supabase client")
+                logger.error("Session creation failed: no database connection")
                 return None
 
             session_token = SessionManager.generate_session_token()
             expires_at = datetime.utcnow() + timedelta(days=SessionManager.SESSION_EXPIRY_DAYS)
-
-            print(f"[Session] Inserting session with token={session_token[:8]}...")
 
             # Store session in database
             result = supabase.table("sessions").upsert({
@@ -123,18 +131,14 @@ class SessionManager:
                 "wallet_address": wallet_address
             }, on_conflict="user_id").execute()
 
-            print(f"[Session] Upsert result: {result.data}")
-
             if result.data:
-                print(f"[Session] Session created successfully")
+                logger.debug("Session created successfully")
                 return session_token
-            print(f"[Session] No data returned from upsert")
+            logger.warning("Session creation returned no data")
             return None
 
         except Exception as e:
-            print(f"[Session] ERROR creating session: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Session creation error: {type(e).__name__}")
             return None
 
     @staticmethod
@@ -162,13 +166,15 @@ class SessionManager:
             return None
 
         except Exception as e:
-            print(f"Error getting session: {e}")
+            from utils.logger import logger
+            logger.debug(f"Session lookup error: {type(e).__name__}")
             return None
 
     @staticmethod
     def delete_session(session_token: str) -> bool:
         """Delete session from database"""
         from supabase_client import get_supabase_client
+        from utils.logger import logger
 
         try:
             supabase = get_supabase_client(use_service_key=True)
@@ -181,13 +187,13 @@ class SessionManager:
             return True
 
         except Exception as e:
-            print(f"Error deleting session: {e}")
+            logger.error(f"Session deletion error: {type(e).__name__}")
             return False
 
     @staticmethod
     def save_session_cookie(session_token: str):
         """Save session token to browser cookie using multiple methods for reliability"""
-        print(f"[Session] Saving cookie with token={session_token[:8]}...")
+        from utils.logger import logger
 
         # Method 1: Direct JavaScript injection (most reliable in production)
         try:
@@ -196,9 +202,8 @@ class SessionManager:
                 session_token,
                 SessionManager.SESSION_EXPIRY_DAYS
             )
-            print(f"[Session] Cookie set via JS successfully")
         except Exception as e:
-            print(f"[Session] JS cookie set failed: {e}")
+            logger.debug(f"JS cookie set failed: {type(e).__name__}")
 
         # Method 2: stx cookie manager (backup)
         try:
@@ -209,9 +214,8 @@ class SessionManager:
                     session_token,
                     expires_at=datetime.now() + timedelta(days=SessionManager.SESSION_EXPIRY_DAYS)
                 )
-                print(f"[Session] Cookie set via stx successfully")
         except Exception as e:
-            print(f"[Session] stx cookie set failed: {e}")
+            logger.debug(f"stx cookie set failed: {type(e).__name__}")
 
         # Also store in session state as ultimate fallback
         st.session_state._session_token_backup = session_token
@@ -257,15 +261,18 @@ class SessionManager:
         # This keeps wallet unlocked across page refreshes but not browser restarts
         try:
             import base64
-            # Encode key for cookie storage
+            import re
+            # Encode key for cookie storage (base64 is safe for cookie values)
             encoded_key = base64.b64encode(wallet_key.encode()).decode()
-            print(f"[Session] Saving wallet key cookie, encoded length: {len(encoded_key)}")
 
-            # Method 1: Direct JavaScript (session cookie - no expiry)
+            # Validate encoded key format to prevent injection
+            if not re.match(r'^[a-zA-Z0-9+/=]+$', encoded_key):
+                raise ValueError("Invalid encoded key format")
+
+            # Method 1: Direct JavaScript (session cookie with Secure flag)
             js_code = f"""
             <script>
-            document.cookie = "chat_wallet_key={encoded_key};path=/;SameSite=Lax";
-            console.log("[Session] Wallet key cookie set via JS");
+            document.cookie = "chat_wallet_key={encoded_key};path=/;SameSite=Lax;Secure";
             </script>
             """
             components.html(js_code, height=0)
@@ -279,12 +286,10 @@ class SessionManager:
                     expires_at=datetime.now() + timedelta(days=1),
                     key="set_wallet_key"
                 )
-                print(f"[Session] Wallet key cookie set via stx")
 
         except Exception as e:
-            print(f"[Session] Failed to save wallet key: {e}")
-            import traceback
-            traceback.print_exc()
+            from utils.logger import logger
+            logger.error(f"Failed to save wallet key cookie: {type(e).__name__}")
 
     @staticmethod
     def get_wallet_key() -> Optional[str]:
@@ -297,7 +302,8 @@ class SessionManager:
             if encoded_key:
                 return base64.b64decode(encoded_key.encode()).decode()
         except Exception as e:
-            print(f"[Session] Failed to get wallet key: {e}")
+            from utils.logger import logger
+            logger.debug(f"Failed to get wallet key: {type(e).__name__}")
         return None
 
     @staticmethod
@@ -311,29 +317,21 @@ class SessionManager:
     @staticmethod
     def restore_session() -> bool:
         """Try to restore session from cookie on page load"""
-        import os
-        debug = os.getenv("DEBUG_SESSION") == "true"
+        from utils.logger import logger
 
         # Skip if already logged in (with both user_id AND wallet_address set)
         # This prevents unnecessary restoration attempts after successful login
         if st.session_state.get("wallet_address") and st.session_state.get("user_id"):
-            if debug:
-                print(f"[Session] Already logged in, skipping restore")
             return True
 
         try:
             # Check for session cookie
             session_token = SessionManager.get_session_cookie()
 
-            if debug:
-                print(f"[Session] Cookie read attempt, token={session_token[:8] if session_token else 'None'}...")
-
             # Cookie manager may return None on first render - need rerun
             # Track attempts to prevent infinite rerun loops
             if session_token is None:
                 attempts = st.session_state.get("_cookie_read_attempts", 0)
-                if debug:
-                    print(f"[Session] Cookie is None, attempt {attempts + 1}/2")
                 if attempts < 2:
                     st.session_state._cookie_read_attempts = attempts + 1
                     # Clear cached cookies so next render fetches fresh
@@ -342,27 +340,17 @@ class SessionManager:
                     # Cookie manager needs a rerun to read cookies from browser
                     st.rerun()
                 # After max attempts, no cookie found - user not logged in
-                if debug:
-                    print(f"[Session] No cookie after 2 attempts - user not logged in")
                 return False
 
             # Reset attempts counter on successful read
             st.session_state._cookie_read_attempts = 0
 
-            if debug:
-                print(f"[Session] Found cookie, validating in database...")
-
             # Validate session in database
             session_data = SessionManager.get_session(session_token)
             if not session_data:
                 # Session invalid or expired - clear stale cookie
-                if debug:
-                    print(f"[Session] Session not found in database - clearing stale cookie")
                 SessionManager.clear_session_cookie()
                 return False
-
-            if debug:
-                print(f"[Session] Session valid, restoring state for {session_data.get('email')}")
 
             # Restore session state
             st.session_state.user_id = session_data["user_id"]
@@ -384,35 +372,29 @@ class SessionManager:
                     # Key was saved - auto-unlock wallet
                     st.session_state.wallet_key = saved_key
                     st.session_state.wallet_locked = False
-                    if debug:
-                        print(f"[Session] Auto-unlocked wallet with saved key")
                 else:
                     # No saved key - wallet stays locked
                     st.session_state.wallet_locked = True
-                    if debug:
-                        print(f"[Session] No saved key - wallet locked")
             else:
                 st.session_state.wallet_locked = True
 
             return True
         except Exception as e:
-            print(f"Session restore error: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Session restore error: {type(e).__name__}")
             return False
 
     @staticmethod
     def login(user_id: str, email: str, wallet_address: str) -> bool:
         """Complete login: create session and set cookie"""
-        print(f"[Session] Creating session for user {user_id[:8]}...")
+        from utils.logger import logger
+
         session_token = SessionManager.create_session(user_id, email, wallet_address)
         if session_token:
-            print(f"[Session] Session created, saving cookie...")
             SessionManager.save_session_cookie(session_token)
             st.session_state.session_token = session_token
-            print(f"[Session] Login complete")
+            logger.debug("Login successful")
             return True
-        print(f"[Session] Failed to create session")
+        logger.warning("Login failed: session creation error")
         return False
 
     @staticmethod

@@ -2043,16 +2043,6 @@ def main():
             SessionManager.get_cookie_manager()
             restored = SessionManager.restore_session()
 
-            # DEBUG: Show session restore status (TEMPORARY - remove after fixing)
-            cookie_token = SessionManager.get_session_cookie()
-            wallet_key_cookie = SessionManager.get_wallet_key()
-            locked = st.session_state.get("wallet_locked", True)
-            all_cookies = SessionManager._get_all_cookies()
-            cookie_keys = list(all_cookies.keys()) if all_cookies else []
-            st.sidebar.caption(f"[Debug] Session: {cookie_token[:8] + '...' if cookie_token else 'None'}")
-            st.sidebar.caption(f"[Debug] WalletKey: {'Yes' if wallet_key_cookie else 'No'} | Locked: {locked}")
-            st.sidebar.caption(f"[Debug] Cookies: {cookie_keys}")
-
             if restored:
                 # Load user theme preference if logged in
                 user_id = st.session_state.get("user_id")
@@ -2062,11 +2052,9 @@ def main():
                     if user_settings and user_settings.get("theme"):
                         st.session_state.user_theme = user_settings["theme"]
         except Exception as e:
-            # Log session restore errors for debugging
+            # Log session restore errors server-side only
             from utils.logger import logger
             logger.warning(f"Session restore error: {e}")
-            # TEMPORARY: Show error in UI
-            st.sidebar.error(f"[Debug] Session error: {e}")
 
     # Handle deferred wallet key save (from previous unlock)
     # This needs to happen on a separate render cycle so the JS component can execute
