@@ -37,6 +37,23 @@ class SessionManager:
         return st.session_state.cookie_manager
 
     @staticmethod
+    def _get_all_cookies() -> dict:
+        """Get all cookies (cached to avoid multiple get_all calls)"""
+        # Cache cookies in session state to avoid multiple component calls
+        if "_cached_cookies" not in st.session_state:
+            cookie_manager = SessionManager.get_cookie_manager()
+            if cookie_manager:
+                cookies = cookie_manager.get_all(key="all_cookies")
+                # Only cache if we got at least one cookie (JS may not have loaded yet)
+                if cookies:
+                    st.session_state._cached_cookies = cookies
+                else:
+                    return {}
+            else:
+                st.session_state._cached_cookies = {}
+        return st.session_state._cached_cookies
+
+    @staticmethod
     def _set_cookie_js(name: str, value: str, days: int = 30):
         """Set cookie using direct JavaScript injection (more reliable)"""
         js_code = f"""
@@ -202,18 +219,11 @@ class SessionManager:
     @staticmethod
     def get_session_cookie() -> Optional[str]:
         """Get session token from browser cookie"""
-        # Try stx cookie manager first (can read JS-set cookies)
-        cookie_manager = SessionManager.get_cookie_manager()
-        if cookie_manager:
-            # IMPORTANT: Must call get_all() to refresh cookies from browser!
-            # The CookieManager caches cookies on init, and get() uses the cache.
-            # On first render after refresh, the cache is empty (default={}).
-            # Calling get_all() fetches fresh cookies from the browser.
-            # Use unique key to avoid Streamlit duplicate key error
-            all_cookies = cookie_manager.get_all(key="session_get_all")
-            token = all_cookies.get(SessionManager.COOKIE_NAME)
-            if token:
-                return token
+        # Use cached cookies to avoid multiple get_all() component calls
+        all_cookies = SessionManager._get_all_cookies()
+        token = all_cookies.get(SessionManager.COOKIE_NAME)
+        if token:
+            return token
 
         # Fallback to session state backup (won't survive refresh, but useful for same session)
         return st.session_state.get("_session_token_backup")
@@ -280,13 +290,12 @@ class SessionManager:
     def get_wallet_key() -> Optional[str]:
         """Get wallet decryption key from cookie (for auto-unlock)"""
         try:
-            cookie_manager = SessionManager.get_cookie_manager()
-            if cookie_manager:
-                import base64
-                all_cookies = cookie_manager.get_all(key="wallet_key_get_all")
-                encoded_key = all_cookies.get("chat_wallet_key")
-                if encoded_key:
-                    return base64.b64decode(encoded_key.encode()).decode()
+            import base64
+            # Use cached cookies to avoid multiple get_all() component calls
+            all_cookies = SessionManager._get_all_cookies()
+            encoded_key = all_cookies.get("chat_wallet_key")
+            if encoded_key:
+                return base64.b64decode(encoded_key.encode()).decode()
         except Exception as e:
             print(f"[Session] Failed to get wallet key: {e}")
         return None
@@ -327,6 +336,9 @@ class SessionManager:
                     print(f"[Session] Cookie is None, attempt {attempts + 1}/2")
                 if attempts < 2:
                     st.session_state._cookie_read_attempts = attempts + 1
+                    # Clear cached cookies so next render fetches fresh
+                    if "_cached_cookies" in st.session_state:
+                        del st.session_state["_cached_cookies"]
                     # Cookie manager needs a rerun to read cookies from browser
                     st.rerun()
                 # After max attempts, no cookie found - user not logged in
