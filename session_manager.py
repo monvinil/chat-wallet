@@ -249,15 +249,32 @@ class SessionManager:
             import base64
             # Encode key for cookie storage
             encoded_key = base64.b64encode(wallet_key.encode()).decode()
-            # Set as session cookie (no expires = browser session only)
+            print(f"[Session] Saving wallet key cookie, encoded length: {len(encoded_key)}")
+
+            # Method 1: Direct JavaScript (session cookie - no expiry)
             js_code = f"""
             <script>
             document.cookie = "chat_wallet_key={encoded_key};path=/;SameSite=Lax";
+            console.log("[Session] Wallet key cookie set via JS");
             </script>
             """
             components.html(js_code, height=0)
+
+            # Method 2: stx cookie manager (backup, with 1 day expiry for persistence)
+            cookie_manager = SessionManager.get_cookie_manager()
+            if cookie_manager:
+                cookie_manager.set(
+                    "chat_wallet_key",
+                    encoded_key,
+                    expires_at=datetime.now() + timedelta(days=1),
+                    key="set_wallet_key"
+                )
+                print(f"[Session] Wallet key cookie set via stx")
+
         except Exception as e:
             print(f"[Session] Failed to save wallet key: {e}")
+            import traceback
+            traceback.print_exc()
 
     @staticmethod
     def get_wallet_key() -> Optional[str]:

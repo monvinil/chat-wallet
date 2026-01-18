@@ -2045,13 +2045,10 @@ def main():
 
             # DEBUG: Show session restore status (TEMPORARY - remove after fixing)
             cookie_token = SessionManager.get_session_cookie()
-            attempts = st.session_state.get("_cookie_read_attempts", 0)
-            # Show all cookies for debugging (use unique key to avoid duplicate key error)
-            cm = SessionManager.get_cookie_manager()
-            all_cookies = cm.get_all(key="debug_get_all") if cm else {}
-            cookie_count = len(all_cookies)
-            st.sidebar.caption(f"[Debug] Cookies: {cookie_count} | Session: {cookie_token[:8] + '...' if cookie_token else 'None'}")
-            st.sidebar.caption(f"[Debug] Attempts: {attempts} | Restored: {restored}")
+            wallet_key_cookie = SessionManager.get_wallet_key()
+            locked = st.session_state.get("wallet_locked", True)
+            st.sidebar.caption(f"[Debug] Session: {cookie_token[:8] + '...' if cookie_token else 'None'}")
+            st.sidebar.caption(f"[Debug] WalletKey: {'Yes' if wallet_key_cookie else 'No'} | Locked: {locked}")
 
             if restored:
                 # Load user theme preference if logged in
