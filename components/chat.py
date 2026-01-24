@@ -215,21 +215,42 @@ def chat_interface(create_agent_func):
             show_api_key_banner()
         return
 
-    # 5. RENDER QUICK ACTIONS (New Location: Below HUD, above Chat)
+    # Force agent re-initialization if API key was just configured
+    if has_api_key and st.session_state.get("_api_key_just_saved"):
+        st.session_state.agent = None
+        st.session_state._agent_initializing = False
+        st.session_state._api_key_just_saved = False
+        cache_key = f"_llm_config_{user_id}"
+        if cache_key in st.session_state:
+            del st.session_state[cache_key]
+
+    # Show free tier status
+    if llm_config.get("using_free_tier"):
+        remaining = llm_config.get("remaining_messages", 0)
+        if remaining <= 10:
+            st.warning(f"{remaining} free messages left. Add your API key in Settings.")
+        else:
+            st.caption(f"{remaining} free messages remaining")
+
+    # 5. RENDER QUICK ACTIONS (Below HUD)
     render_quick_actions()
 
-    # 6. WELCOME STATE (If no messages)
+    # 6. RENDER MODULES (Grouped with quick actions as "Command Palette")
+    render_suggested_actions()
+
+    # 7. CHAT SECTION
+    st.markdown("<div style='height: 10px'></div>", unsafe_allow_html=True)
+
+    # Welcome state (if no messages yet)
     if not st.session_state.messages:
         wallet_short = ChainUtils.format_address(st.session_state.wallet_address) if st.session_state.wallet_address else "..."
-
-        # HTML "Terminal Output" Welcome
         st.markdown(f"""
         <div style="
             background: rgba(255,255,255,0.02);
             border: 1px solid rgba(255,255,255,0.05);
             border-radius: 16px;
             padding: 20px;
-            margin: 20px 0;
+            margin: 10px 0 20px 0;
             font-family: 'JetBrains Mono', monospace;
         ">
             <div style="color: #52525b; font-size: 10px; margin-bottom: 8px;">SESSION INITIALIZED</div>
@@ -241,25 +262,19 @@ def chat_interface(create_agent_func):
         </div>
         """, unsafe_allow_html=True)
 
-    # 7. RENDER CHAT FEED
-    # Spacer to breathe
-    st.markdown("<div style='height: 10px'></div>", unsafe_allow_html=True)
-
+    # Render chat history
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # 8. HANDLE INPUT LOGIC (Keep existing logic)
+    # 8. HANDLE INPUT LOGIC
     prompt = None
     if st.session_state.get("_quick_action_triggered"):
         st.session_state._quick_action_triggered = False
         if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
             prompt = st.session_state.messages[-1]["content"]
 
-    # 9. RENDER MODULES (New Location: Below chat, acts as a footer/launcher)
-    render_suggested_actions()
-
-    # 10. INPUT FIELD (Standard Streamlit input, styled by App.py CSS)
+    # 9. INPUT FIELD
     if not prompt:
         prompt = st.chat_input("Enter command...")
         if prompt:
@@ -267,7 +282,7 @@ def chat_interface(create_agent_func):
             with st.chat_message("user"):
                 st.markdown(prompt)
 
-    # 11. PROCESS MESSAGE LOGIC (Keep existing logic exactly as is)
+    # 10. PROCESS MESSAGE
     if prompt:
         with st.chat_message("assistant"):
             with st.spinner("Processing..."):
