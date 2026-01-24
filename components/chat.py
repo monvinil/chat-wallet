@@ -61,34 +61,34 @@ def render_header():
     st.markdown("---")
 
 
-# --- QUICK ACTIONS: CONTROL DECK ---
+# --- QUICK ACTIONS: COMMAND DECK ---
 def render_action_deck():
     """
     Render quick actions as industrial operation buttons.
     """
-    st.markdown("<div style='font-family: \"JetBrains Mono\"; font-size: 10px; color: #52525b; margin-bottom: 10px;'>OPERATIONS</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-family: \"JetBrains Mono\"; font-size: 10px; color: #52525b; margin-bottom: 10px;'>COMMAND DECK</div>", unsafe_allow_html=True)
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        if st.button("↓ INTAKE", key="dock_deposit", type="primary", use_container_width=True):
+        if st.button("↓ DEPOSIT", key="quick_deposit", type="primary", use_container_width=True):
             st.session_state.show_deposit_modal = True
             st.rerun()
 
     with col2:
-        if st.button("↗ TRANSFER", key="dock_send", use_container_width=True):
+        if st.button("↗ SEND", key="quick_send", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "I want to send money"})
             st.session_state._quick_action_triggered = True
             st.rerun()
 
     with col3:
-        if st.button("🎁 ACQUIRE", key="dock_card", use_container_width=True):
+        if st.button("🎁 PERKS", key="quick_giftcard", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Show me gift cards"})
             st.session_state._quick_action_triggered = True
             st.rerun()
 
     with col4:
-        if st.button("⚡ SETTLE", key="dock_bill", use_container_width=True):
+        if st.button("⚡ BILLS", key="quick_bill", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
             st.session_state._quick_action_triggered = True
             st.rerun()
@@ -101,28 +101,33 @@ def render_modules():
     """
     st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
 
-    tabs = st.tabs(["ASSETS", "LIFESTYLE", "SECURITY"])
+    tabs = st.tabs(["FINANCE", "LIFESTYLE", "TOOLS"])
 
-    with tabs[0]:  # Assets
-        c1, c2, c3 = st.columns(3)
+    with tabs[0]:  # Finance
+        c1, c2, c3, c4 = st.columns(4)
         with c1:
             if st.button("Send USDC", key="mod_send", use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": "Help me send USDC to someone"})
                 st.session_state._quick_action_triggered = True
                 st.rerun()
         with c2:
-            if st.button("Schedule", key="mod_schedule", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "I want to set up a recurring payment"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c3:
             if st.button("Pay Bills", key="mod_bills", use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": "Help me pay a bill with crypto"})
                 st.session_state._quick_action_triggered = True
                 st.rerun()
+        with c3:
+            if st.button("Phone Top-up", key="mod_phone", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "I want to top up my phone"})
+                st.session_state._quick_action_triggered = True
+                st.rerun()
+        with c4:
+            if st.button("Schedule", key="mod_schedule", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "I want to set up a recurring payment"})
+                st.session_state._quick_action_triggered = True
+                st.rerun()
 
     with tabs[1]:  # Lifestyle
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
         with c1:
             if st.button("Amazon", key="mod_amazon", use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": "I want to buy an Amazon gift card"})
@@ -138,9 +143,14 @@ def render_modules():
                 st.session_state.messages.append({"role": "user", "content": "Get me a Starbucks gift card"})
                 st.session_state._quick_action_triggered = True
                 st.rerun()
+        with c4:
+            if st.button("PlayStation", key="mod_playstation", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "I want a PlayStation gift card"})
+                st.session_state._quick_action_triggered = True
+                st.rerun()
 
-    with tabs[2]:  # Security
-        c1, c2, c3 = st.columns(3)
+    with tabs[2]:  # Tools
+        c1, c2, c3, c4 = st.columns(4)
         with c1:
             if st.button("VPN", key="mod_vpn", use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": "I want a Mullvad VPN subscription"})
@@ -152,6 +162,11 @@ def render_modules():
                 st.session_state._quick_action_triggered = True
                 st.rerun()
         with c3:
+            if st.button("Hosting", key="mod_hosting", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "I want to pay for hosting services"})
+                st.session_state._quick_action_triggered = True
+                st.rerun()
+        with c4:
             st.button("Alerts", key="mod_alerts", use_container_width=True, disabled=True)
 
 
@@ -159,33 +174,39 @@ def render_modules_preview():
     """
     Render capability preview for pre-login users (disabled).
     """
-    tabs = st.tabs(["ASSETS", "LIFESTYLE", "SECURITY"])
+    tabs = st.tabs(["FINANCE", "LIFESTYLE", "TOOLS"])
 
     with tabs[0]:
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
         with c1:
             st.button("Send USDC", key="prev_send", disabled=True, use_container_width=True)
         with c2:
-            st.button("Schedule", key="prev_schedule", disabled=True, use_container_width=True)
-        with c3:
             st.button("Pay Bills", key="prev_bills", disabled=True, use_container_width=True)
+        with c3:
+            st.button("Phone Top-up", key="prev_phone", disabled=True, use_container_width=True)
+        with c4:
+            st.button("Schedule", key="prev_schedule", disabled=True, use_container_width=True)
 
     with tabs[1]:
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
         with c1:
             st.button("Amazon", key="prev_amazon", disabled=True, use_container_width=True)
         with c2:
             st.button("Uber", key="prev_uber", disabled=True, use_container_width=True)
         with c3:
             st.button("Starbucks", key="prev_starbucks", disabled=True, use_container_width=True)
+        with c4:
+            st.button("PlayStation", key="prev_playstation", disabled=True, use_container_width=True)
 
     with tabs[2]:
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
         with c1:
             st.button("VPN", key="prev_vpn", disabled=True, use_container_width=True)
         with c2:
             st.button("Domain", key="prev_domain", disabled=True, use_container_width=True)
         with c3:
+            st.button("Hosting", key="prev_hosting", disabled=True, use_container_width=True)
+        with c4:
             st.button("Alerts", key="prev_alerts", disabled=True, use_container_width=True)
 
 
