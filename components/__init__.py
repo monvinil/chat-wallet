@@ -21,7 +21,7 @@ from components.chat import (
     render_modules,
     render_modules_preview,
     render_header,
-    render_industrial_card
+    render_fashion_card
 )
 
 __all__ = [
@@ -41,5 +41,5 @@ __all__ = [
     "render_modules",
     "render_modules_preview",
     "render_header",
-    "render_industrial_card",
+    "render_fashion_card",
 ]

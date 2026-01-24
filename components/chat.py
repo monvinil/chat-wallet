@@ -1,94 +1,86 @@
 """
 Chat Interface Component
-V7 Design: "The Construct"
-Industrial high-fidelity aesthetic with terminal-like precision.
+V8 Design: "The Drop" (Fashion/Tech)
+High-end streetwear aesthetic with volt accents.
 """
 
 import streamlit as st
 from chain_utils import ChainUtils
 
 
-# --- HELPER: INDUSTRIAL CARD ---
-def render_industrial_card(title, value, subtext=None, accent=False):
+# --- HELPER: FASHION-TECH CARD ---
+def render_fashion_card(label, value, tag=None):
     """
-    Renders a card that looks like a machine part / label.
+    Renders a card that looks like a product spec sheet.
     """
-    border_color = "#bef264" if accent else "rgba(255,255,255,0.08)"
-    bg_color = "rgba(190, 242, 100, 0.05)" if accent else "#18181b"
-    text_color = "#bef264" if accent else "#f4f4f5"
-
     st.markdown(f"""
     <div style="
-        background: {bg_color};
-        border: 1px solid {border_color};
+        background: #0A0A0A;
+        border: 1px solid #1F1F1F;
         border-radius: 4px;
-        padding: 16px;
+        padding: 20px;
         height: 100%;
-        transition: all 0.2s;
         position: relative;
+        transition: border 0.2s;
     ">
-        <div style="position: absolute; top: 6px; right: 6px; width: 4px; height: 4px; border-radius: 50%; background: #3f3f46;"></div>
-
-        <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #71717a; text-transform: uppercase; margin-bottom: 8px;">{title}</div>
-        <div style="font-family: 'Inter'; font-size: 18px; font-weight: 600; color: {text_color}; letter-spacing: -0.02em;">{value}</div>
-        {f'<div style="font-size: 11px; color: #a1a1aa; margin-top: 4px; font-family: JetBrains Mono;">{subtext}</div>' if subtext else ''}
+        <div style="font-family: 'JetBrains Mono'; font-size: 9px; color: #525252; margin-bottom: 8px; letter-spacing: 0.1em;">{label.upper()}</div>
+        <div style="font-family: 'Inter'; font-size: 16px; font-weight: 600; color: white; letter-spacing: -0.02em;">{value}</div>
+        {f'<div style="position: absolute; top: 10px; right: 10px; background: #1F1F1F; color: #999; font-size: 9px; padding: 2px 6px; border-radius: 2px; font-family: JetBrains Mono;">{tag}</div>' if tag else ''}
     </div>
     """, unsafe_allow_html=True)
 
 
-# --- HEADER: SYSTEM STATUS ---
+# --- HEADER: THE "BRAND" HEADER ---
 def render_header():
     """
-    A technical header with system diagnostics.
+    Big, bold, unapologetic branding.
     """
-    c1, c2 = st.columns([3, 1])
+    c1, c2 = st.columns([1, 1])
     with c1:
         st.markdown("""
-        <div style="margin-top: -10px;">
-            <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #bef264; margin-bottom: 4px;">/// SECURE CHANNEL ESTABLISHED</div>
-            <h1 style="font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.02em;">Command Center</h1>
+        <div style="margin-top: 10px;">
+            <h1 style="font-size: 40px; line-height: 0.9; margin: 0; letter-spacing: -0.05em; font-weight: 800;">
+                CHAT<br><span style="color: #333;">WALLET</span>
+            </h1>
         </div>
         """, unsafe_allow_html=True)
     with c2:
-        # Tech indicator
         st.markdown("""
-        <div style="display: flex; justify-content: flex-end; align-items: center; height: 100%;">
-            <div style="padding: 4px 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; font-family: 'JetBrains Mono'; font-size: 10px; color: #71717a;">
-                V7.0.1
-            </div>
+        <div style="text-align: right; font-family: 'JetBrains Mono'; font-size: 10px; color: #525252; margin-top: 10px;">
+            BUILD_V8.0<br>
+            SECURE_ENCLAVE<br>
+            <span style="color: #ccff00;">● SYSTEM_READY</span>
         </div>
         """, unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
 
 
-# --- QUICK ACTIONS: COMMAND DECK ---
+# --- ACTIONS: THE CONTROL STRIP ---
 def render_action_deck():
     """
-    Render quick actions as industrial operation buttons.
+    A single row of high-contrast buttons.
     """
-    st.markdown("<div style='font-family: \"JetBrains Mono\"; font-size: 10px; color: #52525b; margin-bottom: 10px;'>COMMAND DECK</div>", unsafe_allow_html=True)
-
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        if st.button("↓ DEPOSIT", key="quick_deposit", type="primary", use_container_width=True):
+        if st.button("DEPOSIT / IN", key="quick_deposit", type="primary", use_container_width=True):
             st.session_state.show_deposit_modal = True
             st.rerun()
 
     with col2:
-        if st.button("↗ SEND", key="quick_send", use_container_width=True):
+        if st.button("SEND / OUT", key="quick_send", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "I want to send money"})
             st.session_state._quick_action_triggered = True
             st.rerun()
 
     with col3:
-        if st.button("🎁 PERKS", key="quick_giftcard", use_container_width=True):
+        if st.button("GIFT / BUY", key="quick_giftcard", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Show me gift cards"})
             st.session_state._quick_action_triggered = True
             st.rerun()
 
     with col4:
-        if st.button("⚡ BILLS", key="quick_bill", use_container_width=True):
+        if st.button("BILL / PAY", key="quick_bill", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
             st.session_state._quick_action_triggered = True
             st.rerun()
@@ -197,7 +189,7 @@ def render_modules_preview():
 # --- MAIN INTERFACE ---
 def chat_interface(create_agent_func):
     """
-    Main chat interface with V7 industrial styling.
+    Main chat interface with V8 streetwear styling.
     """
     # 1. HEADER
     render_header()
@@ -205,23 +197,29 @@ def chat_interface(create_agent_func):
     # 2. HANDLE PRE-LOGIN STATE
     if not st.session_state.wallet_address:
         st.markdown("""
-        <div style="background: #121212; border: 1px dashed #3f3f46; border-radius: 4px; padding: 30px; text-align: center; margin-bottom: 20px;">
-            <div style="font-family: 'JetBrains Mono'; font-size: 12px; color: #bef264; margin-bottom: 10px;">SYSTEM STANDBY</div>
-            <div style="color: #a1a1aa; font-size: 14px;">Awaiting user authentication to initialize neural wallet agent.</div>
+        <div style="
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 40px 0;
+            margin: 20px 0;
+            text-align: center;
+        ">
+            <div style="font-family: 'Inter'; font-weight: 600; color: white; font-size: 18px; letter-spacing: -0.03em;">AUTHENTICATION REQUIRED</div>
+            <div style="color: #525252; font-size: 12px; margin-top: 8px; font-family: 'JetBrains Mono';">PLEASE INITIALIZE SESSION TO PROCEED</div>
         </div>
         """, unsafe_allow_html=True)
         render_modules_preview()
-        st.chat_input("AUTHENTICATE TO PROCEED...", disabled=True, key="preview_input")
+        st.chat_input("WAITING...", disabled=True, key="preview_input")
         return
 
     # 3. HANDLE LOCKED STATE
     if st.session_state.get("wallet_locked", False) and st.session_state.get("wallet_encrypted"):
-        st.warning("ENCRYPTION ACTIVE")
-        st.caption("Unlock keystore in sidebar to continue.")
+        st.warning("SESSION LOCKED")
+        st.caption("Unlock in sidebar to continue.")
         st.chat_input("LOCKED", disabled=True, key="locked_input")
         return
 
-    # 4. ONBOARDING & API CHECKS (Keep existing logic)
+    # 4. ONBOARDING & API CHECKS
     from onboarding import show_onboarding
     if not show_onboarding():
         return
@@ -258,35 +256,43 @@ def chat_interface(create_agent_func):
         else:
             st.caption(f"{remaining} free messages remaining")
 
-    # 5. OPERATIONS DECK
+    # 5. ACTION STRIP
     render_action_deck()
 
     # 6. CHAT SECTION
-    st.markdown("<div style='margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
     # Welcome state (if no messages yet)
     if not st.session_state.messages:
         wallet_short = ChainUtils.format_address(st.session_state.wallet_address) if st.session_state.wallet_address else "..."
         st.markdown(f"""
-        <div style="margin-top: 20px; font-family: 'JetBrains Mono'; font-size: 11px; color: #52525b;">
-            > CONNECTED: {wallet_short}<br>
-            > NETWORK: BASE-SEPOLIA<br>
-            > AGENT: READY<br>
-            > WAITING FOR INPUT...<span style="animation: blink 1s infinite;">_</span>
+        <div style="display: flex; gap: 30px; border-bottom: 1px solid #1A1A1A; padding-bottom: 20px; margin-bottom: 20px;">
+            <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 9px; color: #525252; letter-spacing: 0.1em;">ID</div>
+                <div style="color: white; font-size: 12px; font-family: 'JetBrains Mono';">{wallet_short}</div>
+            </div>
+            <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 9px; color: #525252; letter-spacing: 0.1em;">NET</div>
+                <div style="color: white; font-size: 12px; font-family: 'JetBrains Mono';">BASE_MAIN</div>
+            </div>
+            <div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 9px; color: #525252; letter-spacing: 0.1em;">STATUS</div>
+                <div style="color: #ccff00; font-size: 12px; font-family: 'JetBrains Mono';">ACTIVE</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         # Show modules when no messages
         render_modules()
 
-    # Render chat history with terminal styling
+    # Render chat history with editorial styling
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             if msg["role"] == "assistant":
-                st.markdown(f"<div style='font-family: \"JetBrains Mono\"; font-size: 11px; color: #71717a; margin-bottom: 4px;'>OUTPUT //</div>", unsafe_allow_html=True)
-                st.markdown(msg["content"])
+                # AI = Clean typography
+                st.markdown(f"<div style='color: #F0F0F0; font-family: Inter; font-weight: 400; font-size: 15px; line-height: 1.6;'>{msg['content']}</div>", unsafe_allow_html=True)
             else:
-                st.markdown(f"<div style='font-family: \"JetBrains Mono\"; font-size: 11px; color: #52525b; margin-bottom: 4px;'>INPUT //</div>", unsafe_allow_html=True)
-                st.markdown(f"<span style='color: #bef264;'>{msg['content']}</span>", unsafe_allow_html=True)
+                # User = Volt, uppercase, right-aligned feel
+                st.markdown(f"<div style='color: #ccff00; font-family: JetBrains Mono; font-size: 13px; letter-spacing: 0.05em;'>{msg['content'].upper()}</div>", unsafe_allow_html=True)
 
     # 7. HANDLE INPUT LOGIC
     prompt = None
@@ -297,12 +303,11 @@ def chat_interface(create_agent_func):
 
     # 8. INPUT FIELD
     if not prompt:
-        prompt = st.chat_input("ENTER COMMAND...")
+        prompt = st.chat_input("TYPE COMMAND...")
         if prompt:
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
-                st.markdown(f"<div style='font-family: \"JetBrains Mono\"; font-size: 11px; color: #52525b; margin-bottom: 4px;'>INPUT //</div>", unsafe_allow_html=True)
-                st.markdown(f"<span style='color: #bef264;'>{prompt}</span>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: #ccff00; font-family: JetBrains Mono; font-size: 13px; letter-spacing: 0.05em;'>{prompt.upper()}</div>", unsafe_allow_html=True)
 
     # 9. PROCESS MESSAGE
     if prompt:
@@ -347,8 +352,7 @@ def chat_interface(create_agent_func):
                 except Exception as e:
                     response = f"**System Error:** {str(e)}"
 
-                st.markdown(f"<div style='font-family: \"JetBrains Mono\"; font-size: 11px; color: #71717a; margin-bottom: 4px;'>OUTPUT //</div>", unsafe_allow_html=True)
-                st.markdown(response)
+                st.markdown(f"<div style='color: #F0F0F0; font-family: Inter; font-weight: 400; font-size: 15px; line-height: 1.6;'>{response}</div>", unsafe_allow_html=True)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
                 if message_success and llm_config.get("using_free_tier"):

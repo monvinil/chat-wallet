@@ -1,9 +1,9 @@
 [theme]
-# V7 "The Construct" - Industrial High-Fidelity Aesthetic
-primaryColor = "#bef264"          # Acid Lime accent
-backgroundColor = "#09090b"       # Deep charcoal
-secondaryBackgroundColor = "#18181b"  # Panel (Zinc-900)
-textColor = "#f4f4f5"             # Primary text (Zinc-100)
+# V8 "The Drop" - High-End Streetwear Aesthetic
+primaryColor = "#ccff00"          # Safety Yellow / Volt
+backgroundColor = "#050505"       # Studio Black
+secondaryBackgroundColor = "#0F0F0F"  # Card Black
+textColor = "#ffffff"             # Pure White
 font = "sans serif"
 
 [server]

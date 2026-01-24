@@ -643,43 +643,35 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # V7 Design System: "The Construct" - Industrial High-Fidelity Aesthetic
+    # V8 Design System: "The Drop" - High-End Streetwear Aesthetic
     st.markdown("""
     <style>
     /* --- 1. CORE VARIABLES --- */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
     :root {
-        /* Deep Charcoal, not pitch black */
-        --bg-app: #09090b;
-        --bg-panel: #18181b;
-        --bg-input: #121212;
+        --bg-app: #050505;
+        --bg-card: #0F0F0F;
 
-        /* The "Acid Lime" Accent - Sharp, Electric, Technical */
-        --accent-primary: #bef264;
-        --accent-dim: rgba(190, 242, 100, 0.1);
-        --accent-glow: rgba(190, 242, 100, 0.25);
+        /* "Safety Yellow" / Volt - High visibility, fashion-forward */
+        --accent-volt: #ccff00;
+        --accent-chrome: #e5e5e5;
 
-        --border-base: rgba(255, 255, 255, 0.08);
-        --border-active: rgba(255, 255, 255, 0.15);
+        --border-glass: rgba(255, 255, 255, 0.08);
+        --border-subtle: #1a1a1a;
+        --border-medium: #333;
 
-        --text-primary: #f4f4f5;
-        --text-secondary: #a1a1aa;
-        --text-tertiary: #71717a;
-
-        --accent-success: #4ade80;
-        --accent-warning: #fbbf24;
-        --accent-error: #ef4444;
+        --text-primary: #ffffff;
+        --text-muted: #525252;
 
         --font-sans: 'Inter', sans-serif;
         --font-mono: 'JetBrains Mono', monospace;
     }
 
-    /* --- 2. TEXTURE & ATMOSPHERE --- */
+    /* --- 2. GLOBAL RESET --- */
     .stApp {
         background-color: var(--bg-app);
-        /* Film Grain Overlay for Texture */
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+        background-image: radial-gradient(circle at 50% 0%, rgba(20, 20, 20, 1) 0%, var(--bg-app) 60%);
     }
 
     html, body, [class*="css"] {
@@ -687,104 +679,107 @@ def main():
         color: var(--text-primary);
     }
 
-    h1, h2, h3, h4 {
+    h1, h2, h3 {
         font-family: var(--font-sans);
-        font-weight: 600;
-        letter-spacing: -0.03em;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        text-transform: uppercase;
         color: white !important;
     }
 
-    /* --- 3. INPUTS: "PRECISION TOOLS" --- */
+    /* --- 3. INPUTS: "THE PILL" --- */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stChatInput > div > div > textarea {
-        background-color: var(--bg-input) !important;
-        border: 1px solid var(--border-base) !important;
-        border-radius: 4px !important;
-        color: var(--text-primary) !important;
-        font-family: var(--font-mono) !important;
-        font-size: 13px !important;
-        padding: 12px 14px !important;
+        background-color: var(--bg-card) !important;
+        border: 1px solid #262626 !important;
+        border-radius: 99px !important;
+        color: white !important;
+        font-family: var(--font-sans) !important;
+        font-weight: 500;
+        padding: 14px 24px !important;
+        font-size: 14px !important;
         transition: all 0.2s ease;
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus,
     .stChatInput > div > div > textarea:focus {
-        border-color: var(--accent-primary) !important;
-        background-color: var(--bg-input) !important;
-        box-shadow: 0 0 0 1px var(--accent-primary) !important;
+        border-color: var(--accent-volt) !important;
+        background-color: var(--bg-card) !important;
+        box-shadow: none !important;
     }
 
     .stTextInput > div > div > input::placeholder,
     .stChatInput > div > div > textarea::placeholder {
-        color: var(--text-tertiary) !important;
+        color: var(--text-muted) !important;
     }
 
-    /* --- 4. BUTTONS: "INDUSTRIAL SWITCHES" --- */
+    /* --- 4. BUTTONS: "GARMENT TAGS" --- */
     .stButton > button {
-        width: 100%;
-        background-color: var(--bg-panel) !important;
-        border: 1px solid var(--border-base) !important;
-        color: var(--text-secondary) !important;
+        background-color: transparent !important;
+        border: 1px solid var(--border-medium) !important;
+        color: white !important;
         border-radius: 4px !important;
         font-family: var(--font-mono) !important;
+        font-size: 10px !important;
         text-transform: uppercase;
-        font-size: 11px !important;
-        letter-spacing: 0.05em;
-        transition: all 0.15s;
+        letter-spacing: 0.1em;
+        padding: 12px 0 !important;
+        transition: all 0.2s;
     }
 
     .stButton > button:hover {
-        border-color: var(--accent-primary) !important;
-        color: var(--accent-primary) !important;
-        background-color: var(--accent-dim) !important;
-        transform: translateY(-1px);
+        background-color: white !important;
+        color: black !important;
+        border-color: white !important;
+        transform: translateY(-2px);
     }
 
-    /* Primary Action: The "Acid Block" */
+    /* Primary Action: VOLT */
     .stButton > button[kind="primary"],
     .stButton > button[data-testid="baseButton-primary"],
     button[kind="primary"] {
-        background-color: var(--accent-primary) !important;
-        color: #000000 !important;
-        border: 1px solid var(--accent-primary) !important;
+        background-color: var(--accent-volt) !important;
+        color: black !important;
+        border: 1px solid var(--accent-volt) !important;
         font-weight: 700 !important;
     }
 
     .stButton > button[kind="primary"]:hover,
     .stButton > button[data-testid="baseButton-primary"]:hover {
-        background-color: #d9f99d !important;
-        box-shadow: 0 0 15px var(--accent-glow);
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.4);
+        transform: scale(1.02);
     }
 
     .stButton > button[kind="primary"] p,
     .stButton > button[kind="primary"] span {
-        color: #000000 !important;
+        color: black !important;
     }
 
     .stButton > button:disabled {
-        opacity: 0.4 !important;
+        opacity: 0.3 !important;
         transform: none !important;
     }
 
-    /* --- 5. CHAT FEED: "AUDIT LOG" --- */
+    /* --- 5. CHAT FEED: "EDITORIAL" --- */
     [data-testid="stChatMessage"] {
         background: transparent !important;
-        padding: 1.5rem 0 !important;
-        border-bottom: 1px dashed var(--border-base);
+        padding: 2rem 0 !important;
+        border-bottom: 1px solid var(--border-subtle);
     }
 
     [data-testid="stChatMessage"] [data-testid="stImage"] {
-        border-radius: 4px;
-        border: 1px solid var(--border-base);
-        filter: grayscale(100%);
+        background: var(--accent-volt);
+        padding: 2px;
+        border-radius: 50%;
+        filter: grayscale(100%) contrast(120%);
     }
 
-    /* --- 6. SIDEBAR: "CONTROL PANEL" --- */
+    /* --- 6. SIDEBAR: "MATTE SLEEVE" --- */
     [data-testid="stSidebar"] {
         background-color: #000000 !important;
-        border-right: 1px solid var(--border-base);
+        border-right: 1px solid var(--border-subtle);
     }
 
     [data-testid="stSidebar"] > div:first-child {
@@ -793,42 +788,41 @@ def main():
 
     /* --- 7. METRIC CARDS --- */
     [data-testid="stMetric"] {
-        background: var(--bg-panel);
-        border: 1px solid var(--border-base);
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
         border-radius: 4px;
         padding: 1rem;
     }
 
     [data-testid="stMetricValue"] {
-        font-family: var(--font-mono) !important;
-        font-weight: 500;
+        font-family: var(--font-sans) !important;
+        font-weight: 600;
         color: var(--text-primary) !important;
     }
 
     [data-testid="stMetricLabel"] {
         font-family: var(--font-mono) !important;
-        font-size: 10px !important;
+        font-size: 9px !important;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: var(--text-tertiary) !important;
+        color: var(--text-muted) !important;
     }
 
-    /* --- 8. TABS: "MECHANICAL" --- */
+    /* --- 8. TABS: "MINIMAL TEXT" --- */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 20px;
         background: transparent;
-        border-bottom: 1px solid var(--border-base);
-        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-subtle);
     }
 
     .stTabs [data-baseweb="tab"] {
-        height: 32px;
-        border-radius: 4px;
-        color: var(--text-secondary);
+        background: transparent;
+        border: none !important;
+        color: var(--text-muted);
         font-family: var(--font-mono);
         font-size: 11px;
-        border: 1px solid transparent !important;
-        background: transparent;
+        text-transform: uppercase;
+        padding: 8px 0;
     }
 
     .stTabs [data-baseweb="tab"]:hover {
@@ -836,31 +830,31 @@ def main():
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        border-color: var(--border-base) !important;
-        background-color: var(--bg-panel);
-        color: var(--accent-primary);
+        color: var(--accent-volt);
+        font-weight: bold;
+        background: transparent;
     }
 
     /* --- 9. CODE BLOCKS --- */
     code {
-        background: var(--bg-panel) !important;
-        color: var(--accent-primary) !important;
+        background: var(--bg-card) !important;
+        color: var(--accent-volt) !important;
         padding: 2px 6px !important;
         border-radius: 4px !important;
         font-size: 12px !important;
         font-family: var(--font-mono) !important;
-        border: 1px solid var(--border-base);
+        border: 1px solid var(--border-subtle);
     }
 
     pre {
-        background: var(--bg-panel) !important;
-        border: 1px solid var(--border-base) !important;
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-subtle) !important;
         border-radius: 4px !important;
     }
 
     /* --- 10. DIVIDERS & MISC --- */
     hr {
-        border-color: var(--border-base) !important;
+        border-color: var(--border-subtle) !important;
         margin: 1.5rem 0 !important;
     }
 
@@ -870,35 +864,36 @@ def main():
     /* --- 11. EXPANDERS --- */
     .streamlit-expanderHeader {
         font-family: var(--font-mono) !important;
-        font-size: 12px !important;
-        color: var(--text-secondary) !important;
-        background: var(--bg-panel) !important;
-        border: 1px solid var(--border-base) !important;
+        font-size: 11px !important;
+        color: var(--text-muted) !important;
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-subtle) !important;
         border-radius: 4px !important;
+        text-transform: uppercase;
     }
 
     details {
         background: transparent !important;
-        border: 1px solid var(--border-base) !important;
+        border: 1px solid var(--border-subtle) !important;
         border-radius: 4px !important;
     }
 
     details:hover {
-        border-color: var(--border-active) !important;
+        border-color: var(--border-medium) !important;
     }
 
     /* --- 12. ALERTS --- */
     .stAlert {
         border-radius: 4px !important;
-        border: 1px solid var(--border-base) !important;
-        background: var(--bg-panel) !important;
+        border: 1px solid var(--border-subtle) !important;
+        background: var(--bg-card) !important;
     }
 
     /* --- 13. SELECT/NUMBER INPUTS --- */
     .stSelectbox > div > div,
     .stNumberInput > div > div > input {
-        background: var(--bg-input) !important;
-        border: 1px solid var(--border-base) !important;
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-subtle) !important;
         border-radius: 4px !important;
         color: var(--text-primary) !important;
         font-family: var(--font-mono) !important;
@@ -906,38 +901,40 @@ def main():
 
     .stSelectbox > div > div:hover,
     .stNumberInput > div > div > input:hover {
-        border-color: var(--border-active) !important;
+        border-color: var(--border-medium) !important;
     }
 
     /* --- 14. CAPTIONS --- */
     .stCaption, [data-testid="stCaptionContainer"] p {
-        color: var(--text-tertiary) !important;
-        font-size: 0.75rem !important;
+        color: var(--text-muted) !important;
+        font-size: 0.7rem !important;
         font-family: var(--font-mono) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
     /* --- 15. LINK BUTTONS --- */
     .stLinkButton > a {
         border-radius: 4px !important;
         font-weight: 500 !important;
-        border: 1px solid var(--border-base) !important;
-        background: var(--bg-panel) !important;
-        color: var(--text-secondary) !important;
-        font-size: 11px !important;
+        border: 1px solid var(--border-medium) !important;
+        background: transparent !important;
+        color: white !important;
+        font-size: 10px !important;
         font-family: var(--font-mono) !important;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.1em;
     }
 
     .stLinkButton > a:hover {
-        border-color: var(--accent-primary) !important;
-        color: var(--accent-primary) !important;
+        background-color: white !important;
+        color: black !important;
     }
 
     /* --- 16. SCROLLBAR --- */
     ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 4px;
+        height: 4px;
     }
 
     ::-webkit-scrollbar-track {
@@ -945,19 +942,12 @@ def main():
     }
 
     ::-webkit-scrollbar-thumb {
-        background: var(--border-base);
-        border-radius: 3px;
+        background: var(--border-subtle);
+        border-radius: 2px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--border-active);
-    }
-
-    /* --- 17. BLINKING CURSOR ANIMATION --- */
-    @keyframes blink {
-        0% { opacity: 0; }
-        50% { opacity: 1; }
-        100% { opacity: 0; }
+        background: var(--border-medium);
     }
     </style>
     """, unsafe_allow_html=True)
