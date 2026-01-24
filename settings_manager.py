@@ -141,8 +141,9 @@ class SettingsManager:
 
         Priority:
         1. User's own API key (if configured)
-        2. Free tier (if quota remaining)
-        3. None (user must add key)
+        2. Gemini OAuth (user signed in with Google - free)
+        3. Free tier API key (if app has GOOGLE_API_KEY)
+        4. None (user must connect Google or add key)
         """
         from free_tier import FreeTier
 
@@ -150,15 +151,15 @@ class SettingsManager:
         if not user_id:
             if FreeTier.is_available():
                 return {
-                    "provider": "anthropic",
-                    "model": "claude-sonnet-4-20250514",
+                    "provider": "google",
+                    "model": "gemini-2.0-flash",
                     "api_key": FreeTier.get_app_api_key(),
                     "using_free_tier": True,
                     "using_default": True
                 }
             return {
-                "provider": "anthropic",
-                "model": "claude-sonnet-4-20250514",
+                "provider": "google",
+                "model": "gemini-2.0-flash",
                 "api_key": None,
                 "using_default": True
             }
@@ -181,24 +182,31 @@ class SettingsManager:
             st.session_state[cache_key] = config
             return config
 
-        # No user key - check free tier
+        # Check for Gemini OAuth (user signed in with Google - uses their free quota)
+        from gemini_oauth import GeminiOAuth
+        oauth_config = GeminiOAuth.get_llm_config(user_id)
+        if oauth_config:
+            st.session_state[cache_key] = oauth_config
+            return oauth_config
+
+        # No user key or OAuth - check free tier API key
         can_use_free, free_config = FreeTier.check_and_get_config(user_id)
         if can_use_free and free_config:
             config = {
                 "provider": free_config["provider"],
                 "model": free_config["model"],
                 "api_key": free_config["api_key"],
+                "base_url": free_config.get("base_url"),
                 "using_default": False,
-                "using_free_tier": True,
-                "remaining_messages": free_config["remaining_messages"]
+                "using_free_tier": True
             }
             st.session_state[cache_key] = config
             return config
 
-        # No key and no free tier - return empty config
+        # No key, no OAuth, no free tier - return empty config
         config = {
-            "provider": "anthropic",
-            "model": "claude-sonnet-4-20250514",
+            "provider": "google",
+            "model": "gemini-2.0-flash",
             "api_key": None,
             "using_default": True,
             "using_free_tier": False

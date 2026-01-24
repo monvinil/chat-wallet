@@ -1,6 +1,6 @@
 """
 Chat interface component for Chat Wallet
-Main chat UI, quick actions, and suggested actions
+2026 Cyber-Physical Design - Bento Grid Layout
 """
 
 import streamlit as st
@@ -8,7 +8,17 @@ from chain_utils import ChainUtils
 
 
 def render_quick_actions():
-    """Render quick action chips above chat"""
+    """Render quick action capsules - Dynamic Island style"""
+    st.markdown("""
+    <div style="
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 16px;
+    ">
+    </div>
+    """, unsafe_allow_html=True)
+
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -30,12 +40,50 @@ def render_quick_actions():
             st.rerun()
 
 
+def render_bento_card(title: str, items: list, tab_idx: int, is_preview: bool = False):
+    """Render a Bento-style capability card"""
+    # Create a 2x2 or 2x3 grid based on item count
+    cols_per_row = 2
+    rows = (len(items) + cols_per_row - 1) // cols_per_row
+
+    for row in range(rows):
+        cols = st.columns(cols_per_row)
+        for col_idx in range(cols_per_row):
+            item_idx = row * cols_per_row + col_idx
+            if item_idx < len(items):
+                with cols[col_idx]:
+                    if is_preview:
+                        label = items[item_idx]
+                        st.button(
+                            label,
+                            key=f"preview_{tab_idx}_{item_idx}",
+                            disabled=True,
+                            use_container_width=True,
+                            help="Sign up to use"
+                        )
+                    else:
+                        label, prompt, is_live = items[item_idx]
+                        if is_live:
+                            if st.button(label, key=f"cap_{tab_idx}_{item_idx}", use_container_width=True):
+                                st.session_state.messages.append({"role": "user", "content": prompt})
+                                st.session_state._quick_action_triggered = True
+                                st.rerun()
+                        else:
+                            st.button(
+                                label,
+                                key=f"cap_{tab_idx}_{item_idx}",
+                                disabled=True,
+                                use_container_width=True,
+                                help=prompt
+                            )
+
+
 def render_suggested_actions():
     """
-    Render capability library with thematic tabs.
+    Render capability library with thematic tabs - Bento Grid style.
     Organized by use case for easy discovery.
     """
-    # Categories: (emoji, label, prompt, is_live)
+    # Categories: (label, prompt, is_live)
     categories = {
         "Send & Pay": [
             ("Send USDC", "Help me send USDC to someone", True),
@@ -59,28 +107,24 @@ def render_suggested_actions():
             ("Target", "Show me Target gift cards", True),
             ("Walmart", "I want a Walmart gift card", True),
             ("Best Buy", "Show me Best Buy gift cards", True),
-            ("Sephora", "Get a Sephora gift card", True),
         ],
         "Food": [
             ("DoorDash", "I want a DoorDash gift card", True),
             ("Uber Eats", "I want Uber Eats gift card credits", True),
             ("Starbucks", "Get me a Starbucks gift card", True),
             ("Chipotle", "I want a Chipotle gift card", True),
-            ("Grubhub", "Show me Grubhub gift cards", True),
         ],
         "Streaming": [
             ("Netflix", "I want a Netflix gift card", True),
             ("Spotify", "Get me a Spotify gift card", True),
             ("Disney+", "I want a Disney+ gift card", False),
             ("Hulu", "Show me Hulu gift cards", False),
-            ("Apple TV+", "I want an Apple TV+ subscription", False),
         ],
         "Gaming": [
             ("PlayStation", "Show me PlayStation gift cards", True),
             ("Xbox", "I want an Xbox gift card", True),
             ("Steam", "Get me a Steam gift card", True),
             ("Nintendo", "I want a Nintendo eShop card", True),
-            ("Roblox", "Show me Roblox gift cards", True),
         ],
     }
 
@@ -88,18 +132,7 @@ def render_suggested_actions():
 
     for tab_idx, (category_name, items) in enumerate(categories.items()):
         with tabs[tab_idx]:
-            cols = st.columns(min(len(items), 4))
-            for i, (label, prompt, is_live) in enumerate(items):
-                col_idx = i % 4
-                with cols[col_idx]:
-                    if is_live:
-                        if st.button(label, key=f"cap_{tab_idx}_{i}", use_container_width=True):
-                            st.session_state.messages.append({"role": "user", "content": prompt})
-                            st.session_state._quick_action_triggered = True
-                            st.rerun()
-                    else:
-                        st.button(label, key=f"cap_{tab_idx}_{i}", disabled=True,
-                                  use_container_width=True, help=prompt)
+            render_bento_card(category_name, items, tab_idx, is_preview=False)
 
 
 def render_suggested_actions_preview():
@@ -107,89 +140,152 @@ def render_suggested_actions_preview():
     Render capability preview for pre-login users.
     All buttons disabled - just for exploration.
     """
-    # Same categories as render_suggested_actions
     categories = {
-        "Send & Pay": [
-            "Send USDC",
-            "Pay Bills",
-            "Phone Top-up",
-            "Schedule",
-        ],
-        "Earn": [
-            "Earn Yield",
-            "Swap to ETH",
-            "Stack Sats",
-        ],
-        "Tools": [
-            "Get Domain",
-            "VPN",
-            "eSIM",
-            "Alerts",
-        ],
-        "Shopping": [
-            "Amazon",
-            "Target",
-            "Walmart",
-            "Best Buy",
-            "Sephora",
-        ],
-        "Food": [
-            "DoorDash",
-            "Uber Eats",
-            "Starbucks",
-            "Chipotle",
-            "Grubhub",
-        ],
-        "Streaming": [
-            "Netflix",
-            "Spotify",
-            "Disney+",
-            "Hulu",
-            "Apple TV+",
-        ],
-        "Gaming": [
-            "PlayStation",
-            "Xbox",
-            "Steam",
-            "Nintendo",
-            "Roblox",
-        ],
+        "Send & Pay": ["Send USDC", "Pay Bills", "Phone Top-up", "Schedule"],
+        "Earn": ["Earn Yield", "Swap to ETH", "Stack Sats"],
+        "Tools": ["Get Domain", "VPN", "eSIM", "Alerts"],
+        "Shopping": ["Amazon", "Target", "Walmart", "Best Buy"],
+        "Food": ["DoorDash", "Uber Eats", "Starbucks", "Chipotle"],
+        "Streaming": ["Netflix", "Spotify", "Disney+", "Hulu"],
+        "Gaming": ["PlayStation", "Xbox", "Steam", "Nintendo"],
     }
 
     tabs = st.tabs(list(categories.keys()))
 
     for tab_idx, (category_name, items) in enumerate(categories.items()):
         with tabs[tab_idx]:
-            cols = st.columns(min(len(items), 4))
-            for i, label in enumerate(items):
-                col_idx = i % 4
-                with cols[col_idx]:
-                    st.button(label, key=f"preview_{tab_idx}_{i}", disabled=True,
-                              use_container_width=True, help="Sign up to use")
+            render_bento_card(category_name, items, tab_idx, is_preview=True)
+
+
+def render_ai_status_capsule(llm_config: dict, user_id: str = None):
+    """Render AI connection status as a HUD capsule"""
+    from gemini_oauth import GeminiOAuth
+
+    if llm_config.get("using_oauth"):
+        email = GeminiOAuth.get_connection_email(user_id)
+        status_text = f"Google ({email})" if email else "Google"
+        status_color = "#00FF9D"
+    elif llm_config.get("using_free_tier"):
+        status_text = "Gemini Free"
+        status_color = "#00D4FF"
+    elif llm_config.get("api_key"):
+        provider = llm_config.get("provider", "").title()
+        status_text = provider or "Connected"
+        status_color = "#00FF9D"
+    else:
+        status_text = "Not Connected"
+        status_color = "#FF3D71"
+
+    st.markdown(f"""
+    <div style="
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba({int(status_color[1:3], 16)}, {int(status_color[3:5], 16)}, {int(status_color[5:7], 16)}, 0.08);
+        border: 1px solid rgba({int(status_color[1:3], 16)}, {int(status_color[3:5], 16)}, {int(status_color[5:7], 16)}, 0.2);
+        border-radius: 100px;
+        margin-bottom: 12px;
+    ">
+        <div style="
+            width: 5px;
+            height: 5px;
+            background: {status_color};
+            border-radius: 50%;
+            box-shadow: 0 0 6px {status_color};
+        "></div>
+        <span style="
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.625rem;
+            color: {status_color};
+            letter-spacing: 0.05em;
+        ">{status_text}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_welcome_hero():
+    """Render welcome hero section for non-logged-in users"""
+    st.markdown("""
+    <div style="
+        text-align: center;
+        padding: 40px 0;
+    ">
+        <div style="
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: #F0F4F8;
+            letter-spacing: -0.03em;
+            margin-bottom: 12px;
+        ">Chat Wallet</div>
+        <div style="
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9375rem;
+            color: #64748B;
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        ">Your crypto wallet that speaks your language. Buy gift cards, pay bills, and send money—all through simple conversation.</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_terminal_header():
+    """Render terminal-style header with connection info"""
+    wallet_addr = ChainUtils.format_address(st.session_state.wallet_address)
+
+    st.markdown(f"""
+    <div style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, rgba(20, 25, 32, 0.9) 0%, rgba(15, 19, 24, 0.9) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 8px;
+        margin-bottom: 16px;
+    ">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="
+                width: 8px;
+                height: 8px;
+                background: #00FF9D;
+                border-radius: 50%;
+                box-shadow: 0 0 8px #00FF9D;
+            "></div>
+            <span style="
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.75rem;
+                color: #94A3B8;
+            ">CONNECTED</span>
+        </div>
+        <span style="
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #64748B;
+            font-variant-numeric: tabular-nums;
+        ">{wallet_addr}</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def chat_interface(create_agent_func):
     """
-    Main chat interface
+    Main chat interface - 2026 Cyber-Physical Design
 
     Args:
         create_agent_func: Function to create the AI agent (passed from app.py)
     """
-    st.title("Chat Wallet")
-    st.caption("Manage your wallet through conversation")
-
-    # No wallet - show welcome and prompt to sign in/up
+    # No wallet - show welcome hero
     if not st.session_state.wallet_address:
+        render_welcome_hero()
+
         with st.chat_message("assistant"):
-            st.markdown("""**Welcome to Chat Wallet**
-
-Your crypto wallet that speaks your language. Buy gift cards, pay bills, and send money—all through simple conversation.
-
-Sign up or log in to get started.
-""")
+            st.markdown("""Sign up or log in to get started with your personal crypto assistant.""")
 
         # Show preview of capabilities (all disabled for exploration)
-        st.divider()
+        st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
         render_suggested_actions_preview()
 
         # Disabled chat input
@@ -198,7 +294,30 @@ Sign up or log in to get started.
 
     # If wallet is locked, show a message to unlock
     if st.session_state.get("wallet_locked", False) and st.session_state.get("wallet_encrypted"):
-        st.info("**Wallet locked** — Enter your password in the sidebar to unlock your wallet and start chatting.")
+        st.markdown("""
+        <div style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 20px;
+            background: rgba(255, 184, 0, 0.08);
+            border: 1px solid rgba(255, 184, 0, 0.15);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        ">
+            <div style="
+                width: 8px;
+                height: 8px;
+                background: #FFB800;
+                border-radius: 50%;
+            "></div>
+            <span style="
+                font-family: 'Space Grotesk', sans-serif;
+                font-size: 0.875rem;
+                color: #FFB800;
+            ">Wallet locked — Enter your password in the sidebar to continue</span>
+        </div>
+        """, unsafe_allow_html=True)
         st.chat_input("Message...", disabled=True, key="locked_input")
         return
 
@@ -208,21 +327,20 @@ Sign up or log in to get started.
         # User is still in onboarding, don't show chat
         return
 
-    # Check if API key is configured (own key or free tier)
+    # Check if API key is configured (own key, OAuth, or free tier)
     from api_key_setup import show_api_key_banner, check_api_key_status
     from free_tier import FreeTier
     from settings_manager import SettingsManager
+    from gemini_oauth import GeminiOAuth
 
     user_id = st.session_state.get("user_id")
     llm_config = SettingsManager.get_llm_config(user_id)
     has_api_key = bool(llm_config.get("api_key"))
+    has_oauth = llm_config.get("using_oauth", False)
 
-    if not has_api_key:
-        # No API access - check if free tier exhausted
-        if FreeTier.is_available() and not FreeTier.has_quota(user_id):
-            FreeTier.show_upgrade_prompt()
-        else:
-            show_api_key_banner()
+    if not has_api_key and not has_oauth:
+        # No API access - show setup prompt
+        show_api_key_banner()
         return
 
     # If API key was just configured, force agent re-initialization
@@ -235,18 +353,14 @@ Sign up or log in to get started.
         if cache_key in st.session_state:
             del st.session_state[cache_key]
 
-    # Show free tier status if using it
-    if llm_config.get("using_free_tier"):
-        remaining = llm_config.get("remaining_messages", 0)
-        if remaining <= 10:
-            st.warning(f"{remaining} free messages left. Add your API key in Settings.")
-        else:
-            st.caption(f"{remaining} free messages remaining")
+    # Terminal header with connection info
+    render_terminal_header()
 
-    # Quick action chips for logged-in users (only after onboarding complete)
+    # AI status capsule
+    render_ai_status_capsule(llm_config, user_id)
+
+    # Quick action capsules
     render_quick_actions()
-
-    st.divider()
 
     # Normal logged-in chat interface
     # Show messages
@@ -262,7 +376,8 @@ Sign up or log in to get started.
         if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
             prompt = st.session_state.messages[-1]["content"]
 
-    # Suggested actions - scrollable pills above chat input
+    # Suggested actions - Bento grid tabs
+    st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
     render_suggested_actions()
 
     # Chat input (only if not processing quick action)
@@ -276,8 +391,7 @@ Sign up or log in to get started.
     # Process the message (from either source)
     if prompt:
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                message_success = False
+            with st.spinner(""):
                 try:
                     # Safety check: ensure agent is initialized
                     if not st.session_state.get("agent"):
@@ -323,7 +437,6 @@ The assistant is still initializing. This usually takes a moment after logging i
                         })
 
                         response = result.get("output", "Sorry, I couldn't process that.")
-                        message_success = True  # Only count successful agent responses
 
                 except Exception as e:
                     error_msg = str(e)
@@ -343,21 +456,15 @@ Wait a minute and try again, or switch providers in Settings if this keeps happe
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-                # Increment free tier usage only on successful messages
-                if message_success and llm_config.get("using_free_tier"):
-                    FreeTier.increment_usage(user_id)
-
     # Welcome message for logged in users (only shown after onboarding complete)
     if not st.session_state.messages:
-        welcome = f"""Wallet connected: `{ChainUtils.format_address(st.session_state.wallet_address)}`
+        welcome = f"""Connected: `{ChainUtils.format_address(st.session_state.wallet_address)}`
 
-**Try these commands:**
+**Try these:**
 - "What's my balance?"
 - "Send $20 to 0x..."
-- "Show my deposit address"
 - "Buy a $25 Amazon gift card"
 - "Register mydomain.com"
-- "Get Mullvad VPN"
 
 What would you like to do?
 """

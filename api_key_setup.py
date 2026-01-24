@@ -239,8 +239,8 @@ General-purpose AI with broad capabilities. Requires prepaid credits.
 
 def check_api_key_status() -> tuple[bool, str]:
     """
-    Check if user has configured an API key.
-    Returns: (has_key, provider_name)
+    Check if user has configured an API key or OAuth.
+    Returns: (has_access, provider_name)
     """
     user_id = st.session_state.get("user_id")
     if not user_id:
@@ -248,33 +248,63 @@ def check_api_key_status() -> tuple[bool, str]:
 
     llm_config = SettingsManager.get_llm_config(user_id)
     has_key = bool(llm_config.get("api_key"))
+    has_oauth = llm_config.get("using_oauth", False)
     provider = llm_config.get("provider", "anthropic")
 
-    return has_key, provider
+    return has_key or has_oauth, provider
 
 
 def show_api_key_banner():
     """Show banner when API key is missing"""
-    st.warning("""
+    import os
+    from gemini_oauth import GeminiOAuth
+
+    user_id = st.session_state.get("user_id")
+    oauth_available = bool(os.getenv("GOOGLE_OAUTH_CLIENT_ID"))
+
+    if oauth_available:
+        st.info("""
+**Sign in to start chatting**
+
+Connect your Google account to use AI chat for free.
+""")
+
+        col1, col2, col3 = st.columns([1, 2, 1])
+
+        with col2:
+            if st.button("Sign in with Google", key="google_signin_banner", type="primary", use_container_width=True):
+                app_url = os.getenv("APP_URL", "http://localhost:8501")
+                redirect_uri = f"{app_url}/oauth/callback"
+
+                auth_url = GeminiOAuth.get_oauth_url(user_id, redirect_uri)
+                if auth_url:
+                    st.markdown(f"[Click here to sign in with Google]({auth_url})")
+
+        st.caption("Or use your own API key")
+        if st.button("Use API key instead", key="open_api_setup_alt"):
+            show_api_key_setup_modal()
+    else:
+        st.warning("""
 **AI provider required**
 
 To use the chat assistant, connect an AI provider. We recommend Google Gemini—it's free and takes 30 seconds to set up.
 """)
 
-    col1, col2, col3 = st.columns([1, 2, 1])
+        col1, col2, col3 = st.columns([1, 2, 1])
 
-    with col2:
-        if st.button("Connect AI provider", key="open_api_setup", type="primary", use_container_width=True):
-            show_api_key_setup_modal()
+        with col2:
+            if st.button("Connect AI provider", key="open_api_setup", type="primary", use_container_width=True):
+                show_api_key_setup_modal()
 
 
 def render_api_status_indicator():
     """Show current API provider status"""
-    has_key, provider = check_api_key_status()
+    has_access, provider = check_api_key_status()
 
-    if has_key:
+    if has_access:
         provider_labels = {
             "google": "Gemini",
+            "google_oauth": "Google",
             "anthropic": "Claude",
             "openai": "GPT"
         }
