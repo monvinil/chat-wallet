@@ -94,113 +94,104 @@ def render_action_deck():
             st.rerun()
 
 
-# --- MODULES: TECHNICAL SPECS ---
+# --- MODULES: FULL CAPABILITY LIBRARY ---
 def render_modules():
     """
-    Render capability modules with industrial card styling.
+    Render full capability library with all categories.
     """
     st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
 
-    tabs = st.tabs(["FINANCE", "LIFESTYLE", "TOOLS"])
+    # Full categories with (label, prompt, is_live)
+    categories = {
+        "Send & Pay": [
+            ("Send USDC", "Help me send USDC to someone", True),
+            ("Pay Bills", "Help me pay a bill with crypto", True),
+            ("Phone Top-up", "I need to add minutes to my phone", True),
+            ("Schedule", "I want to set up a recurring payment", True),
+        ],
+        "Earn": [
+            ("Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
+            ("Swap to ETH", "Swap USDC to ETH at best rates", False),
+            ("Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
+        ],
+        "Tools": [
+            ("Get Domain", "I want to register a domain", True),
+            ("VPN", "I want a Mullvad VPN subscription", True),
+            ("eSIM", "I need an international eSIM", False),
+            ("Alerts", "Set up balance alerts and spending notifications", False),
+        ],
+        "Shopping": [
+            ("Amazon", "I want to buy an Amazon gift card", True),
+            ("Target", "Show me Target gift cards", True),
+            ("Walmart", "I want a Walmart gift card", True),
+            ("Best Buy", "Show me Best Buy gift cards", True),
+            ("Sephora", "Get a Sephora gift card", True),
+        ],
+        "Food": [
+            ("DoorDash", "I want a DoorDash gift card", True),
+            ("Uber Eats", "I want Uber Eats gift card credits", True),
+            ("Starbucks", "Get me a Starbucks gift card", True),
+            ("Chipotle", "I want a Chipotle gift card", True),
+            ("Grubhub", "Show me Grubhub gift cards", True),
+        ],
+        "Streaming": [
+            ("Netflix", "I want a Netflix gift card", True),
+            ("Spotify", "Get me a Spotify gift card", True),
+            ("Disney+", "I want a Disney+ gift card", False),
+            ("Hulu", "Show me Hulu gift cards", False),
+            ("Apple TV+", "I want an Apple TV+ subscription", False),
+        ],
+        "Gaming": [
+            ("PlayStation", "Show me PlayStation gift cards", True),
+            ("Xbox", "I want an Xbox gift card", True),
+            ("Steam", "Get me a Steam gift card", True),
+            ("Nintendo", "I want a Nintendo eShop card", True),
+            ("Roblox", "Show me Roblox gift cards", True),
+        ],
+    }
 
-    with tabs[0]:  # Finance
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            if st.button("Send USDC", key="mod_send", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "Help me send USDC to someone"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c2:
-            if st.button("Pay Bills", key="mod_bills", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "Help me pay a bill with crypto"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c3:
-            if st.button("Phone Top-up", key="mod_phone", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "I want to top up my phone"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c4:
-            if st.button("Schedule", key="mod_schedule", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "I want to set up a recurring payment"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
+    tabs = st.tabs(list(categories.keys()))
 
-    with tabs[1]:  # Lifestyle
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            if st.button("Amazon", key="mod_amazon", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "I want to buy an Amazon gift card"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c2:
-            if st.button("Uber", key="mod_uber", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "I want Uber Eats gift card credits"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c3:
-            if st.button("Coffee", key="mod_coffee", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "Get me a Starbucks gift card"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c4:
-            if st.button("Streaming", key="mod_streaming", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "Get me a Spotify gift card"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-
-    with tabs[2]:  # Tools
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            if st.button("VPN", key="mod_vpn", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "I want a Mullvad VPN subscription"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c2:
-            if st.button("Domain", key="mod_domain", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "I want to register a domain"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c3:
-            st.button("Alerts", key="mod_alerts", use_container_width=True, disabled=True)
+    for tab_idx, (category_name, items) in enumerate(categories.items()):
+        with tabs[tab_idx]:
+            cols = st.columns(min(len(items), 4))
+            for i, (label, prompt, is_live) in enumerate(items):
+                col_idx = i % 4
+                with cols[col_idx]:
+                    if is_live:
+                        if st.button(label, key=f"mod_{tab_idx}_{i}", use_container_width=True):
+                            st.session_state.messages.append({"role": "user", "content": prompt})
+                            st.session_state._quick_action_triggered = True
+                            st.rerun()
+                    else:
+                        st.button(label, key=f"mod_{tab_idx}_{i}", disabled=True,
+                                  use_container_width=True, help=prompt)
 
 
 def render_modules_preview():
     """
-    Render capability preview for pre-login users (disabled).
+    Render capability preview for pre-login users (all disabled).
     """
-    tabs = st.tabs(["FINANCE", "LIFESTYLE", "TOOLS"])
+    categories = {
+        "Send & Pay": ["Send USDC", "Pay Bills", "Phone Top-up", "Schedule"],
+        "Earn": ["Earn Yield", "Swap to ETH", "Stack Sats"],
+        "Tools": ["Get Domain", "VPN", "eSIM", "Alerts"],
+        "Shopping": ["Amazon", "Target", "Walmart", "Best Buy", "Sephora"],
+        "Food": ["DoorDash", "Uber Eats", "Starbucks", "Chipotle", "Grubhub"],
+        "Streaming": ["Netflix", "Spotify", "Disney+", "Hulu", "Apple TV+"],
+        "Gaming": ["PlayStation", "Xbox", "Steam", "Nintendo", "Roblox"],
+    }
 
-    with tabs[0]:
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            st.button("Send USDC", key="prev_send", disabled=True, use_container_width=True)
-        with c2:
-            st.button("Pay Bills", key="prev_bills", disabled=True, use_container_width=True)
-        with c3:
-            st.button("Phone Top-up", key="prev_phone", disabled=True, use_container_width=True)
-        with c4:
-            st.button("Schedule", key="prev_schedule", disabled=True, use_container_width=True)
+    tabs = st.tabs(list(categories.keys()))
 
-    with tabs[1]:
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            st.button("Amazon", key="prev_amazon", disabled=True, use_container_width=True)
-        with c2:
-            st.button("Uber", key="prev_uber", disabled=True, use_container_width=True)
-        with c3:
-            st.button("Coffee", key="prev_coffee", disabled=True, use_container_width=True)
-        with c4:
-            st.button("Streaming", key="prev_streaming", disabled=True, use_container_width=True)
-
-    with tabs[2]:
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.button("VPN", key="prev_vpn", disabled=True, use_container_width=True)
-        with c2:
-            st.button("Domain", key="prev_domain", disabled=True, use_container_width=True)
-        with c3:
-            st.button("Alerts", key="prev_alerts", disabled=True, use_container_width=True)
+    for tab_idx, (category_name, items) in enumerate(categories.items()):
+        with tabs[tab_idx]:
+            cols = st.columns(min(len(items), 4))
+            for i, label in enumerate(items):
+                col_idx = i % 4
+                with cols[col_idx]:
+                    st.button(label, key=f"prev_{tab_idx}_{i}", disabled=True,
+                              use_container_width=True, help="Sign up to use")
 
 
 # --- MAIN INTERFACE ---
