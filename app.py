@@ -643,99 +643,112 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # V3 Design System: "Opinionated Luxury" - Cyber-Physical Aesthetic
+    # V5 Design System: "Neural Vault" - Electric Violet/Cyan
     st.markdown("""
     <style>
-    /* --- 1. FONTS & BASICS --- */
+    /* --- 1. FONTS & VARIABLES --- */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
     :root {
-        --bg-void: #050505;
-        --bg-panel: #0A0A0B;
-        --border-glass: rgba(255, 255, 255, 0.08);
-        --accent-lime: #a3e635;
-        --accent-glow: rgba(163, 230, 53, 0.15);
-        --text-mono: 'JetBrains Mono', monospace;
-        --text-sans: 'Inter', sans-serif;
+        --bg-void: #020204;
+        --text-primary: #ffffff;
+        --text-secondary: #94a3b8;
+
+        /* THE NEURAL PALETTE */
+        --accent-core: #8b5cf6;  /* Violet-500 (The AI) */
+        --accent-sec: #06b6d4;   /* Cyan-500 (The Security) */
+        --accent-glow: rgba(139, 92, 246, 0.15);
+
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --glass-surface: rgba(255, 255, 255, 0.02);
+
+        --font-mono: 'JetBrains Mono', monospace;
+        --font-sans: 'Inter', sans-serif;
     }
 
+    /* --- 2. THE "LIVING" BACKGROUND --- */
     .stApp {
         background-color: var(--bg-void);
         background-image:
-            radial-gradient(circle at 50% 0%, #171717 0%, transparent 40%),
-            url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            radial-gradient(circle at 50% 10%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+        background-size: 40px 40px, 40px 40px, 100% 100%;
     }
 
     html, body, [class*="css"] {
-        font-family: var(--text-sans);
+        font-family: var(--font-sans);
     }
 
+    /* --- 3. UI TYPOGRAPHY --- */
     h1, h2, h3 {
-        font-family: var(--text-sans);
-        letter-spacing: -0.025em;
+        font-family: var(--font-sans);
+        letter-spacing: -0.02em;
         color: white !important;
+        text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
     }
 
-    /* --- 2. GLASSMORPHIC INPUTS --- */
+    /* --- 4. INPUTS: "COMMAND LINE" FEEL --- */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stChatInput > div > div > textarea {
-        background: rgba(255, 255, 255, 0.02) !important;
-        border: 1px solid var(--border-glass) !important;
-        border-radius: 12px !important;
-        color: #e4e4e7 !important;
-        font-family: var(--text-sans);
+        background: var(--glass-surface) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 8px !important;
+        color: #e2e8f0 !important;
+        font-family: var(--font-mono) !important;
+        font-size: 13px !important;
         transition: all 0.3s ease;
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus,
     .stChatInput > div > div > textarea:focus {
-        border-color: var(--accent-lime) !important;
-        background: rgba(255, 255, 255, 0.04) !important;
-        box-shadow: 0 0 20px var(--accent-glow) !important;
+        border-color: var(--accent-core) !important;
+        background: rgba(139, 92, 246, 0.05) !important;
+        box-shadow: 0 0 15px var(--accent-glow) !important;
     }
 
-    /* --- 3. BENTO GRID BUTTONS --- */
+    /* --- 5. BUTTONS: "HAPTIC" TILES --- */
     .stButton > button {
         width: 100%;
-        border-radius: 12px !important;
-        font-family: var(--text-sans) !important;
-        font-weight: 500 !important;
-        border: 1px solid var(--border-glass) !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%) !important;
-        color: #a1a1aa !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 6px !important;
+        font-family: var(--font-mono) !important;
         text-transform: uppercase;
+        font-size: 11px !important;
         letter-spacing: 0.05em;
-        font-size: 0.75rem !important;
+        background: var(--glass-surface) !important;
+        border: 1px solid var(--glass-border) !important;
+        color: var(--text-secondary) !important;
+        transition: all 0.2s ease;
     }
 
     .stButton > button:hover {
-        border-color: rgba(255,255,255,0.2) !important;
+        border-color: var(--accent-sec) !important;
         color: white !important;
-        transform: translateY(-2px);
+        text-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+        background: rgba(6, 182, 212, 0.05) !important;
     }
 
-    /* Primary Actions (Lime) */
+    /* Primary Action: The "Execute" Button */
     .stButton > button[kind="primary"],
     .stButton > button[data-testid="baseButton-primary"],
     button[kind="primary"] {
-        background: var(--accent-lime) !important;
-        color: #000 !important;
-        border: none !important;
-        font-weight: 700 !important;
-        box-shadow: 0 0 15px var(--accent-glow);
+        background: linear-gradient(135deg, var(--accent-core) 0%, #7c3aed 100%) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
     }
 
     .stButton > button[kind="primary"]:hover,
     .stButton > button[data-testid="baseButton-primary"]:hover {
-        box-shadow: 0 0 25px rgba(163, 230, 53, 0.4);
+        box-shadow: 0 0 25px rgba(124, 58, 237, 0.5);
+        transform: scale(1.01);
     }
 
     .stButton > button[kind="primary"] p,
     .stButton > button[kind="primary"] span {
-        color: #000 !important;
+        color: white !important;
     }
 
     .stButton > button:disabled {
@@ -743,141 +756,146 @@ def main():
         transform: none !important;
     }
 
-    /* --- 4. CHAT BUBBLES --- */
+    /* --- 6. CHAT BUBBLES --- */
     [data-testid="stChatMessage"] {
-        background: linear-gradient(180deg, rgba(20,20,22,0.6) 0%, rgba(10,10,11,0.4) 100%);
-        border: 1px solid var(--border-glass);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        background: transparent !important;
+        border-bottom: 1px solid var(--glass-border);
+        border-radius: 0 !important;
+        padding: 2rem 1rem !important;
+    }
+
+    [data-testid="stChatMessage"]:hover {
+        background: rgba(255,255,255,0.01) !important;
     }
 
     [data-testid="stChatMessage"] [data-testid="stImage"] {
-        border-radius: 8px;
-        border: 1px solid var(--border-glass);
+        border-radius: 4px !important;
+        filter: grayscale(100%);
+        opacity: 0.8;
     }
 
-    /* --- 5. SIDEBAR --- */
+    /* --- 7. SIDEBAR --- */
     [data-testid="stSidebar"] {
-        background-color: #020202 !important;
-        border-right: 1px solid var(--border-glass);
+        background-color: #050507 !important;
+        border-right: 1px solid var(--glass-border);
     }
 
-    /* --- 6. METRIC CARDS (Financial Data) --- */
+    .streamlit-expanderHeader {
+        font-family: var(--font-mono) !important;
+        font-size: 12px !important;
+        color: var(--text-secondary) !important;
+        background: transparent !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 4px !important;
+    }
+
+    /* --- 8. TABS --- */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: rgba(255,255,255,0.02);
+        padding: 4px;
+        border-radius: 8px;
+        border: 1px solid var(--glass-border);
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 32px;
+        border-radius: 6px;
+        color: var(--text-secondary);
+        font-family: var(--font-sans);
+        font-size: 12px;
+        border: none !important;
+    }
+
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background: var(--glass-border);
+        color: white;
+    }
+
+    /* --- 9. METRIC CARDS --- */
     [data-testid="stMetric"] {
-        background: rgba(255,255,255,0.01);
-        border: 1px solid var(--border-glass);
-        border-radius: 12px;
+        background: var(--glass-surface);
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
         padding: 1rem;
     }
 
     [data-testid="stMetricValue"] {
-        font-family: var(--text-mono) !important;
+        font-family: var(--font-mono) !important;
         font-weight: 500;
         letter-spacing: -0.05em;
     }
 
     [data-testid="stMetricLabel"] {
-        font-family: var(--text-mono) !important;
+        font-family: var(--font-mono) !important;
         font-size: 10px !important;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: #71717a !important;
     }
 
-    /* --- 7. TABS --- */
-    .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 1px solid var(--border-glass);
-        gap: 20px;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        color: #71717a;
-        font-family: var(--text-mono);
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.05em;
-    }
-
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: var(--accent-lime);
-        border-bottom: 2px solid var(--accent-lime);
-        background: transparent;
-    }
-
-    /* --- 8. CODE BLOCKS --- */
+    /* --- 10. CODE BLOCKS --- */
     code {
         background: rgba(255,255,255,0.03) !important;
-        color: var(--accent-lime) !important;
+        color: var(--accent-core) !important;
         padding: 3px 8px !important;
-        border-radius: 6px !important;
+        border-radius: 4px !important;
         font-size: 12px !important;
-        font-family: var(--text-mono) !important;
-        border: 1px solid var(--border-glass);
+        font-family: var(--font-mono) !important;
+        border: 1px solid var(--glass-border);
     }
 
-    /* --- 9. DIVIDERS & MISC --- */
+    /* --- 11. DIVIDERS & MISC --- */
     hr {
-        border-color: var(--border-glass) !important;
+        border-color: var(--glass-border) !important;
         margin: 1.5rem 0 !important;
     }
 
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* --- 10. EXPANDERS --- */
-    .streamlit-expanderHeader {
-        font-family: var(--text-mono) !important;
-        font-size: 11px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #71717a !important;
-        background: transparent;
-    }
-
     details {
         background: transparent !important;
-        border: 1px solid var(--border-glass) !important;
-        border-radius: 12px !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 8px !important;
     }
 
-    /* --- 11. ALERTS --- */
+    /* --- 12. ALERTS --- */
     .stAlert {
-        border-radius: 12px !important;
-        border: 1px solid var(--border-glass) !important;
-        background: rgba(255,255,255,0.02) !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--glass-border) !important;
+        background: var(--glass-surface) !important;
     }
 
-    /* --- 12. SELECT/NUMBER INPUTS --- */
+    /* --- 13. SELECT/NUMBER INPUTS --- */
     .stSelectbox > div > div,
     .stNumberInput > div > div > input {
-        background: rgba(255, 255, 255, 0.02) !important;
-        border: 1px solid var(--border-glass) !important;
-        border-radius: 12px !important;
-        color: #e4e4e7 !important;
+        background: var(--glass-surface) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 8px !important;
+        color: #e2e8f0 !important;
     }
 
-    /* --- 13. CAPTIONS --- */
+    /* --- 14. CAPTIONS --- */
     .stCaption, [data-testid="stCaptionContainer"] p {
-        color: #52525b !important;
+        color: #64748b !important;
         font-size: 0.75rem !important;
     }
 
-    /* --- 14. LINK BUTTONS --- */
+    /* --- 15. LINK BUTTONS --- */
     .stLinkButton > a {
-        border-radius: 12px !important;
+        border-radius: 6px !important;
         font-weight: 500 !important;
-        border: 1px solid var(--border-glass) !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%) !important;
-        color: #a1a1aa !important;
+        border: 1px solid var(--glass-border) !important;
+        background: var(--glass-surface) !important;
+        color: var(--text-secondary) !important;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         font-size: 0.75rem !important;
     }
 
     .stLinkButton > a:hover {
-        border-color: rgba(255,255,255,0.2) !important;
+        border-color: var(--accent-sec) !important;
         color: white !important;
     }
     </style>

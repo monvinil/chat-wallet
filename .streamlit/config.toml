@@ -1,9 +1,9 @@
 [theme]
-# V3 "Opinionated Luxury" - Cyber-Physical Design System
-primaryColor = "#a3e635"          # Lime-400 accent
-backgroundColor = "#050505"       # Void black
-secondaryBackgroundColor = "#0A0A0B"  # Panel dark
-textColor = "#e4e4e7"             # Zinc-200 text
+# V5 "Neural Vault" - Electric Violet/Cyan
+primaryColor = "#8b5cf6"          # Violet-500 accent
+backgroundColor = "#020204"       # Deep void
+secondaryBackgroundColor = "#0A0A0C"  # Panel dark
+textColor = "#e2e8f0"             # Slate-200 text
 font = "sans serif"
 
 [server]

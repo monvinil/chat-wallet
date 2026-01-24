@@ -1,6 +1,6 @@
 """
 Sidebar component for Chat Wallet
-V3 "Opinionated Luxury" - Cyber-Physical Design System
+V5 "Neural Vault" - Electric Violet/Cyan
 """
 
 import streamlit as st
@@ -33,13 +33,13 @@ def render_status_card(is_active: bool):
     """Render keystore status card with appropriate styling"""
     if is_active:
         st.markdown("""
-        <div style="background: rgba(163, 230, 53, 0.08); border: 1px solid rgba(163, 230, 53, 0.25);
+        <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25);
                     border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem;
                     display: flex; align-items: center; gap: 0.6rem;">
-            <span style="width: 8px; height: 8px; background: #a3e635; border-radius: 50%;
-                         box-shadow: 0 0 12px rgba(163, 230, 53, 0.6);"></span>
+            <span style="width: 8px; height: 8px; background: #8b5cf6; border-radius: 50%;
+                         box-shadow: 0 0 12px rgba(139, 92, 246, 0.6);"></span>
             <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
-                         letter-spacing: 0.1em; color: #a3e635; text-transform: uppercase;">
+                         letter-spacing: 0.1em; color: #8b5cf6; text-transform: uppercase;">
                 KEYSTORE ACTIVE
             </span>
         </div>
@@ -126,10 +126,10 @@ def render_transaction_history():
 
                 # Arrow indicators
                 arrow = "↓" if tx_type == "deposit" else "↑"
-                arrow_color = "#a3e635" if tx_type == "deposit" else "#71717a"
+                arrow_color = "#8b5cf6" if tx_type == "deposit" else "#71717a"
 
                 # Status styling
-                status_color = "#a3e635" if status == "confirmed" else "#eab308" if status == "pending" else "#ef4444"
+                status_color = "#8b5cf6" if status == "confirmed" else "#eab308" if status == "pending" else "#ef4444"
 
                 st.markdown(f"""
                 <div style="display: flex; justify-content: space-between; align-items: center;
