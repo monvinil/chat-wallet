@@ -1,9 +1,9 @@
 [theme]
-# Professional dark theme
-primaryColor = "#3B82F6"          # Vibrant blue - action buttons, links
-backgroundColor = "#0F0F14"       # Deep dark background
-secondaryBackgroundColor = "#1A1A24"  # Elevated cards/sections
-textColor = "#E5E7EB"             # Light gray text
+# V3 "Opinionated Luxury" - Cyber-Physical Design System
+primaryColor = "#a3e635"          # Lime-400 accent
+backgroundColor = "#050505"       # Void black
+secondaryBackgroundColor = "#0A0A0B"  # Panel dark
+textColor = "#e4e4e7"             # Zinc-200 text
 font = "sans serif"
 
 [server]
