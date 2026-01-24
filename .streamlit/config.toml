@@ -1,9 +1,9 @@
 [theme]
-# V3 "Opinionated Luxury" - Cyber-Physical Design System
-primaryColor = "#a3e635"          # Lime-400 accent
-backgroundColor = "#050505"       # Void black
-secondaryBackgroundColor = "#0A0A0B"  # Panel dark
-textColor = "#e4e4e7"             # Zinc-200 text
+# V6 "Obsidian Standard" - Linear/Stripe Fintech Aesthetic
+primaryColor = "#5E6AD2"          # Blurple brand accent
+backgroundColor = "#08090A"       # App background
+secondaryBackgroundColor = "#121315"  # Panel background
+textColor = "#EDEDEF"             # Primary text
 font = "sans serif"
 
 [server]

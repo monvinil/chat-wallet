@@ -1,7 +1,7 @@
 """
 Chat Interface Component
-V3 Design: "Opinionated Luxury"
-Retains core chat logic, upgrades visuals and layout locations.
+V6 Design: "Obsidian Standard"
+Linear/Stripe fintech aesthetic with minimal, professional styling.
 """
 
 import streamlit as st
@@ -20,9 +20,9 @@ def render_hud_header():
     with c1:
         st.markdown("""
             <div style="margin-top: -10px;">
-                <h1 style="font-size: 26px; font-weight: 700; margin-bottom: 0; letter-spacing: -0.03em;">Chat Wallet</h1>
-                <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #71717a; letter-spacing: 0.1em; text-transform: uppercase;">
-                    AI-POWERED • NON-CUSTODIAL
+                <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 0; letter-spacing: -0.02em; color: #EDEDEF;">Chat Wallet</h1>
+                <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #5C6370; letter-spacing: 0;">
+                    AI-powered • Non-custodial
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -31,8 +31,8 @@ def render_hud_header():
         # The "System Status" Pill
         # Visual check for connection
         is_connected = bool(st.session_state.wallet_address)
-        status_color = "#a3e635" if is_connected else "#ef4444"  # Lime or Red
-        status_text = "SYSTEM ONLINE" if is_connected else "DISCONNECTED"
+        status_color = "#3ECF8E" if is_connected else "#EF4444"  # Green or Red
+        status_text = "Online" if is_connected else "Offline"
 
         st.markdown(f"""
         <div style="
@@ -42,10 +42,10 @@ def render_hud_header():
             gap: 8px;
             padding: 8px 0px;
         ">
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: {status_color}; text-transform: uppercase; letter-spacing: 0.05em;">
+            <span style="font-family: 'Inter', sans-serif; font-size: 11px; color: {status_color}; letter-spacing: 0;">
                 {status_text}
             </span>
-            <div style="width: 6px; height: 6px; background: {status_color}; border-radius: 50%; box-shadow: 0 0 8px {status_color};"></div>
+            <div style="width: 6px; height: 6px; background: {status_color}; border-radius: 50%;"></div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -55,10 +55,9 @@ def render_hud_header():
 # --- VISUAL COMPONENT: QUICK ACTION DECK ---
 def render_quick_actions():
     """
-    Render quick actions as a 'Bento Grid' of tiles.
-    Refines location to be a 'Control Deck' at the top.
+    Render quick actions as a grid of action tiles.
     """
-    st.markdown("<div style='font-family: \"JetBrains Mono\"; font-size: 10px; color: #52525b; margin-bottom: 10px;'>COMMAND DECK</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-family: \"Inter\", sans-serif; font-size: 11px; font-weight: 500; color: #5C6370; margin-bottom: 10px;'>Quick Actions</div>", unsafe_allow_html=True)
 
     # Using 4 columns for a tighter, more professional grid look
     # These rely on the CSS injected in App.py to look like "Glass Tiles"
@@ -93,9 +92,8 @@ def render_quick_actions():
 def render_suggested_actions():
     """
     Render capability library with thematic tabs.
-    Refines location to be less cluttered, using the V3 Tab styling.
     """
-    st.markdown("<div style='margin-top: 30px; font-family: \"JetBrains Mono\"; font-size: 10px; color: #52525b; margin-bottom: 10px;'>MODULES</div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top: 24px; font-family: \"Inter\", sans-serif; font-size: 11px; font-weight: 500; color: #5C6370; margin-bottom: 10px;'>Modules</div>", unsafe_allow_html=True)
 
     categories = {
         "FINANCE": [
@@ -138,7 +136,7 @@ def render_suggested_actions_preview():
     Render capability preview for pre-login users.
     Same visual style, just disabled.
     """
-    st.markdown("<div style='margin-top: 30px; font-family: \"JetBrains Mono\"; font-size: 10px; color: #52525b; margin-bottom: 10px;'>PREVIEW MODULES</div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top: 24px; font-family: \"Inter\", sans-serif; font-size: 11px; font-weight: 500; color: #5C6370; margin-bottom: 10px;'>Preview</div>", unsafe_allow_html=True)
 
     categories = {
         "FINANCE": ["Send USDC", "Pay Bills", "Schedule"],
@@ -166,20 +164,19 @@ def chat_interface(create_agent_func):
 
     # 2. HANDLE PRE-LOGIN STATE
     if not st.session_state.wallet_address:
-        # Replace the basic text welcome with the "Receipt" visual
         st.markdown("""
         <div style="
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px;
+            background: #121315;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
             padding: 24px;
             margin-bottom: 24px;
             text-align: center;
         ">
-            <div style="font-family: 'JetBrains Mono'; color: white; font-size: 16px; margin-bottom: 8px;">Your money, your words.</div>
-            <div style="color: #71717a; font-size: 13px; line-height: 1.5;">
+            <div style="font-family: 'Inter', sans-serif; color: #EDEDEF; font-size: 16px; font-weight: 500; margin-bottom: 8px;">Your money, your words.</div>
+            <div style="color: #8A8F98; font-size: 13px; line-height: 1.6;">
                 AI-powered wallet that turns conversation into action.<br>
-                Sign up or log in to initialize session.
+                Sign in to get started.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -246,18 +243,18 @@ def chat_interface(create_agent_func):
         wallet_short = ChainUtils.format_address(st.session_state.wallet_address) if st.session_state.wallet_address else "..."
         st.markdown(f"""
         <div style="
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px;
+            background: #121315;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
             padding: 20px;
             margin: 10px 0 20px 0;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Inter', sans-serif;
         ">
-            <div style="color: #52525b; font-size: 10px; margin-bottom: 8px;">SESSION INITIALIZED</div>
-            <div style="color: white; font-size: 13px;">Connected: <span style="color: #a3e635;">{wallet_short}</span></div>
+            <div style="color: #5C6370; font-size: 11px; font-weight: 500; margin-bottom: 8px;">Session Active</div>
+            <div style="color: #EDEDEF; font-size: 13px;">Connected: <span style="color: #5E6AD2;">{wallet_short}</span></div>
             <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-                <span style="background: rgba(163, 230, 53, 0.1); color: #a3e635; padding: 4px 8px; border-radius: 4px; font-size: 10px;">READY</span>
-                <span style="background: rgba(255,255,255,0.05); color: #71717a; padding: 4px 8px; border-radius: 4px; font-size: 10px;">BASE-SEPOLIA</span>
+                <span style="background: rgba(62, 207, 142, 0.1); color: #3ECF8E; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 500;">Ready</span>
+                <span style="background: rgba(255,255,255,0.05); color: #8A8F98; padding: 4px 8px; border-radius: 4px; font-size: 11px;">Base Sepolia</span>
             </div>
         </div>
         """, unsafe_allow_html=True)

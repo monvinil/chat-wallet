@@ -643,242 +643,292 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # V3 Design System: "Opinionated Luxury" - Cyber-Physical Aesthetic
+    # V6 Design System: "Obsidian Standard" - Linear/Stripe Fintech Aesthetic
     st.markdown("""
     <style>
-    /* --- 1. FONTS & BASICS --- */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+    /* --- 1. FONTS & CSS VARIABLES --- */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
     :root {
-        --bg-void: #050505;
-        --bg-panel: #0A0A0B;
-        --border-glass: rgba(255, 255, 255, 0.08);
-        --accent-lime: #a3e635;
-        --accent-glow: rgba(163, 230, 53, 0.15);
-        --text-mono: 'JetBrains Mono', monospace;
-        --text-sans: 'Inter', sans-serif;
+        --bg-app: #08090A;
+        --bg-panel: #121315;
+        --bg-elevated: #1A1B1E;
+        --border-subtle: rgba(255, 255, 255, 0.08);
+        --border-hover: rgba(255, 255, 255, 0.15);
+        --text-primary: #EDEDEF;
+        --text-secondary: #8A8F98;
+        --text-tertiary: #5C6370;
+        --accent-primary: #FFFFFF;
+        --accent-brand: #5E6AD2;
+        --accent-success: #3ECF8E;
+        --accent-warning: #F5A623;
+        --accent-error: #EF4444;
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
     }
 
+    /* --- 2. BASE STYLES --- */
     .stApp {
-        background-color: var(--bg-void);
-        background-image:
-            radial-gradient(circle at 50% 0%, #171717 0%, transparent 40%),
-            url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+        background-color: var(--bg-app);
     }
 
     html, body, [class*="css"] {
-        font-family: var(--text-sans);
+        font-family: var(--font-sans);
+        color: var(--text-primary);
     }
 
     h1, h2, h3 {
-        font-family: var(--text-sans);
-        letter-spacing: -0.025em;
-        color: white !important;
+        font-family: var(--font-sans);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--text-primary) !important;
     }
 
-    /* --- 2. GLASSMORPHIC INPUTS --- */
+    /* --- 3. INPUTS --- */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stChatInput > div > div > textarea {
-        background: rgba(255, 255, 255, 0.02) !important;
-        border: 1px solid var(--border-glass) !important;
-        border-radius: 12px !important;
-        color: #e4e4e7 !important;
-        font-family: var(--text-sans);
-        transition: all 0.3s ease;
+        background: var(--bg-panel) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 8px !important;
+        color: var(--text-primary) !important;
+        font-family: var(--font-sans);
+        transition: border-color 0.15s ease;
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus,
     .stChatInput > div > div > textarea:focus {
-        border-color: var(--accent-lime) !important;
-        background: rgba(255, 255, 255, 0.04) !important;
-        box-shadow: 0 0 20px var(--accent-glow) !important;
+        border-color: var(--accent-brand) !important;
+        background: var(--bg-panel) !important;
+        box-shadow: none !important;
     }
 
-    /* --- 3. BENTO GRID BUTTONS --- */
+    .stTextInput > div > div > input::placeholder,
+    .stChatInput > div > div > textarea::placeholder {
+        color: var(--text-tertiary) !important;
+    }
+
+    /* --- 4. BUTTONS --- */
     .stButton > button {
         width: 100%;
-        border-radius: 12px !important;
-        font-family: var(--text-sans) !important;
+        border-radius: 6px !important;
+        font-family: var(--font-sans) !important;
         font-weight: 500 !important;
-        border: 1px solid var(--border-glass) !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%) !important;
-        color: #a1a1aa !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-size: 0.75rem !important;
+        font-size: 0.8125rem !important;
+        border: 1px solid var(--border-subtle) !important;
+        background: var(--bg-panel) !important;
+        color: var(--text-secondary) !important;
+        transition: all 0.15s ease;
+        text-transform: none;
+        letter-spacing: 0;
     }
 
     .stButton > button:hover {
-        border-color: rgba(255,255,255,0.2) !important;
-        color: white !important;
-        transform: translateY(-2px);
+        border-color: var(--border-hover) !important;
+        color: var(--text-primary) !important;
+        background: var(--bg-elevated) !important;
     }
 
-    /* Primary Actions (Lime) */
+    /* Primary Buttons - Stark White */
     .stButton > button[kind="primary"],
     .stButton > button[data-testid="baseButton-primary"],
     button[kind="primary"] {
-        background: var(--accent-lime) !important;
-        color: #000 !important;
+        background: var(--accent-primary) !important;
+        color: #000000 !important;
         border: none !important;
-        font-weight: 700 !important;
-        box-shadow: 0 0 15px var(--accent-glow);
+        font-weight: 600 !important;
     }
 
     .stButton > button[kind="primary"]:hover,
     .stButton > button[data-testid="baseButton-primary"]:hover {
-        box-shadow: 0 0 25px rgba(163, 230, 53, 0.4);
+        background: rgba(255, 255, 255, 0.9) !important;
     }
 
     .stButton > button[kind="primary"] p,
     .stButton > button[kind="primary"] span {
-        color: #000 !important;
+        color: #000000 !important;
     }
 
     .stButton > button:disabled {
-        opacity: 0.4 !important;
-        transform: none !important;
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
     }
 
-    /* --- 4. CHAT BUBBLES --- */
+    /* --- 5. CHAT MESSAGES --- */
     [data-testid="stChatMessage"] {
-        background: linear-gradient(180deg, rgba(20,20,22,0.6) 0%, rgba(10,10,11,0.4) 100%);
-        border: 1px solid var(--border-glass);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        background: var(--bg-panel);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1.25rem;
     }
 
     [data-testid="stChatMessage"] [data-testid="stImage"] {
-        border-radius: 8px;
-        border: 1px solid var(--border-glass);
+        border-radius: 6px;
+        border: 1px solid var(--border-subtle);
     }
 
-    /* --- 5. SIDEBAR --- */
+    /* --- 6. SIDEBAR --- */
     [data-testid="stSidebar"] {
-        background-color: #020202 !important;
-        border-right: 1px solid var(--border-glass);
+        background: rgba(8, 9, 10, 0.95) !important;
+        backdrop-filter: blur(20px);
+        border-right: 1px solid var(--border-subtle);
     }
 
-    /* --- 6. METRIC CARDS (Financial Data) --- */
+    [data-testid="stSidebar"] > div:first-child {
+        background: transparent !important;
+    }
+
+    /* --- 7. METRIC CARDS --- */
     [data-testid="stMetric"] {
-        background: rgba(255,255,255,0.01);
-        border: 1px solid var(--border-glass);
-        border-radius: 12px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
         padding: 1rem;
     }
 
     [data-testid="stMetricValue"] {
-        font-family: var(--text-mono) !important;
+        font-family: var(--font-mono) !important;
         font-weight: 500;
-        letter-spacing: -0.05em;
+        color: var(--text-primary) !important;
     }
 
     [data-testid="stMetricLabel"] {
-        font-family: var(--text-mono) !important;
-        font-size: 10px !important;
+        font-family: var(--font-mono) !important;
+        font-size: 0.6875rem !important;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #71717a !important;
+        letter-spacing: 0.05em;
+        color: var(--text-tertiary) !important;
     }
 
-    /* --- 7. TABS --- */
+    /* --- 8. TABS --- */
     .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 1px solid var(--border-glass);
-        gap: 20px;
+        border-bottom: 1px solid var(--border-subtle);
+        gap: 0;
     }
 
     .stTabs [data-baseweb="tab"] {
-        color: #71717a;
-        font-family: var(--text-mono);
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.05em;
+        color: var(--text-tertiary);
+        font-family: var(--font-sans);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        padding: 0.75rem 1rem;
+    }
+
+    .stTabs [data-baseweb="tab"]:hover {
+        color: var(--text-secondary);
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: var(--accent-lime);
-        border-bottom: 2px solid var(--accent-lime);
+        color: var(--text-primary);
+        border-bottom: 2px solid var(--accent-brand);
         background: transparent;
     }
 
-    /* --- 8. CODE BLOCKS --- */
+    /* --- 9. CODE BLOCKS --- */
     code {
-        background: rgba(255,255,255,0.03) !important;
-        color: var(--accent-lime) !important;
-        padding: 3px 8px !important;
-        border-radius: 6px !important;
-        font-size: 12px !important;
-        font-family: var(--text-mono) !important;
-        border: 1px solid var(--border-glass);
+        background: var(--bg-panel) !important;
+        color: var(--accent-brand) !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 0.8125rem !important;
+        font-family: var(--font-mono) !important;
+        border: 1px solid var(--border-subtle);
     }
 
-    /* --- 9. DIVIDERS & MISC --- */
+    pre {
+        background: var(--bg-panel) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 8px !important;
+    }
+
+    /* --- 10. DIVIDERS & MISC --- */
     hr {
-        border-color: var(--border-glass) !important;
+        border-color: var(--border-subtle) !important;
         margin: 1.5rem 0 !important;
     }
 
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* --- 10. EXPANDERS --- */
+    /* --- 11. EXPANDERS --- */
     .streamlit-expanderHeader {
-        font-family: var(--text-mono) !important;
-        font-size: 11px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #71717a !important;
+        font-family: var(--font-sans) !important;
+        font-size: 0.8125rem !important;
+        font-weight: 500;
+        color: var(--text-secondary) !important;
         background: transparent;
     }
 
     details {
-        background: transparent !important;
-        border: 1px solid var(--border-glass) !important;
-        border-radius: 12px !important;
+        background: var(--bg-panel) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 8px !important;
     }
 
-    /* --- 11. ALERTS --- */
+    details:hover {
+        border-color: var(--border-hover) !important;
+    }
+
+    /* --- 12. ALERTS --- */
     .stAlert {
-        border-radius: 12px !important;
-        border: 1px solid var(--border-glass) !important;
-        background: rgba(255,255,255,0.02) !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--border-subtle) !important;
+        background: var(--bg-panel) !important;
     }
 
-    /* --- 12. SELECT/NUMBER INPUTS --- */
+    /* --- 13. SELECT/NUMBER INPUTS --- */
     .stSelectbox > div > div,
     .stNumberInput > div > div > input {
-        background: rgba(255, 255, 255, 0.02) !important;
-        border: 1px solid var(--border-glass) !important;
-        border-radius: 12px !important;
-        color: #e4e4e7 !important;
+        background: var(--bg-panel) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 8px !important;
+        color: var(--text-primary) !important;
     }
 
-    /* --- 13. CAPTIONS --- */
+    .stSelectbox > div > div:hover,
+    .stNumberInput > div > div > input:hover {
+        border-color: var(--border-hover) !important;
+    }
+
+    /* --- 14. CAPTIONS --- */
     .stCaption, [data-testid="stCaptionContainer"] p {
-        color: #52525b !important;
+        color: var(--text-tertiary) !important;
         font-size: 0.75rem !important;
     }
 
-    /* --- 14. LINK BUTTONS --- */
+    /* --- 15. LINK BUTTONS --- */
     .stLinkButton > a {
-        border-radius: 12px !important;
+        border-radius: 6px !important;
         font-weight: 500 !important;
-        border: 1px solid var(--border-glass) !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%) !important;
-        color: #a1a1aa !important;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-size: 0.75rem !important;
+        border: 1px solid var(--border-subtle) !important;
+        background: var(--bg-panel) !important;
+        color: var(--text-secondary) !important;
+        font-size: 0.8125rem !important;
     }
 
     .stLinkButton > a:hover {
-        border-color: rgba(255,255,255,0.2) !important;
-        color: white !important;
+        border-color: var(--border-hover) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* --- 16. SCROLLBAR --- */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-subtle);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--border-hover);
     }
     </style>
     """, unsafe_allow_html=True)
