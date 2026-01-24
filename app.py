@@ -274,46 +274,14 @@ def create_agent():
     user_id = st.session_state.get("user_id")
     llm_config = SettingsManager.get_llm_config(user_id)
 
-    # Check if using OAuth (no API key needed) or API key
-    provider = llm_config.get("provider", "anthropic")
-    has_api_key = bool(llm_config.get("api_key"))
-    has_oauth = llm_config.get("using_oauth", False)
-
-    if not has_api_key and not has_oauth:
+    # Validate API key exists (should be caught by banner, but safety check)
+    if not llm_config.get("api_key"):
         return None  # Banner will handle this
 
     # Create LLM based on provider
-    if provider == "google_oauth":
-        # Google OAuth - user signed in with Google, uses their free Gemini quota
-        import google.generativeai as genai
-        from langchain_google_genai import ChatGoogleGenerativeAI
+    provider = llm_config.get("provider", "anthropic")
 
-        # Configure genai with OAuth credentials
-        credentials = llm_config.get("credentials")
-        if credentials:
-            genai.configure(credentials=credentials)
-
-        # Create LLM (will use the configured credentials)
-        llm = ChatGoogleGenerativeAI(
-            model=llm_config.get("model", "gemini-2.0-flash"),
-            temperature=0.3,
-            max_output_tokens=4096
-        )
-    elif provider == "openrouter":
-        # OpenRouter - OpenAI-compatible API with many free models
-        from langchain_openai import ChatOpenAI
-        llm = ChatOpenAI(
-            model=llm_config.get("model", "deepseek/deepseek-r1t2-chimera:free"),
-            api_key=llm_config.get("api_key"),
-            base_url=llm_config.get("base_url", "https://openrouter.ai/api/v1"),
-            temperature=0.3,
-            max_tokens=4096,
-            default_headers={
-                "HTTP-Referer": "https://chatwallet.app",
-                "X-Title": "Chat Wallet"
-            }
-        )
-    elif provider == "openai":
+    if provider == "openai":
         from langchain_openai import ChatOpenAI
         llm = ChatOpenAI(
             model=llm_config.get("model", "gpt-4o"),
@@ -324,7 +292,7 @@ def create_agent():
     elif provider == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
         llm = ChatGoogleGenerativeAI(
-            model=llm_config.get("model", "gemini-2.0-flash"),
+            model=llm_config.get("model", "gemini-2.0-flash-exp"),
             google_api_key=llm_config.get("api_key"),
             temperature=0.3,
             max_output_tokens=4096
@@ -678,790 +646,342 @@ def main():
     # Chat02 Design System - Professional dark theme with texture and depth
     st.markdown("""
     <style>
-    /* ═══════════════════════════════════════════════════════════════════════════
-       2026 CYBER-PHYSICAL DESIGN SYSTEM
-       "Opinionated Luxury" - Heavy, Tactile, Precision Instrument Aesthetic
-       ═══════════════════════════════════════════════════════════════════════════ */
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       TYPOGRAPHY: Premium Geometric Sans + Monospace for Data
-       ───────────────────────────────────────────────────────────────────────── */
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
-    :root {
-        /* Deep Void Palette - No flat blacks */
-        --void-deep: #020408;
-        --void-elevated: #0A0D14;
-        --void-surface: #0F1318;
-        --void-card: #141920;
-        --void-hover: #1A2028;
-
-        /* Electric Accents - High contrast, used sparingly */
-        --accent-cyan: #00D4FF;
-        --accent-cyan-dim: rgba(0, 212, 255, 0.15);
-        --accent-cyan-glow: rgba(0, 212, 255, 0.4);
-        --accent-emerald: #00FF9D;
-        --accent-emerald-dim: rgba(0, 255, 157, 0.15);
-        --accent-amber: #FFB800;
-        --accent-rose: #FF3D71;
-
-        /* Text Hierarchy */
-        --text-primary: #F0F4F8;
-        --text-secondary: #94A3B8;
-        --text-tertiary: #64748B;
-        --text-muted: #475569;
-
-        /* Borders - Ultra thin, low opacity */
-        --border-subtle: rgba(255, 255, 255, 0.04);
-        --border-dim: rgba(255, 255, 255, 0.06);
-        --border-visible: rgba(255, 255, 255, 0.08);
-        --border-accent: rgba(0, 212, 255, 0.3);
-
-        /* Glassmorphism */
-        --glass-bg: rgba(10, 13, 20, 0.8);
-        --glass-border: rgba(255, 255, 255, 0.05);
-    }
+    /* Clean, professional typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"] {
-        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-        font-feature-settings: 'ss01' on, 'ss02' on;
-        -webkit-font-smoothing: antialiased;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Main app background with noise texture */
-    .stApp {
-        background: var(--void-deep) !important;
-    }
-
-    .stApp::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 0;
-        /* Noise texture simulation */
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-        opacity: 0.015;
-    }
-
-    /* Northern Lights ambient glow */
-    .stApp::after {
-        content: '';
-        position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        pointer-events: none;
-        z-index: 0;
-        background:
-            radial-gradient(ellipse at 20% 20%, rgba(0, 212, 255, 0.04) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 80%, rgba(0, 255, 157, 0.03) 0%, transparent 50%),
-            radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.02) 0%, transparent 60%);
-        animation: aurora 30s ease-in-out infinite;
-    }
-
-    @keyframes aurora {
-        0%, 100% { transform: translate(0, 0) rotate(0deg); }
-        33% { transform: translate(-2%, 1%) rotate(1deg); }
-        66% { transform: translate(1%, -1%) rotate(-1deg); }
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       TYPOGRAPHY HIERARCHY
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Dark theme header styling */
     h1 {
-        font-family: 'Space Grotesk', sans-serif !important;
-        font-weight: 600 !important;
-        letter-spacing: -0.03em !important;
-        color: var(--text-primary) !important;
-        font-size: 1.75rem !important;
-    }
-
-    h2 {
-        font-family: 'Space Grotesk', sans-serif !important;
         font-weight: 600 !important;
         letter-spacing: -0.02em !important;
-        color: var(--text-primary) !important;
-        font-size: 1.25rem !important;
+        color: #F9FAFB !important;
     }
 
-    h3 {
-        font-family: 'Space Grotesk', sans-serif !important;
+    h2, h3 {
         font-weight: 500 !important;
-        letter-spacing: -0.01em !important;
-        color: var(--text-secondary) !important;
-        font-size: 1rem !important;
+        color: #D1D5DB !important;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       METRIC CARDS - HUD Style with Glassmorphism
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Professional card styling with texture */
     [data-testid="stMetric"] {
-        background: linear-gradient(135deg, var(--void-card) 0%, var(--void-surface) 100%);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid var(--border-dim);
-        border-radius: 12px;
-        padding: 20px 24px;
-        position: relative;
-        overflow: hidden;
-        box-shadow:
-            0 4px 24px rgba(0, 0, 0, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    }
-
-    /* Accent glow line at top */
-    [data-testid="stMetric"]::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 20px;
-        right: 20px;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
-        opacity: 0.5;
+        background: linear-gradient(145deg, #1F1F2E 0%, #16161F 100%);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
     [data-testid="stMetricValue"] {
-        font-family: 'JetBrains Mono', monospace !important;
-        font-weight: 600 !important;
-        font-size: 2rem !important;
-        color: var(--text-primary) !important;
-        font-variant-numeric: tabular-nums;
-        letter-spacing: -0.02em;
+        font-weight: 700 !important;
+        font-size: 1.75rem !important;
+        color: #FFFFFF !important;
     }
 
     [data-testid="stMetricLabel"] {
-        font-family: 'Space Grotesk', sans-serif !important;
-        color: var(--text-tertiary) !important;
-        font-size: 0.75rem !important;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        font-weight: 500;
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       BUTTONS - Heavy, Tactile Feel
-       ───────────────────────────────────────────────────────────────────────── */
-    .stButton > button {
-        font-family: 'Space Grotesk', sans-serif !important;
-        border-radius: 8px !important;
-        font-weight: 500 !important;
+        color: #9CA3AF !important;
         font-size: 0.875rem !important;
-        padding: 0.75rem 1.5rem !important;
-        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        border: 1px solid var(--border-visible) !important;
-        background: linear-gradient(180deg, var(--void-card) 0%, var(--void-surface) 100%) !important;
-        color: var(--text-secondary) !important;
-        box-shadow:
-            0 2px 8px rgba(0, 0, 0, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.04),
-            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-        position: relative;
-        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    .stButton > button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 50%);
-        pointer-events: none;
+    /* Textured buttons with depth */
+    .stButton > button {
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+        padding: 0.625rem 1.25rem !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%) !important;
+        color: #E5E7EB !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
     .stButton > button:hover {
-        transform: translateY(-1px);
-        border-color: var(--border-accent) !important;
-        background: linear-gradient(180deg, var(--void-hover) 0%, var(--void-card) 100%) !important;
-        color: var(--text-primary) !important;
-        box-shadow:
-            0 8px 24px rgba(0, 0, 0, 0.4),
-            0 0 20px var(--accent-cyan-dim),
-            inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.12) !important;
+        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%) !important;
     }
 
-    /* Primary buttons - Electric accent */
     .stButton > button[kind="primary"],
     .stButton > button[data-testid="baseButton-primary"],
     button[kind="primary"] {
-        background: linear-gradient(180deg, var(--accent-cyan) 0%, #00B8E0 100%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        color: #020408 !important;
-        font-weight: 600 !important;
-        box-shadow:
-            0 4px 16px var(--accent-cyan-glow),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2),
-            inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+        background: linear-gradient(145deg, #3B82F6 0%, #2563EB 100%) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 16px rgba(59,130,246,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
     }
 
     .stButton > button[kind="primary"]:hover,
     .stButton > button[data-testid="baseButton-primary"]:hover,
     button[kind="primary"]:hover {
-        background: linear-gradient(180deg, #33DFFF 0%, var(--accent-cyan) 100%) !important;
-        box-shadow:
-            0 8px 32px var(--accent-cyan-glow),
-            0 0 40px var(--accent-cyan-dim),
-            inset 0 1px 0 rgba(255, 255, 255, 0.25);
-        transform: translateY(-2px);
+        background: linear-gradient(145deg, #4F8FFF 0%, #3B7BF6 100%) !important;
+        box-shadow: 0 8px 28px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
     }
 
+    /* Force white text on primary buttons */
     .stButton > button[kind="primary"] p,
     .stButton > button[kind="primary"] span,
     .stButton > button[data-testid="baseButton-primary"] p,
     .stButton > button[data-testid="baseButton-primary"] span {
-        color: #020408 !important;
-        font-weight: 600 !important;
+        color: #FFFFFF !important;
     }
 
     .stButton > button:disabled {
-        opacity: 0.3 !important;
+        opacity: 0.4 !important;
         transform: none !important;
-        box-shadow: none !important;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       SIDEBAR - Glassmorphic Panel
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Refined dark sidebar */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--void-elevated) 0%, var(--void-deep) 100%) !important;
-        border-right: 1px solid var(--border-subtle) !important;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-    }
-
-    [data-testid="stSidebar"]::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background:
-            radial-gradient(ellipse at 50% 0%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
-        pointer-events: none;
+        background: linear-gradient(180deg, #141419 0%, #0F0F14 100%);
+        border-right: 1px solid rgba(255,255,255,0.04);
     }
 
     [data-testid="stSidebar"] h1 {
-        font-size: 1.125rem !important;
-        margin-bottom: 1.5rem;
-        color: var(--text-primary) !important;
-        letter-spacing: -0.02em;
+        font-size: 1.25rem !important;
+        margin-bottom: 1rem;
+        color: #F9FAFB !important;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       INPUT FIELDS - Precision Instrument Style
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Dark input fields with glow */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea {
-        font-family: 'JetBrains Mono', monospace !important;
-        border-radius: 8px !important;
-        border: 1px solid var(--border-dim) !important;
-        background: var(--void-surface) !important;
-        padding: 14px 16px !important;
-        font-size: 0.875rem !important;
-        color: var(--text-primary) !important;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-        transition: all 0.15s ease;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: #1A1A24 !important;
+        padding: 14px !important;
+        font-size: 14px !important;
+        color: #E5E7EB !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus {
-        border-color: var(--accent-cyan) !important;
-        box-shadow:
-            0 0 0 3px var(--accent-cyan-dim),
-            inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
-        outline: none;
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15), inset 0 2px 4px rgba(0,0,0,0.2) !important;
     }
 
     .stTextInput > div > div > input::placeholder,
     .stTextArea > div > div > textarea::placeholder {
-        color: var(--text-muted) !important;
-        font-family: 'Space Grotesk', sans-serif !important;
+        color: #6B7280 !important;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       TABS - Capsule Navigation
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Dark tabs with texture */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 4px;
-        background: var(--void-surface);
-        border-radius: 10px;
-        padding: 4px;
-        border: 1px solid var(--border-subtle);
+        gap: 8px;
+        background: transparent;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        padding-bottom: 8px;
     }
 
     .stTabs [data-baseweb="tab"] {
-        border-radius: 6px;
-        padding: 10px 20px;
+        border-radius: 8px;
+        padding: 10px 18px;
         font-weight: 500;
-        font-size: 0.8125rem;
         background: transparent;
-        color: var(--text-tertiary);
-        transition: all 0.15s ease;
-        border: none;
-    }
-
-    .stTabs [data-baseweb="tab"]:hover {
-        color: var(--text-secondary);
-        background: rgba(255, 255, 255, 0.02);
+        color: #9CA3AF;
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        background: var(--void-card);
-        color: var(--text-primary);
-        box-shadow:
-            0 2px 8px rgba(0, 0, 0, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%);
+        color: #FFFFFF;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       CHAT MESSAGES - Bento Card Style
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Dark chat messages with gradient */
     [data-testid="stChatMessage"] {
-        background: linear-gradient(135deg, var(--void-card) 0%, var(--void-surface) 100%);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid var(--border-subtle);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        position: relative;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
     }
 
-    [data-testid="stChatMessage"]::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--border-visible), transparent);
-    }
-
-    /* Chat input - Terminal style */
+    /* Chat input styling */
     [data-testid="stChatInput"] textarea {
-        font-family: 'JetBrains Mono', monospace !important;
         border-radius: 12px !important;
-        background: var(--void-surface) !important;
-        border: 1px solid var(--border-dim) !important;
-        padding: 16px 20px !important;
-        font-size: 0.875rem !important;
-        box-shadow:
-            inset 0 2px 4px rgba(0, 0, 0, 0.3),
-            0 0 0 1px var(--border-subtle);
+        background: #1A1A24 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        padding: 14px 16px !important;
+        font-size: 14px !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
 
     [data-testid="stChatInput"] textarea:focus {
-        border-color: var(--accent-cyan) !important;
-        box-shadow:
-            0 0 0 3px var(--accent-cyan-dim),
-            inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15), inset 0 2px 4px rgba(0,0,0,0.2) !important;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       CODE BLOCKS - Data Terminal Aesthetic
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Dark code blocks */
     code {
-        font-family: 'JetBrains Mono', monospace !important;
-        background: var(--void-surface) !important;
-        color: var(--accent-cyan) !important;
-        padding: 4px 10px !important;
+        background: #252532 !important;
+        color: #A5B4FC !important;
+        padding: 3px 8px !important;
         border-radius: 6px !important;
-        font-size: 0.8125rem !important;
-        border: 1px solid var(--border-dim);
-        font-variant-numeric: tabular-nums;
+        font-size: 13px !important;
+        border: 1px solid rgba(255,255,255,0.06);
     }
 
-    pre {
-        background: var(--void-surface) !important;
-        border: 1px solid var(--border-dim) !important;
-        border-radius: 8px !important;
-        padding: 16px !important;
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       ALERTS - HUD Status Display
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Dark alert boxes */
     .stAlert {
-        border-radius: 8px !important;
-        border: 1px solid var(--border-dim) !important;
-        background: linear-gradient(135deg, var(--void-card) 0%, var(--void-surface) 100%) !important;
-        backdrop-filter: blur(12px);
-        position: relative;
-        overflow: hidden;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%) !important;
     }
 
-    .stAlert::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        background: var(--accent-cyan);
-    }
-
-    /* Info alerts */
-    .stAlert[data-baseweb="notification"] {
-        border-left: 3px solid var(--accent-cyan) !important;
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       DIVIDERS
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Dark dividers */
     hr {
-        border: none !important;
-        height: 1px !important;
-        background: linear-gradient(90deg, transparent, var(--border-dim), transparent) !important;
-        margin: 2rem 0 !important;
+        border-color: rgba(255,255,255,0.06) !important;
+        margin: 1.5rem 0 !important;
     }
 
     /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       EXPANDERS - Collapsible Modules
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Dark expander */
     .streamlit-expanderHeader {
-        font-family: 'Space Grotesk', sans-serif !important;
         font-weight: 500 !important;
-        font-size: 0.875rem !important;
-        color: var(--text-secondary) !important;
-        background: linear-gradient(135deg, var(--void-card) 0%, var(--void-surface) 100%);
-        border-radius: 8px;
-        padding: 14px 18px !important;
-        transition: all 0.15s ease;
-    }
-
-    .streamlit-expanderHeader:hover {
-        background: var(--void-hover);
-        color: var(--text-primary) !important;
+        color: #9CA3AF !important;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
+        border-radius: 10px;
+        padding: 12px 16px !important;
     }
 
     details {
         background: transparent !important;
-        border: 1px solid var(--border-dim) !important;
-        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        border-radius: 12px !important;
     }
 
-    details[open] {
-        border-color: var(--border-visible) !important;
+    /* Quick action chips */
+    .quick-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        color: #E5E7EB;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 4px;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       HUD STATUS INDICATORS
-       ───────────────────────────────────────────────────────────────────────── */
+    .quick-action:hover {
+        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%);
+        border-color: rgba(255,255,255,0.12);
+        transform: translateY(-1px);
+    }
+
+    .quick-action.active {
+        background: linear-gradient(145deg, #3B82F6 0%, #2563EB 100%);
+        border-color: rgba(255,255,255,0.15);
+        color: #FFFFFF;
+    }
+
+    /* Status indicator */
     .status-dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
         display: inline-block;
-        position: relative;
     }
 
     .status-dot.connected {
-        background: var(--accent-emerald);
-        box-shadow: 0 0 12px var(--accent-emerald);
-        animation: pulse-glow 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse-glow {
-        0%, 100% { box-shadow: 0 0 8px var(--accent-emerald); }
-        50% { box-shadow: 0 0 16px var(--accent-emerald), 0 0 24px var(--accent-emerald-dim); }
+        background: #10B981;
+        box-shadow: 0 0 8px rgba(16,185,129,0.5);
     }
 
     .status-dot.disconnected {
-        background: var(--text-muted);
+        background: #6B7280;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       BENTO GRID CARDS
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Section cards */
     .section-card {
-        background: linear-gradient(135deg, var(--void-card) 0%, var(--void-surface) 100%);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid var(--border-dim);
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 12px;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.2s ease;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
     }
 
-    .section-card:hover {
-        border-color: var(--border-visible);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-
-    .section-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       QUICK ACTION CAPSULES
-       ───────────────────────────────────────────────────────────────────────── */
-    .quick-action {
-        font-family: 'Space Grotesk', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 18px;
-        background: linear-gradient(180deg, var(--void-card) 0%, var(--void-surface) 100%);
-        border: 1px solid var(--border-dim);
-        border-radius: 100px;
-        color: var(--text-secondary);
-        font-size: 0.8125rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        margin: 4px;
-    }
-
-    .quick-action:hover {
-        background: var(--void-hover);
-        border-color: var(--border-accent);
-        color: var(--text-primary);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 0 20px var(--accent-cyan-dim);
-    }
-
-    .quick-action.active {
-        background: linear-gradient(180deg, var(--accent-cyan) 0%, #00B8E0 100%);
-        border-color: transparent;
-        color: #020408;
-        box-shadow: 0 4px 16px var(--accent-cyan-glow);
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       NUMBER & SELECT INPUTS
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Number input styling */
     .stNumberInput > div > div > input {
-        font-family: 'JetBrains Mono', monospace !important;
-        font-variant-numeric: tabular-nums;
-        border-radius: 8px !important;
-        border: 1px solid var(--border-dim) !important;
-        background: var(--void-surface) !important;
-        color: var(--text-primary) !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: #1A1A24 !important;
+        color: #E5E7EB !important;
     }
 
+    /* Select box styling */
     .stSelectbox > div > div {
-        background: var(--void-surface) !important;
-        border: 1px solid var(--border-dim) !important;
-        border-radius: 8px !important;
+        background: #1A1A24 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        border-radius: 10px !important;
     }
 
-    .stSelectbox > div > div:hover {
-        border-color: var(--border-visible) !important;
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       CAPTIONS & LABELS
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Consistent caption styling */
     .stCaption, [data-testid="stCaptionContainer"] p {
-        color: var(--text-muted) !important;
-        font-size: 0.75rem !important;
-        line-height: 1.6;
-        letter-spacing: 0.01em;
+        color: #6B7280 !important;
+        font-size: 0.8125rem !important;
+        line-height: 1.5;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       SIDEBAR LINKS
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Footer link styling */
     [data-testid="stSidebar"] a {
-        color: var(--text-muted) !important;
+        color: #6B7280 !important;
         text-decoration: none;
         transition: color 0.15s ease;
     }
 
     [data-testid="stSidebar"] a:hover {
-        color: var(--accent-cyan) !important;
+        color: #9CA3AF !important;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       PILL BUTTONS
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Pill button styling for suggested actions */
     [data-testid="stHorizontalBlock"] .stButton > button {
-        border-radius: 100px !important;
-        font-size: 0.75rem !important;
+        border-radius: 20px !important;
+        font-size: 0.8125rem !important;
         padding: 0.5rem 1rem !important;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       LINK BUTTONS
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Link buttons */
     .stLinkButton > a {
-        font-family: 'Space Grotesk', sans-serif !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         font-weight: 500 !important;
-        font-size: 0.8125rem !important;
-        padding: 12px 20px !important;
-        min-height: 42px !important;
+        font-size: 13px !important;
+        padding: 10px 16px !important;
+        min-height: 38px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        border: 1px solid var(--border-dim) !important;
-        background: linear-gradient(180deg, var(--void-card) 0%, var(--void-surface) 100%) !important;
-        color: var(--text-secondary) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: linear-gradient(145deg, #252532 0%, #1C1C26 100%) !important;
+        color: #E5E7EB !important;
         text-decoration: none !important;
-        transition: all 0.15s ease !important;
+        transition: all 0.2s ease !important;
     }
 
     .stLinkButton > a:hover {
-        background: var(--void-hover) !important;
-        border-color: var(--border-accent) !important;
-        color: var(--text-primary) !important;
+        background: linear-gradient(145deg, #2A2A3A 0%, #202030 100%) !important;
+        border-color: rgba(255,255,255,0.12) !important;
         text-decoration: none !important;
-        box-shadow: 0 0 20px var(--accent-cyan-dim);
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-       MODALS - Floating Modules
-       ───────────────────────────────────────────────────────────────────────── */
+    /* Dialogs/Modals */
     [data-testid="stModal"] > div {
-        background: linear-gradient(135deg, var(--void-card) 0%, var(--void-elevated) 100%) !important;
-        backdrop-filter: blur(24px) !important;
-        -webkit-backdrop-filter: blur(24px) !important;
-        border: 1px solid var(--border-dim) !important;
+        background: linear-gradient(145deg, #1A1A24 0%, #14141C 100%) !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
         border-radius: 16px !important;
-        box-shadow:
-            0 24px 80px rgba(0, 0, 0, 0.5),
-            0 0 1px rgba(255, 255, 255, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       PROGRESS BARS - System Diagnostic Style
-       ───────────────────────────────────────────────────────────────────────── */
-    .stProgress > div > div {
-        background: var(--void-surface) !important;
-        border-radius: 4px;
-    }
-
-    .stProgress > div > div > div {
-        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald)) !important;
-        border-radius: 4px;
-        box-shadow: 0 0 12px var(--accent-cyan-glow);
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       CHECKBOXES & TOGGLES
-       ───────────────────────────────────────────────────────────────────────── */
-    .stCheckbox > label > div[data-testid="stCheckbox"] > div {
-        border-color: var(--border-visible) !important;
-        background: var(--void-surface) !important;
-    }
-
-    .stCheckbox > label > div[data-testid="stCheckbox"] > div[aria-checked="true"] {
-        background: var(--accent-cyan) !important;
-        border-color: var(--accent-cyan) !important;
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       RADIO BUTTONS
-       ───────────────────────────────────────────────────────────────────────── */
-    .stRadio > div {
-        gap: 8px;
-    }
-
-    .stRadio > div > label {
-        background: var(--void-surface);
-        border: 1px solid var(--border-dim);
-        border-radius: 8px;
-        padding: 12px 16px;
-        transition: all 0.15s ease;
-    }
-
-    .stRadio > div > label:hover {
-        border-color: var(--border-visible);
-        background: var(--void-card);
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       TOOLTIPS
-       ───────────────────────────────────────────────────────────────────────── */
-    [data-baseweb="tooltip"] {
-        background: var(--void-card) !important;
-        border: 1px solid var(--border-dim) !important;
-        border-radius: 8px !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       SCROLLBAR - Minimal
-       ───────────────────────────────────────────────────────────────────────── */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--border-visible);
-        border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--text-muted);
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       DATA DISPLAY UTILITIES
-       ───────────────────────────────────────────────────────────────────────── */
-    .mono-data {
-        font-family: 'JetBrains Mono', monospace !important;
-        font-variant-numeric: tabular-nums;
-        letter-spacing: -0.02em;
-    }
-
-    .data-label {
-        font-size: 0.6875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-muted);
-        font-weight: 500;
-    }
-
-    .data-value {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 1.125rem;
-        color: var(--text-primary);
-        font-variant-numeric: tabular-nums;
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-       ACCENT GLOW UTILITIES
-       ───────────────────────────────────────────────────────────────────────── */
-    .glow-cyan {
-        box-shadow: 0 0 20px var(--accent-cyan-dim), 0 0 40px var(--accent-cyan-dim);
-    }
-
-    .glow-emerald {
-        box-shadow: 0 0 20px var(--accent-emerald-dim), 0 0 40px var(--accent-emerald-dim);
-    }
-
-    .border-glow {
-        border-color: var(--accent-cyan) !important;
-        box-shadow: 0 0 20px var(--accent-cyan-dim);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -1506,35 +1026,20 @@ def main():
     # Handle OAuth callback (simplified - no blocking sleep)
     query_params = st.query_params
     if "code" in query_params and "state" in query_params:
+        from gmail_oauth import GmailOAuth
+
         code = query_params["code"]
-        state = query_params["state"]
+        user_id = query_params["state"]
 
         app_url = os.getenv("APP_URL", "http://localhost:8501")
         redirect_uri = f"{app_url}/oauth/callback"
 
-        # Determine OAuth type from state prefix
-        if state.startswith("gemini:"):
-            # Gemini OAuth - user signing in with Google for AI
-            from gemini_oauth import GeminiOAuth
-            user_id = state.replace("gemini:", "")
-            success = GeminiOAuth.handle_oauth_callback(code, redirect_uri, user_id)
+        success = GmailOAuth.handle_oauth_callback(code, redirect_uri, user_id)
 
-            # Clear params and invalidate LLM config cache to pick up new OAuth
-            st.query_params.clear()
-            cache_key = f"_llm_config_{user_id}"
-            if cache_key in st.session_state:
-                del st.session_state[cache_key]
-            st.session_state.agent = None  # Force agent recreation
-            st.session_state._oauth_result = "gemini_success" if success else "gemini_error"
-        else:
-            # Gmail OAuth
-            from gmail_oauth import GmailOAuth
-            user_id = state
-            success = GmailOAuth.handle_oauth_callback(code, redirect_uri, user_id)
-
-            st.query_params.clear()
-            st.session_state.show_settings = True
-            st.session_state._oauth_result = "success" if success else "error"
+        # Clear params immediately to prevent reprocessing
+        st.query_params.clear()
+        st.session_state.show_settings = True
+        st.session_state._oauth_result = "success" if success else "error"
 
     # Show auth modal if requested
     if st.session_state.get("show_auth_modal"):

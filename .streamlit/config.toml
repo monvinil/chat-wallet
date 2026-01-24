@@ -1,10 +1,9 @@
 [theme]
-# 2026 Cyber-Physical Design System
-# Deep void backgrounds, not flat black
-primaryColor = "#00D4FF"              # Electric cyan accent
-backgroundColor = "#020408"           # Deep rich void
-secondaryBackgroundColor = "#0A0D14"  # Elevated surfaces
-textColor = "#E8ECF4"                 # Cool white text
+# Professional dark theme
+primaryColor = "#3B82F6"          # Vibrant blue - action buttons, links
+backgroundColor = "#0F0F14"       # Deep dark background
+secondaryBackgroundColor = "#1A1A24"  # Elevated cards/sections
+textColor = "#E5E7EB"             # Light gray text
 font = "sans serif"
 
 [server]

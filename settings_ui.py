@@ -51,52 +51,14 @@ def settings_page():
     # TAB 1: AI Model Configuration
     # ============================================================================
     with tab1:
-        import os
-        from gemini_oauth import GeminiOAuth
-
         st.subheader("Connect Your AI")
         st.caption("Choose which AI powers your assistant")
 
         # Current model display with friendly messaging
         llm_config = SettingsManager.get_llm_config(user_id)
-        has_oauth = GeminiOAuth.is_connected(user_id)
 
-        if has_oauth:
-            email = GeminiOAuth.get_connection_email(user_id)
-            st.success(f"Connected with Google ({email})")
-            st.caption("Using your Google account's free Gemini quota")
-
-            if st.button("Disconnect Google", key="disconnect_gemini"):
-                if GeminiOAuth.disconnect(user_id):
-                    # Clear LLM config cache
-                    cache_key = f"_llm_config_{user_id}"
-                    if cache_key in st.session_state:
-                        del st.session_state[cache_key]
-                    st.session_state.agent = None
-                    st.rerun()
-
-            st.divider()
-            st.caption("Or use your own API key instead:")
-        elif llm_config.get("using_default") or not llm_config.get("api_key"):
-            # Check if Google OAuth is available
-            oauth_available = bool(os.getenv("GOOGLE_OAUTH_CLIENT_ID"))
-
-            if oauth_available:
-                st.info("Sign in with Google to start chatting (free)")
-
-                if st.button("Sign in with Google", type="primary", use_container_width=True, key="google_signin_settings"):
-                    app_url = os.getenv("APP_URL", "http://localhost:8501")
-                    redirect_uri = f"{app_url}/oauth/callback"
-
-                    auth_url = GeminiOAuth.get_oauth_url(user_id, redirect_uri)
-                    if auth_url:
-                        st.markdown(f"[Click here to sign in with Google]({auth_url})")
-                        st.caption("Uses your Google account's free Gemini quota")
-
-                st.divider()
-                st.caption("Or add your own API key:")
-            else:
-                st.warning("No AI connected yet. Add your API key below to start.")
+        if llm_config["using_default"]:
+            st.warning("No AI connected yet. Add your API key below to start.")
         else:
             st.success(f"Connected: {llm_config['provider'].title()} - {llm_config['model']}")
 
@@ -245,21 +207,11 @@ def settings_page():
     with tab2:
         st.subheader("Connected Accounts")
 
-        # Google (Gemini AI) connection - show first
-        st.markdown("**Google (AI Assistant)**")
-        from gemini_oauth import show_gemini_connection_ui
-        show_gemini_connection_ui(user_id)
-
-        st.divider()
-
-        # List other connected accounts
+        # List connected accounts
         connected = SettingsManager.list_connected_accounts(user_id)
 
-        # Filter out gemini (already shown above)
-        other_connected = [c for c in connected if c['provider'] != 'gemini']
-
-        if other_connected:
-            for conn in other_connected:
+        if connected:
+            for conn in connected:
                 col1, col2 = st.columns([3, 1])
                 with col1:
                     status = "Connected" if conn['is_active'] else "Disconnected"
