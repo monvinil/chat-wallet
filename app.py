@@ -643,33 +643,43 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # V6 Design System: "Obsidian Standard" - Linear/Stripe Fintech Aesthetic
+    # V7 Design System: "The Construct" - Industrial High-Fidelity Aesthetic
     st.markdown("""
     <style>
-    /* --- 1. FONTS & CSS VARIABLES --- */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+    /* --- 1. CORE VARIABLES --- */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
     :root {
-        --bg-app: #08090A;
-        --bg-panel: #121315;
-        --bg-elevated: #1A1B1E;
-        --border-subtle: rgba(255, 255, 255, 0.08);
-        --border-hover: rgba(255, 255, 255, 0.15);
-        --text-primary: #EDEDEF;
-        --text-secondary: #8A8F98;
-        --text-tertiary: #5C6370;
-        --accent-primary: #FFFFFF;
-        --accent-brand: #5E6AD2;
-        --accent-success: #3ECF8E;
-        --accent-warning: #F5A623;
-        --accent-error: #EF4444;
-        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        /* Deep Charcoal, not pitch black */
+        --bg-app: #09090b;
+        --bg-panel: #18181b;
+        --bg-input: #121212;
+
+        /* The "Acid Lime" Accent - Sharp, Electric, Technical */
+        --accent-primary: #bef264;
+        --accent-dim: rgba(190, 242, 100, 0.1);
+        --accent-glow: rgba(190, 242, 100, 0.25);
+
+        --border-base: rgba(255, 255, 255, 0.08);
+        --border-active: rgba(255, 255, 255, 0.15);
+
+        --text-primary: #f4f4f5;
+        --text-secondary: #a1a1aa;
+        --text-tertiary: #71717a;
+
+        --accent-success: #4ade80;
+        --accent-warning: #fbbf24;
+        --accent-error: #ef4444;
+
+        --font-sans: 'Inter', sans-serif;
         --font-mono: 'JetBrains Mono', monospace;
     }
 
-    /* --- 2. BASE STYLES --- */
+    /* --- 2. TEXTURE & ATMOSPHERE --- */
     .stApp {
         background-color: var(--bg-app);
+        /* Film Grain Overlay for Texture */
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
     }
 
     html, body, [class*="css"] {
@@ -677,31 +687,33 @@ def main():
         color: var(--text-primary);
     }
 
-    h1, h2, h3 {
+    h1, h2, h3, h4 {
         font-family: var(--font-sans);
         font-weight: 600;
-        letter-spacing: -0.02em;
-        color: var(--text-primary) !important;
+        letter-spacing: -0.03em;
+        color: white !important;
     }
 
-    /* --- 3. INPUTS --- */
+    /* --- 3. INPUTS: "PRECISION TOOLS" --- */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stChatInput > div > div > textarea {
-        background: var(--bg-panel) !important;
-        border: 1px solid var(--border-subtle) !important;
-        border-radius: 8px !important;
+        background-color: var(--bg-input) !important;
+        border: 1px solid var(--border-base) !important;
+        border-radius: 4px !important;
         color: var(--text-primary) !important;
-        font-family: var(--font-sans);
-        transition: border-color 0.15s ease;
+        font-family: var(--font-mono) !important;
+        font-size: 13px !important;
+        padding: 12px 14px !important;
+        transition: all 0.2s ease;
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus,
     .stChatInput > div > div > textarea:focus {
-        border-color: var(--accent-brand) !important;
-        background: var(--bg-panel) !important;
-        box-shadow: none !important;
+        border-color: var(--accent-primary) !important;
+        background-color: var(--bg-input) !important;
+        box-shadow: 0 0 0 1px var(--accent-primary) !important;
     }
 
     .stTextInput > div > div > input::placeholder,
@@ -709,40 +721,41 @@ def main():
         color: var(--text-tertiary) !important;
     }
 
-    /* --- 4. BUTTONS --- */
+    /* --- 4. BUTTONS: "INDUSTRIAL SWITCHES" --- */
     .stButton > button {
         width: 100%;
-        border-radius: 6px !important;
-        font-family: var(--font-sans) !important;
-        font-weight: 500 !important;
-        font-size: 0.8125rem !important;
-        border: 1px solid var(--border-subtle) !important;
-        background: var(--bg-panel) !important;
+        background-color: var(--bg-panel) !important;
+        border: 1px solid var(--border-base) !important;
         color: var(--text-secondary) !important;
-        transition: all 0.15s ease;
-        text-transform: none;
-        letter-spacing: 0;
+        border-radius: 4px !important;
+        font-family: var(--font-mono) !important;
+        text-transform: uppercase;
+        font-size: 11px !important;
+        letter-spacing: 0.05em;
+        transition: all 0.15s;
     }
 
     .stButton > button:hover {
-        border-color: var(--border-hover) !important;
-        color: var(--text-primary) !important;
-        background: var(--bg-elevated) !important;
+        border-color: var(--accent-primary) !important;
+        color: var(--accent-primary) !important;
+        background-color: var(--accent-dim) !important;
+        transform: translateY(-1px);
     }
 
-    /* Primary Buttons - Stark White */
+    /* Primary Action: The "Acid Block" */
     .stButton > button[kind="primary"],
     .stButton > button[data-testid="baseButton-primary"],
     button[kind="primary"] {
-        background: var(--accent-primary) !important;
+        background-color: var(--accent-primary) !important;
         color: #000000 !important;
-        border: none !important;
-        font-weight: 600 !important;
+        border: 1px solid var(--accent-primary) !important;
+        font-weight: 700 !important;
     }
 
     .stButton > button[kind="primary"]:hover,
     .stButton > button[data-testid="baseButton-primary"]:hover {
-        background: rgba(255, 255, 255, 0.9) !important;
+        background-color: #d9f99d !important;
+        box-shadow: 0 0 15px var(--accent-glow);
     }
 
     .stButton > button[kind="primary"] p,
@@ -751,28 +764,27 @@ def main():
     }
 
     .stButton > button:disabled {
-        opacity: 0.5 !important;
-        cursor: not-allowed !important;
+        opacity: 0.4 !important;
+        transform: none !important;
     }
 
-    /* --- 5. CHAT MESSAGES --- */
+    /* --- 5. CHAT FEED: "AUDIT LOG" --- */
     [data-testid="stChatMessage"] {
-        background: var(--bg-panel);
-        border: 1px solid var(--border-subtle);
-        border-radius: 12px;
-        padding: 1.25rem;
+        background: transparent !important;
+        padding: 1.5rem 0 !important;
+        border-bottom: 1px dashed var(--border-base);
     }
 
     [data-testid="stChatMessage"] [data-testid="stImage"] {
-        border-radius: 6px;
-        border: 1px solid var(--border-subtle);
+        border-radius: 4px;
+        border: 1px solid var(--border-base);
+        filter: grayscale(100%);
     }
 
-    /* --- 6. SIDEBAR --- */
+    /* --- 6. SIDEBAR: "CONTROL PANEL" --- */
     [data-testid="stSidebar"] {
-        background: rgba(8, 9, 10, 0.95) !important;
-        backdrop-filter: blur(20px);
-        border-right: 1px solid var(--border-subtle);
+        background-color: #000000 !important;
+        border-right: 1px solid var(--border-base);
     }
 
     [data-testid="stSidebar"] > div:first-child {
@@ -782,8 +794,8 @@ def main():
     /* --- 7. METRIC CARDS --- */
     [data-testid="stMetric"] {
         background: var(--bg-panel);
-        border: 1px solid var(--border-subtle);
-        border-radius: 8px;
+        border: 1px solid var(--border-base);
+        border-radius: 4px;
         padding: 1rem;
     }
 
@@ -795,56 +807,60 @@ def main():
 
     [data-testid="stMetricLabel"] {
         font-family: var(--font-mono) !important;
-        font-size: 0.6875rem !important;
+        font-size: 10px !important;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.1em;
         color: var(--text-tertiary) !important;
     }
 
-    /* --- 8. TABS --- */
+    /* --- 8. TABS: "MECHANICAL" --- */
     .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 1px solid var(--border-subtle);
-        gap: 0;
+        gap: 8px;
+        background: transparent;
+        border-bottom: 1px solid var(--border-base);
+        padding-bottom: 8px;
     }
 
     .stTabs [data-baseweb="tab"] {
-        color: var(--text-tertiary);
-        font-family: var(--font-sans);
-        font-size: 0.8125rem;
-        font-weight: 500;
-        padding: 0.75rem 1rem;
+        height: 32px;
+        border-radius: 4px;
+        color: var(--text-secondary);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        border: 1px solid transparent !important;
+        background: transparent;
     }
 
     .stTabs [data-baseweb="tab"]:hover {
-        color: var(--text-secondary);
+        color: var(--text-primary);
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: var(--text-primary);
-        border-bottom: 2px solid var(--accent-brand);
-        background: transparent;
+        border-color: var(--border-base) !important;
+        background-color: var(--bg-panel);
+        color: var(--accent-primary);
     }
 
     /* --- 9. CODE BLOCKS --- */
     code {
         background: var(--bg-panel) !important;
-        color: var(--accent-brand) !important;
+        color: var(--accent-primary) !important;
         padding: 2px 6px !important;
         border-radius: 4px !important;
-        font-size: 0.8125rem !important;
+        font-size: 12px !important;
         font-family: var(--font-mono) !important;
-        border: 1px solid var(--border-subtle);
+        border: 1px solid var(--border-base);
     }
 
     pre {
         background: var(--bg-panel) !important;
-        border: 1px solid var(--border-subtle) !important;
-        border-radius: 8px !important;
+        border: 1px solid var(--border-base) !important;
+        border-radius: 4px !important;
     }
 
     /* --- 10. DIVIDERS & MISC --- */
     hr {
-        border-color: var(--border-subtle) !important;
+        border-color: var(--border-base) !important;
         margin: 1.5rem 0 !important;
     }
 
@@ -853,69 +869,75 @@ def main():
 
     /* --- 11. EXPANDERS --- */
     .streamlit-expanderHeader {
-        font-family: var(--font-sans) !important;
-        font-size: 0.8125rem !important;
-        font-weight: 500;
+        font-family: var(--font-mono) !important;
+        font-size: 12px !important;
         color: var(--text-secondary) !important;
-        background: transparent;
+        background: var(--bg-panel) !important;
+        border: 1px solid var(--border-base) !important;
+        border-radius: 4px !important;
     }
 
     details {
-        background: var(--bg-panel) !important;
-        border: 1px solid var(--border-subtle) !important;
-        border-radius: 8px !important;
+        background: transparent !important;
+        border: 1px solid var(--border-base) !important;
+        border-radius: 4px !important;
     }
 
     details:hover {
-        border-color: var(--border-hover) !important;
+        border-color: var(--border-active) !important;
     }
 
     /* --- 12. ALERTS --- */
     .stAlert {
-        border-radius: 8px !important;
-        border: 1px solid var(--border-subtle) !important;
+        border-radius: 4px !important;
+        border: 1px solid var(--border-base) !important;
         background: var(--bg-panel) !important;
     }
 
     /* --- 13. SELECT/NUMBER INPUTS --- */
     .stSelectbox > div > div,
     .stNumberInput > div > div > input {
-        background: var(--bg-panel) !important;
-        border: 1px solid var(--border-subtle) !important;
-        border-radius: 8px !important;
+        background: var(--bg-input) !important;
+        border: 1px solid var(--border-base) !important;
+        border-radius: 4px !important;
         color: var(--text-primary) !important;
+        font-family: var(--font-mono) !important;
     }
 
     .stSelectbox > div > div:hover,
     .stNumberInput > div > div > input:hover {
-        border-color: var(--border-hover) !important;
+        border-color: var(--border-active) !important;
     }
 
     /* --- 14. CAPTIONS --- */
     .stCaption, [data-testid="stCaptionContainer"] p {
         color: var(--text-tertiary) !important;
         font-size: 0.75rem !important;
+        font-family: var(--font-mono) !important;
     }
 
     /* --- 15. LINK BUTTONS --- */
     .stLinkButton > a {
-        border-radius: 6px !important;
+        border-radius: 4px !important;
         font-weight: 500 !important;
-        border: 1px solid var(--border-subtle) !important;
+        border: 1px solid var(--border-base) !important;
         background: var(--bg-panel) !important;
         color: var(--text-secondary) !important;
-        font-size: 0.8125rem !important;
+        font-size: 11px !important;
+        font-family: var(--font-mono) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
     .stLinkButton > a:hover {
-        border-color: var(--border-hover) !important;
-        color: var(--text-primary) !important;
+        border-color: var(--accent-primary) !important;
+        color: var(--accent-primary) !important;
     }
 
     /* --- 16. SCROLLBAR --- */
     ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
     }
 
     ::-webkit-scrollbar-track {
@@ -923,12 +945,19 @@ def main():
     }
 
     ::-webkit-scrollbar-thumb {
-        background: var(--border-subtle);
-        border-radius: 4px;
+        background: var(--border-base);
+        border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--border-hover);
+        background: var(--border-active);
+    }
+
+    /* --- 17. BLINKING CURSOR ANIMATION --- */
+    @keyframes blink {
+        0% { opacity: 0; }
+        50% { opacity: 1; }
+        100% { opacity: 0; }
     }
     </style>
     """, unsafe_allow_html=True)

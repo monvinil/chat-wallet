@@ -1,9 +1,9 @@
 [theme]
-# V6 "Obsidian Standard" - Linear/Stripe Fintech Aesthetic
-primaryColor = "#5E6AD2"          # Blurple brand accent
-backgroundColor = "#08090A"       # App background
-secondaryBackgroundColor = "#121315"  # Panel background
-textColor = "#EDEDEF"             # Primary text
+# V7 "The Construct" - Industrial High-Fidelity Aesthetic
+primaryColor = "#bef264"          # Acid Lime accent
+backgroundColor = "#09090b"       # Deep charcoal
+secondaryBackgroundColor = "#18181b"  # Panel (Zinc-900)
+textColor = "#f4f4f5"             # Primary text (Zinc-100)
 font = "sans serif"
 
 [server]
