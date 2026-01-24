@@ -139,18 +139,18 @@ def render_modules():
                 st.session_state._quick_action_triggered = True
                 st.rerun()
         with c3:
-            if st.button("Starbucks", key="mod_starbucks", use_container_width=True):
+            if st.button("Coffee", key="mod_coffee", use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": "Get me a Starbucks gift card"})
                 st.session_state._quick_action_triggered = True
                 st.rerun()
         with c4:
-            if st.button("PlayStation", key="mod_playstation", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "I want a PlayStation gift card"})
+            if st.button("Streaming", key="mod_streaming", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "Get me a Spotify gift card"})
                 st.session_state._quick_action_triggered = True
                 st.rerun()
 
     with tabs[2]:  # Tools
-        c1, c2, c3, c4 = st.columns(4)
+        c1, c2, c3 = st.columns(3)
         with c1:
             if st.button("VPN", key="mod_vpn", use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": "I want a Mullvad VPN subscription"})
@@ -162,11 +162,6 @@ def render_modules():
                 st.session_state._quick_action_triggered = True
                 st.rerun()
         with c3:
-            if st.button("Hosting", key="mod_hosting", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "I want to pay for hosting services"})
-                st.session_state._quick_action_triggered = True
-                st.rerun()
-        with c4:
             st.button("Alerts", key="mod_alerts", use_container_width=True, disabled=True)
 
 
@@ -194,19 +189,17 @@ def render_modules_preview():
         with c2:
             st.button("Uber", key="prev_uber", disabled=True, use_container_width=True)
         with c3:
-            st.button("Starbucks", key="prev_starbucks", disabled=True, use_container_width=True)
+            st.button("Coffee", key="prev_coffee", disabled=True, use_container_width=True)
         with c4:
-            st.button("PlayStation", key="prev_playstation", disabled=True, use_container_width=True)
+            st.button("Streaming", key="prev_streaming", disabled=True, use_container_width=True)
 
     with tabs[2]:
-        c1, c2, c3, c4 = st.columns(4)
+        c1, c2, c3 = st.columns(3)
         with c1:
             st.button("VPN", key="prev_vpn", disabled=True, use_container_width=True)
         with c2:
             st.button("Domain", key="prev_domain", disabled=True, use_container_width=True)
         with c3:
-            st.button("Hosting", key="prev_hosting", disabled=True, use_container_width=True)
-        with c4:
             st.button("Alerts", key="prev_alerts", disabled=True, use_container_width=True)
 
 
