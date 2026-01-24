@@ -1,7 +1,7 @@
 """
 Chat Interface Component
-V5 Design: "Neural Vault"
-Electric Violet/Cyan palette with micro-grid background.
+V3 Design: "Opinionated Luxury"
+Retains core chat logic, upgrades visuals and layout locations.
 """
 
 import streamlit as st
@@ -31,7 +31,7 @@ def render_hud_header():
         # The "System Status" Pill
         # Visual check for connection
         is_connected = bool(st.session_state.wallet_address)
-        status_color = "#8b5cf6" if is_connected else "#ef4444"  # Violet or Red
+        status_color = "#a3e635" if is_connected else "#ef4444"  # Lime or Red
         status_text = "SYSTEM ONLINE" if is_connected else "DISCONNECTED"
 
         st.markdown(f"""
@@ -254,9 +254,9 @@ def chat_interface(create_agent_func):
             font-family: 'JetBrains Mono', monospace;
         ">
             <div style="color: #52525b; font-size: 10px; margin-bottom: 8px;">SESSION INITIALIZED</div>
-            <div style="color: white; font-size: 13px;">Connected: <span style="color: #8b5cf6;">{wallet_short}</span></div>
+            <div style="color: white; font-size: 13px;">Connected: <span style="color: #a3e635;">{wallet_short}</span></div>
             <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-                <span style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 4px 8px; border-radius: 4px; font-size: 10px;">READY</span>
+                <span style="background: rgba(163, 230, 53, 0.1); color: #a3e635; padding: 4px 8px; border-radius: 4px; font-size: 10px;">READY</span>
                 <span style="background: rgba(255,255,255,0.05); color: #71717a; padding: 4px 8px; border-radius: 4px; font-size: 10px;">BASE-SEPOLIA</span>
             </div>
         </div>
