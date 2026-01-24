@@ -17,9 +17,11 @@ from components.modals import (
 )
 from components.chat import (
     chat_interface,
-    render_quick_actions,
-    render_suggested_actions,
-    render_suggested_actions_preview
+    render_action_deck,
+    render_modules,
+    render_modules_preview,
+    render_header,
+    render_industrial_card
 )
 
 __all__ = [
@@ -35,7 +37,9 @@ __all__ = [
     "show_success_animation",
     # Chat
     "chat_interface",
-    "render_quick_actions",
-    "render_suggested_actions",
-    "render_suggested_actions_preview",
+    "render_action_deck",
+    "render_modules",
+    "render_modules_preview",
+    "render_header",
+    "render_industrial_card",
 ]
