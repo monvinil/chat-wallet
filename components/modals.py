@@ -466,6 +466,9 @@ def _render_send_confirmation():
                         if user_id:
                             SpendingLimits.record_spend(user_id, total)
 
+                        # Invalidate balance cache so UI refreshes
+                        ChainUtils.invalidate_balance_cache(st.session_state.wallet_address)
+
                         show_success_animation()
                         st.markdown(f"""
 <div style="background: #0A0A0A; border: 1px solid #333; padding: 15px; font-family: 'JetBrains Mono', monospace;">

@@ -102,6 +102,20 @@ class ChainUtils:
         st.session_state[cache_time_key] = time.time()
 
     @staticmethod
+    def invalidate_balance_cache(address: Optional[str] = None) -> None:
+        """Invalidate balance cache - call after transactions"""
+        keys_to_delete = []
+        for key in list(st.session_state.keys()):
+            if key.startswith("_balance_cache"):
+                if address is None or address in key:
+                    keys_to_delete.append(key)
+        for key in keys_to_delete:
+            del st.session_state[key]
+        # Also clear the main balances
+        if "balances" in st.session_state:
+            st.session_state.balances = {}
+
+    @staticmethod
     def get_evm_balance(network_key: str, address: str, use_cache: bool = True) -> Dict[str, float]:
         """Get ETH and USDC balance for an EVM address"""
         network = NETWORKS.get(network_key)
@@ -253,10 +267,10 @@ class ChainUtils:
                 future = executor.submit(ChainUtils.get_solana_balance, solana_address, network_key)
                 future_to_network[future] = (network_key, "solana")
 
-            for future in concurrent.futures.as_completed(future_to_network, timeout=15):
+            for future in concurrent.futures.as_completed(future_to_network, timeout=5):
                 network_key, chain_type = future_to_network[future]
                 try:
-                    balances[network_key] = future.result(timeout=8)
+                    balances[network_key] = future.result(timeout=3)
                 except Exception as e:
                     print(f"Balance fetch error for {network_key}: {e}")
                     # Return zero balances on error

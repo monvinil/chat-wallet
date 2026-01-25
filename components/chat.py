@@ -55,35 +55,39 @@ def render_header():
     st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
 
 
+# --- CALLBACKS FOR ACTION BUTTONS ---
+def _on_deposit_click():
+    st.session_state.show_deposit_modal = True
+
+
+def _on_quick_action(prompt: str):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state._quick_action_triggered = True
+
+
 # --- ACTIONS: THE CONTROL STRIP ---
 def render_action_deck():
     """
     A single row of high-contrast buttons.
+    Uses on_click callbacks to avoid double-render from explicit st.rerun().
     """
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        if st.button("DEPOSIT / IN", key="quick_deposit", type="primary", use_container_width=True):
-            st.session_state.show_deposit_modal = True
-            st.rerun()
+        st.button("DEPOSIT / IN", key="quick_deposit", type="primary",
+                  use_container_width=True, on_click=_on_deposit_click)
 
     with col2:
-        if st.button("SEND / OUT", key="quick_send", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "I want to send money"})
-            st.session_state._quick_action_triggered = True
-            st.rerun()
+        st.button("SEND / OUT", key="quick_send", use_container_width=True,
+                  on_click=_on_quick_action, args=("I want to send money",))
 
     with col3:
-        if st.button("GIFT / BUY", key="quick_giftcard", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Show me gift cards"})
-            st.session_state._quick_action_triggered = True
-            st.rerun()
+        st.button("GIFT / BUY", key="quick_giftcard", use_container_width=True,
+                  on_click=_on_quick_action, args=("Show me gift cards",))
 
     with col4:
-        if st.button("BILL / PAY", key="quick_bill", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
-            st.session_state._quick_action_triggered = True
-            st.rerun()
+        st.button("BILL / PAY", key="quick_bill", use_container_width=True,
+                  on_click=_on_quick_action, args=("Help me pay a bill",))
 
 
 # --- MODULES: FULL CAPABILITY LIBRARY ---
@@ -151,10 +155,8 @@ def render_modules():
                 col_idx = i % 4
                 with cols[col_idx]:
                     if is_live:
-                        if st.button(label, key=f"mod_{tab_idx}_{i}", use_container_width=True):
-                            st.session_state.messages.append({"role": "user", "content": prompt})
-                            st.session_state._quick_action_triggered = True
-                            st.rerun()
+                        st.button(label, key=f"mod_{tab_idx}_{i}", use_container_width=True,
+                                  on_click=_on_quick_action, args=(prompt,))
                     else:
                         st.button(label, key=f"mod_{tab_idx}_{i}", disabled=True,
                                   use_container_width=True, help=prompt)

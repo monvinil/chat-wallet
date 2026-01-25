@@ -10,6 +10,7 @@ from web3 import Web3
 from eth_account import Account
 from config import NETWORKS, calculate_fee
 from meta_tx import MetaTransaction
+from utils.logger import logger
 import streamlit as st
 
 
@@ -70,7 +71,8 @@ class TransactionRelayer:
                     Web3.to_checksum_address(user_address)
                 ).call()
                 return Decimal(balance_raw) / Decimal(1e6)
-            except:
+            except Exception as e:
+                logger.warning(f"Failed to fetch USDC balance for {user_address[:10]}...: {e}")
                 return Decimal(0)
         return Decimal(0)
 
@@ -93,7 +95,8 @@ class TransactionRelayer:
             if self.network["testnet"]:
                 gas_cost_usd = 0.02  # Simulate $0.02 gas cost
 
-        except:
+        except Exception as e:
+            logger.warning(f"Gas estimation failed, using default: {e}")
             gas_cost_usd = 0.02  # Default estimate
 
         # Calculate app fee
@@ -143,7 +146,7 @@ class TransactionRelayer:
                 if not can_proceed:
                     return False, limit_msg
             except ImportError:
-                pass  # Spending limits module not available
+                logger.debug("Spending limits module not available, skipping check")
 
         return True, None
 
@@ -244,5 +247,6 @@ class TransactionRelayer:
                 "usdc": usdc_balance,
                 "address": self.relayer_address
             }
-        except:
+        except Exception as e:
+            logger.warning(f"Failed to get relayer balance: {e}")
             return {"eth": 0, "usdc": 0, "address": self.relayer_address}

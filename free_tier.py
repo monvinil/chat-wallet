@@ -52,7 +52,7 @@ class FreeTier:
 
     @staticmethod
     def increment_usage(user_id: str) -> bool:
-        """Increment message count for user (call after successful message)"""
+        """Increment message count for user atomically (call after successful message)"""
         from supabase_client import get_supabase_client
 
         try:
@@ -60,9 +60,15 @@ class FreeTier:
             if not client:
                 return False
 
-            current = FreeTier.get_usage(user_id)
+            # Try atomic increment via RPC first (requires Supabase function)
+            try:
+                client.rpc("increment_free_tier_usage", {"p_user_id": user_id}).execute()
+                return True
+            except Exception:
+                pass  # RPC not available, fall back to upsert
 
-            # Upsert the new count
+            # Fallback: upsert with current value (not fully atomic but acceptable)
+            current = FreeTier.get_usage(user_id)
             client.table("user_settings").upsert({
                 "user_id": user_id,
                 "free_tier_messages_used": current + 1,

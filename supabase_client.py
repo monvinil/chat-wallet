@@ -375,11 +375,40 @@ def log_transaction(client: Client, user_id: str, wallet_id: str, tx_hash: str,
 
 
 def get_user_transactions(client: Client, user_id: str, limit: int = 50) -> list:
-    """Get transaction history for a user"""
+    """Get transaction history for a user (with 30s cache)"""
+    import time
+
+    # Check cache first
+    cache_key = f"_tx_cache_{user_id}"
+    cache_time_key = f"_tx_cache_time_{user_id}"
+    cache_ttl = 30  # 30 second cache
+
+    cached_time = st.session_state.get(cache_time_key)
+    if cached_time and (time.time() - cached_time) < cache_ttl:
+        cached = st.session_state.get(cache_key)
+        if cached is not None:
+            return cached
+
     try:
         result = client.table("transactions").select("*").eq("user_id", user_id)\
             .order("created_at", desc=True).limit(limit).execute()
-        return result.data if result.data else []
+        transactions = result.data if result.data else []
+
+        # Cache result
+        st.session_state[cache_key] = transactions
+        st.session_state[cache_time_key] = time.time()
+
+        return transactions
     except Exception as e:
         logger.error(f"Fetch transactions: {e}")
         return []
+
+
+def invalidate_transaction_cache(user_id: str) -> None:
+    """Invalidate transaction cache after new transaction"""
+    cache_key = f"_tx_cache_{user_id}"
+    cache_time_key = f"_tx_cache_time_{user_id}"
+    if cache_key in st.session_state:
+        del st.session_state[cache_key]
+    if cache_time_key in st.session_state:
+        del st.session_state[cache_time_key]

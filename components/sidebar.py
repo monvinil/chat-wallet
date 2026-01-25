@@ -9,6 +9,31 @@ from wallet_manager import WalletManager
 from session_manager import SessionManager
 
 
+# --- CALLBACKS (avoid double-render from explicit st.rerun) ---
+def _on_show_auth():
+    st.session_state.show_auth_modal = True
+
+
+def _on_show_deposit():
+    st.session_state.show_deposit_modal = True
+
+
+def _on_show_send():
+    st.session_state.show_send_modal = True
+
+
+def _on_show_settings():
+    st.session_state.show_settings = True
+
+
+def _on_lock_wallet():
+    WalletManager.lock_wallet()
+
+
+def _on_logout():
+    SessionManager.logout()
+
+
 def _get_solana_address_from_session() -> str:
     """Get Solana address from session state if available"""
     return st.session_state.get("solana_address", "")
@@ -203,9 +228,8 @@ def sidebar():
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("AUTHENTICATE", use_container_width=True, type="primary"):
-                st.session_state.show_auth_modal = True
-                st.rerun()
+            st.button("AUTHENTICATE", use_container_width=True, type="primary",
+                       on_click=_on_show_auth)
 
             render_sidebar_footer()
             return
@@ -244,13 +268,11 @@ def sidebar():
             # Primary actions
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("DEPOSIT", use_container_width=True, type="primary"):
-                    st.session_state.show_deposit_modal = True
-                    st.rerun()
+                st.button("DEPOSIT", use_container_width=True, type="primary",
+                          on_click=_on_show_deposit)
             with col2:
-                if st.button("SEND", use_container_width=True):
-                    st.session_state.show_send_modal = True
-                    st.rerun()
+                st.button("SEND", use_container_width=True,
+                          on_click=_on_show_send)
 
             st.markdown("<div style='height: 0.75rem;'></div>", unsafe_allow_html=True)
 
@@ -260,13 +282,11 @@ def sidebar():
             st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
 
             # Secondary actions
-            if st.button("SETTINGS", use_container_width=True):
-                st.session_state.show_settings = True
-                st.rerun()
+            st.button("SETTINGS", use_container_width=True,
+                      on_click=_on_show_settings)
 
-            if st.button("LOCK_SESSION", use_container_width=True):
-                WalletManager.lock_wallet()
-                st.rerun()
+            st.button("LOCK_SESSION", use_container_width=True,
+                      on_click=_on_lock_wallet)
 
             render_sidebar_footer()
 
@@ -294,13 +314,11 @@ def sidebar():
 
                 st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
-                if st.button("SETTINGS", use_container_width=True):
-                    st.session_state.show_settings = True
-                    st.rerun()
+                st.button("SETTINGS", use_container_width=True,
+                          on_click=_on_show_settings, key="locked_settings")
 
-                if st.button("TERMINATE", use_container_width=True):
-                    SessionManager.logout()
-                    st.rerun()
+                st.button("TERMINATE", use_container_width=True,
+                          on_click=_on_logout)
 
                 render_sidebar_footer()
 
@@ -313,8 +331,7 @@ def sidebar():
                 """, unsafe_allow_html=True)
                 st.code(ChainUtils.format_address(st.session_state.wallet_address))
 
-                if st.button("IMPORT_WALLET", use_container_width=True, type="primary"):
-                    st.session_state.show_auth_modal = True
-                    st.rerun()
+                st.button("IMPORT_WALLET", use_container_width=True, type="primary",
+                          on_click=_on_show_auth)
 
                 render_sidebar_footer()

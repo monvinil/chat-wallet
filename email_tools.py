@@ -23,7 +23,7 @@ def get_verification_code(from_domain: Optional[str] = None) -> str:
         The verification code string, or error message if not found
     """
     try:
-        user_id = st.session_state.get("wallet_address")
+        user_id = st.session_state.get("user_id")
         if not user_id:
             return "Error: User not logged in"
 
@@ -61,7 +61,7 @@ def search_recent_emails(query: str = "ALL", max_results: int = 5) -> str:
         Formatted list of recent emails with subject, from, date, and snippet
     """
     try:
-        user_id = st.session_state.get("wallet_address")
+        user_id = st.session_state.get("user_id")
         if not user_id:
             return "Error: User not logged in"
 
@@ -104,7 +104,7 @@ def check_email_connected() -> str:
         Status message about email connection
     """
     try:
-        user_id = st.session_state.get("wallet_address")
+        user_id = st.session_state.get("user_id")
         if not user_id:
             return "Error: User not logged in"
 
