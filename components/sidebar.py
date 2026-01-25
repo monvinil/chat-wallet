@@ -1,6 +1,6 @@
 """
 Sidebar component for Chat Wallet
-V7 "The Construct" - Industrial High-Fidelity Aesthetic
+V8 "The Drop" - High-End Streetwear Aesthetic
 """
 
 import streamlit as st
@@ -15,58 +15,93 @@ def _get_solana_address_from_session() -> str:
 
 
 def render_sidebar_header():
-    """Render V7 workspace header"""
+    """Render V8 brand header with volt accent"""
     st.markdown("""
-    <div style="margin-bottom: 1.5rem;">
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
-                    letter-spacing: 0.1em; color: #71717a; text-transform: uppercase;">
-            CONTROL PANEL
+    <div style="
+        border-left: 3px solid #ccff00;
+        padding-left: 12px;
+        margin-bottom: 1.5rem;
+    ">
+        <div style="font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 800;
+                    letter-spacing: 0.05em; color: white;">
+            CW_SYSTEMS<span style="color: #ccff00;">&reg;</span>
         </div>
-        <div style="font-size: 1rem; font-weight: 600; color: #f4f4f5; margin-top: 0.25rem;">
-            Personal Wallet
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                    color: #525252; margin-top: 2px; letter-spacing: 0.1em;">
+            PERSONAL_EDITION
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 
 def render_status_card(is_active: bool):
-    """Render keystore status card with V7 styling"""
+    """Render V8 status card with floating label"""
     if is_active:
         st.markdown("""
-        <div style="background: rgba(190, 242, 100, 0.08); border: 1px solid rgba(190, 242, 100, 0.25);
-                    border-radius: 4px; padding: 0.75rem 1rem; margin-bottom: 1rem;
-                    display: flex; align-items: center; gap: 0.6rem;">
-            <span style="width: 6px; height: 6px; background: #bef264; border-radius: 50%;"></span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
-                         letter-spacing: 0.05em; color: #bef264; text-transform: uppercase;">
-                KEYSTORE ACTIVE
-            </span>
+        <div style="position: relative; margin-bottom: 1.25rem;">
+            <div style="
+                position: absolute;
+                top: -8px;
+                left: 10px;
+                background: #000;
+                padding: 0 6px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 8px;
+                color: #525252;
+                letter-spacing: 0.1em;
+            ">STATUS</div>
+            <div style="
+                border: 1px solid #ccff00;
+                padding: 12px 14px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            ">
+                <span style="width: 6px; height: 6px; background: #ccff00; border-radius: 50%;"></span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
+                             letter-spacing: 0.1em; color: #ccff00;">ACTIVE</span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25);
-                    border-radius: 4px; padding: 0.75rem 1rem; margin-bottom: 1rem;
-                    display: flex; align-items: center; gap: 0.6rem;">
-            <span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%;"></span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
-                         letter-spacing: 0.05em; color: #ef4444; text-transform: uppercase;">
-                KEYSTORE LOCKED
-            </span>
+        <div style="position: relative; margin-bottom: 1.25rem;">
+            <div style="
+                position: absolute;
+                top: -8px;
+                left: 10px;
+                background: #000;
+                padding: 0 6px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 8px;
+                color: #525252;
+                letter-spacing: 0.1em;
+            ">STATUS</div>
+            <div style="
+                border: 1px solid #333;
+                padding: 12px 14px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            ">
+                <span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%;"></span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
+                             letter-spacing: 0.1em; color: #999;">LOCKED</span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
 
 def render_balance_display(total_usdc: float):
-    """Render V7 balance display with large monospace numbers"""
+    """Render V8 balance display with large typography"""
     st.markdown(f"""
-    <div style="margin-bottom: 1.25rem;">
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
-                    letter-spacing: 0.1em; color: #71717a; text-transform: uppercase; margin-bottom: 0.5rem;">
-            NET EQUITY
+    <div style="margin-bottom: 1.5rem;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                    letter-spacing: 0.1em; color: #525252; margin-bottom: 6px;">
+            TOTAL_EQUITY
         </div>
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.75rem; font-weight: 600;
-                    color: #f4f4f5; letter-spacing: -0.02em;">
+        <div style="font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 600;
+                    color: white; letter-spacing: -0.02em;">
             ${total_usdc:,.2f}
         </div>
     </div>
@@ -74,25 +109,25 @@ def render_balance_display(total_usdc: float):
 
 
 def render_sidebar_footer():
-    """Render V7 footer - trust indicators"""
+    """Render V8 footer - industrial trust indicators"""
     st.markdown("""
-    <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
-                    letter-spacing: 0.05em; color: #52525b; text-transform: uppercase; text-align: center;">
-            NON-CUSTODIAL • ENCRYPTED LOCALLY
+    <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #1a1a1a;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                    letter-spacing: 0.05em; color: #333; text-align: center;">
+            ENCRYPTED LOCALLY / NO_CLOUD_LEAKS
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 
 def render_transaction_history():
-    """Render V7 transaction history with styled rows"""
+    """Render V8 transaction history ticker"""
     user_id = st.session_state.get("user_id")
 
     if not user_id or user_id.startswith("guest_"):
         return
 
-    with st.expander("TRANSACTIONS", expanded=False):
+    with st.expander("LATEST_OPS", expanded=False):
         try:
             from supabase_client import get_supabase_client, get_user_transactions
 
@@ -105,8 +140,8 @@ def render_transaction_history():
 
             if not transactions:
                 st.markdown("""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #71717a;">
-                    No transactions yet
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #525252;">
+                    NO_TRANSACTIONS_YET
                 </div>
                 """, unsafe_allow_html=True)
                 return
@@ -114,23 +149,24 @@ def render_transaction_history():
             for tx in transactions:
                 tx_type = tx.get("type", "unknown")
                 amount = float(tx.get("amount", 0))
-                currency = tx.get("currency", "USD")
                 status = tx.get("status", "pending")
                 chain = tx.get("chain", "")
 
-                # Arrow indicators
-                arrow = "↓" if tx_type == "deposit" else "↑"
-                arrow_color = "#bef264" if tx_type == "deposit" else "#a1a1aa"
+                # V8 style badges
+                if tx_type == "deposit":
+                    badge = '<span style="background: #ccff00; color: black; font-size: 8px; padding: 2px 4px; font-family: JetBrains Mono; font-weight: 600;">IN</span>'
+                else:
+                    badge = '<span style="background: #333; color: white; font-size: 8px; padding: 2px 4px; font-family: JetBrains Mono;">OUT</span>'
 
-                # Status styling
-                status_color = "#bef264" if status == "confirmed" else "#fbbf24" if status == "pending" else "#ef4444"
+                # Status indicator
+                status_color = "#ccff00" if status == "confirmed" else "#fbbf24" if status == "pending" else "#ef4444"
 
                 st.markdown(f"""
                 <div style="display: flex; justify-content: space-between; align-items: center;
-                            padding: 0.5rem 0; border-bottom: 1px dashed rgba(255,255,255,0.08);">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="color: {arrow_color}; font-size: 0.875rem;">{arrow}</span>
-                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #f4f4f5;">
+                            padding: 8px 0; border-bottom: 1px solid #1a1a1a;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        {badge}
+                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: white;">
                             ${amount:.2f}
                         </span>
                     </div>
@@ -144,8 +180,8 @@ def render_transaction_history():
                     if explorer_url:
                         st.markdown(f"""
                         <a href="{explorer_url}" target="_blank" style="font-family: 'JetBrains Mono', monospace;
-                           font-size: 10px; color: #bef264; text-decoration: none; text-transform: uppercase;">
-                            VIEW →
+                           font-size: 9px; color: #ccff00; text-decoration: none; letter-spacing: 0.05em;">
+                            VIEW_TX &rarr;
                         </a>
                         """, unsafe_allow_html=True)
 
@@ -154,20 +190,20 @@ def render_transaction_history():
 
 
 def sidebar():
-    """Render V7 sidebar"""
+    """Render V8 sidebar"""
     with st.sidebar:
         render_sidebar_header()
 
         # No wallet - show login
         if not st.session_state.wallet_address:
             st.markdown("""
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
-                        color: #a1a1aa; margin-bottom: 1rem;">
-                Authenticate to initialize session
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
+                        color: #525252; margin-bottom: 1rem; letter-spacing: 0.05em;">
+                INITIALIZE_SESSION_TO_PROCEED
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("SIGN IN", use_container_width=True, type="primary"):
+            if st.button("AUTHENTICATE", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
                 st.rerun()
 
@@ -190,17 +226,17 @@ def sidebar():
 
             with st.expander("ADDRESSES", expanded=False):
                 st.markdown("""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
-                            letter-spacing: 0.1em; color: #71717a; margin-bottom: 0.25rem;">
-                    EVM
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                            letter-spacing: 0.1em; color: #525252; margin-bottom: 4px;">
+                    EVM_ADDR
                 </div>
                 """, unsafe_allow_html=True)
                 st.code(ChainUtils.format_address(st.session_state.wallet_address, 8))
                 if solana_addr:
                     st.markdown("""
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
-                                letter-spacing: 0.1em; color: #71717a; margin-bottom: 0.25rem; margin-top: 0.5rem;">
-                        SOLANA
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                                letter-spacing: 0.1em; color: #525252; margin-bottom: 4px; margin-top: 8px;">
+                        SOL_ADDR
                     </div>
                     """, unsafe_allow_html=True)
                     st.code(ChainUtils.format_address(solana_addr, 8))
@@ -228,7 +264,7 @@ def sidebar():
                 st.session_state.show_settings = True
                 st.rerun()
 
-            if st.button("LOCK SESSION", use_container_width=True):
+            if st.button("LOCK_SESSION", use_container_width=True):
                 WalletManager.lock_wallet()
                 st.rerun()
 
@@ -240,8 +276,8 @@ def sidebar():
                 render_status_card(is_active=False)
 
                 st.markdown(f"""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px;
-                            color: #a1a1aa; margin-bottom: 0.5rem;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
+                            color: #666; margin-bottom: 0.75rem;">
                     {ChainUtils.format_address(st.session_state.wallet_address, 8)}
                 </div>
                 """, unsafe_allow_html=True)
@@ -249,12 +285,12 @@ def sidebar():
                 unlock_password = st.text_input("Password", type="password", key="unlock_pwd",
                                                  label_visibility="collapsed", placeholder="Enter password")
 
-                if st.button("UNLOCK", use_container_width=True, type="primary"):
+                if st.button("DECRYPT", use_container_width=True, type="primary"):
                     if unlock_password:
                         if WalletManager.unlock_wallet_with_password(unlock_password):
                             st.rerun()
                         else:
-                            st.error("Incorrect password")
+                            st.error("INVALID_CREDENTIALS")
 
                 st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
@@ -262,7 +298,7 @@ def sidebar():
                     st.session_state.show_settings = True
                     st.rerun()
 
-                if st.button("TERMINATE SESSION", use_container_width=True):
+                if st.button("TERMINATE", use_container_width=True):
                     SessionManager.logout()
                     st.rerun()
 
@@ -270,14 +306,14 @@ def sidebar():
 
             elif st.session_state.get("wallet_address"):
                 st.markdown("""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
-                            color: #a1a1aa; margin-bottom: 1rem;">
-                    Import wallet to continue
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
+                            color: #525252; margin-bottom: 1rem; letter-spacing: 0.05em;">
+                    IMPORT_WALLET_TO_CONTINUE
                 </div>
                 """, unsafe_allow_html=True)
                 st.code(ChainUtils.format_address(st.session_state.wallet_address))
 
-                if st.button("IMPORT WALLET", use_container_width=True, type="primary"):
+                if st.button("IMPORT_WALLET", use_container_width=True, type="primary"):
                     st.session_state.show_auth_modal = True
                     st.rerun()
 

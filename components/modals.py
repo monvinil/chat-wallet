@@ -1,6 +1,6 @@
 """
 Modal components for Chat Wallet
-Deposit, Send, and Seed Phrase modals
+V8 "The Spec Sheet" - Product Spec Aesthetic
 """
 
 import random
@@ -14,8 +14,8 @@ from chain_utils import ChainUtils
 
 
 def generate_qr(data: str):
-    """Generate QR code"""
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    """Generate QR code with V8 thin border"""
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
     qr.add_data(data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
@@ -26,7 +26,7 @@ def generate_qr(data: str):
 
 
 def show_success_animation():
-    """Show a professional success animation instead of balloons"""
+    """Show V8 style success animation"""
     st.markdown("""
     <style>
     @keyframes success-checkmark {
@@ -40,18 +40,13 @@ def show_success_animation():
         100% { transform: scale(1); opacity: 1; }
     }
 
-    @keyframes confetti-fall {
-        0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-    }
-
     .success-overlay {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(15, 15, 20, 0.9);
+        background: rgba(5, 5, 5, 0.95);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -71,20 +66,19 @@ def show_success_animation():
     .success-icon {
         width: 80px;
         height: 80px;
-        border-radius: 50%;
-        background: linear-gradient(145deg, #10B981 0%, #059669 100%);
+        border-radius: 0;
+        background: #ccff00;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto 20px;
         animation: success-checkmark 0.5s ease-out;
-        box-shadow: 0 0 40px rgba(16, 185, 129, 0.4);
     }
 
     .success-icon svg {
         width: 40px;
         height: 40px;
-        stroke: white;
+        stroke: black;
         stroke-width: 3;
         fill: none;
     }
@@ -93,40 +87,20 @@ def show_success_animation():
         position: absolute;
         width: 100px;
         height: 100px;
-        border: 3px solid rgba(16, 185, 129, 0.3);
-        border-radius: 50%;
+        border: 2px solid rgba(204, 255, 0, 0.3);
         animation: success-ring 0.6s ease-out;
     }
 
-    .confetti {
-        position: fixed;
-        width: 10px;
-        height: 10px;
-        top: -10px;
-        animation: confetti-fall 3s ease-out forwards;
+    .success-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        color: #ccff00;
+        letter-spacing: 0.1em;
+        margin-top: 20px;
     }
-
-    .confetti:nth-child(1) { left: 10%; background: #3B82F6; animation-delay: 0s; }
-    .confetti:nth-child(2) { left: 20%; background: #8B5CF6; animation-delay: 0.1s; }
-    .confetti:nth-child(3) { left: 30%; background: #10B981; animation-delay: 0.2s; }
-    .confetti:nth-child(4) { left: 40%; background: #F59E0B; animation-delay: 0.15s; }
-    .confetti:nth-child(5) { left: 50%; background: #3B82F6; animation-delay: 0.25s; }
-    .confetti:nth-child(6) { left: 60%; background: #EC4899; animation-delay: 0.1s; }
-    .confetti:nth-child(7) { left: 70%; background: #8B5CF6; animation-delay: 0.3s; }
-    .confetti:nth-child(8) { left: 80%; background: #10B981; animation-delay: 0.05s; }
-    .confetti:nth-child(9) { left: 90%; background: #3B82F6; animation-delay: 0.2s; }
     </style>
 
     <div class="success-overlay" id="successOverlay">
-        <div class="confetti"></div>
-        <div class="confetti"></div>
-        <div class="confetti"></div>
-        <div class="confetti"></div>
-        <div class="confetti"></div>
-        <div class="confetti"></div>
-        <div class="confetti"></div>
-        <div class="confetti"></div>
-        <div class="confetti"></div>
         <div class="success-content">
             <div style="position: relative; display: inline-block;">
                 <div class="success-ring"></div>
@@ -136,6 +110,7 @@ def show_success_animation():
                     </svg>
                 </div>
             </div>
+            <div class="success-label">EXECUTION_COMPLETE</div>
         </div>
     </div>
 
@@ -154,8 +129,7 @@ def show_success_animation():
 
 def seed_phrase_modal():
     """
-    Full-page modal for seed phrase display and verification after signup.
-    User must verify 3 random words before proceeding.
+    V8 seed phrase modal - "PRIVATE_KEY_GENERATION"
     """
     mnemonic = st.session_state.get("_pending_seed_phrase", "")
     if not mnemonic:
@@ -173,35 +147,44 @@ def seed_phrase_modal():
 
     indices = st.session_state._seed_verify_indices
 
-    st.title("Save Your Recovery Phrase")
+    st.markdown("### PRIVATE_KEY_GENERATION")
 
     if st.session_state.get("_seed_verify_step") == "show":
-        st.warning("**Write this down and store it securely.** This is the only way to recover your wallet if you forget your password or lose access to your account.")
+        st.warning("DO NOT SHARE. OFFLINE STORAGE ONLY.")
 
         st.markdown("---")
 
-        # Display words in a grid
-        st.markdown("#### Your 12-word recovery phrase:")
+        # V8 numbered grid display
         cols = st.columns(3)
         for i, word in enumerate(words):
             with cols[i % 3]:
-                st.markdown(f"**{i+1}.** {word}")
+                st.markdown(f"""
+                <div style="
+                    border: 1px solid #333;
+                    padding: 10px;
+                    margin-bottom: 8px;
+                    background: #0A0A0A;
+                ">
+                    <div style="font-size: 9px; color: #525252; font-family: 'JetBrains Mono', monospace;">{i+1:02d}</div>
+                    <div style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: white;">{word}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
         st.markdown("---")
 
-        # Also show as copyable code block
-        with st.expander("Copy as text"):
+        # Copyable text
+        with st.expander("COPY_AS_TEXT"):
             st.code(mnemonic, language=None)
 
-        st.caption("You'll need to verify 3 words in the next step to confirm you've saved your phrase.")
+        st.caption("VERIFICATION_REQUIRED: 3 WORDS IN NEXT STEP")
 
-        if st.button("I've written it down", type="primary", use_container_width=True):
+        if st.button("CONFIRM SECURE STORAGE", type="primary", use_container_width=True):
             st.session_state._seed_verify_step = "verify"
             st.rerun()
 
     elif st.session_state.get("_seed_verify_step") == "verify":
-        st.markdown("#### Verify your recovery phrase")
-        st.caption("Enter the requested words to confirm you've saved your phrase.")
+        st.markdown("#### IDENTITY_VERIFICATION")
+        st.caption("Enter the requested words to confirm backup.")
 
         all_correct = True
         user_inputs = []
@@ -209,7 +192,7 @@ def seed_phrase_modal():
         for i, idx in enumerate(indices):
             word_num = idx + 1
             user_input = st.text_input(
-                f"Word #{word_num}",
+                f"WORD_{word_num:02d}",
                 key=f"seed_verify_{i}",
                 placeholder=f"Enter word {word_num}"
             ).strip().lower()
@@ -223,16 +206,15 @@ def seed_phrase_modal():
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            if st.button("Show phrase again", use_container_width=True):
+            if st.button("SHOW_PHRASE", use_container_width=True):
                 st.session_state._seed_verify_step = "show"
-                # Clear inputs
                 for i in range(3):
                     if f"seed_verify_{i}" in st.session_state:
                         del st.session_state[f"seed_verify_{i}"]
                 st.rerun()
 
         with col2:
-            if st.button("Verify", type="primary", use_container_width=True, disabled=not all_filled):
+            if st.button("AUTHENTICATE", type="primary", use_container_width=True, disabled=not all_filled):
                 if all_correct:
                     # Clean up state
                     st.session_state._seed_verify_indices = None
@@ -244,12 +226,12 @@ def seed_phrase_modal():
                     st.session_state.just_signed_up = True
                     st.rerun()
                 else:
-                    st.error("One or more words are incorrect. Please check your recovery phrase.")
+                    st.error("MISMATCH_DETECTED")
 
 
 def deposit_modal():
-    """Show deposit address modal with multi-chain support"""
-    st.markdown("### Deposit")
+    """V8 deposit modal - "INBOUND_TRANSFER" with shipping label aesthetic"""
+    st.markdown("### INBOUND_TRANSFER")
 
     # Get wallet data to check for Solana address
     wallet_data = WalletManager.get_wallet_from_session()
@@ -274,7 +256,7 @@ def deposit_modal():
         chain_options["Solana Devnet (Testnet)"] = "solana-devnet"
         chain_options["Solana Mainnet"] = "solana-mainnet"
 
-    selected_chain_name = st.selectbox("Network", list(chain_options.keys()))
+    selected_chain_name = st.selectbox("NETWORK", list(chain_options.keys()))
     selected_chain = chain_options[selected_chain_name]
 
     network = NETWORKS[selected_chain]
@@ -283,84 +265,96 @@ def deposit_modal():
     if network["type"] == "solana":
         address = solana_address
         if not address:
-            st.error("Solana address not available. Try importing your wallet with a seed phrase.")
+            st.error("SOLANA_ADDR_UNAVAILABLE")
             return
     else:
         address = st.session_state.wallet_address
 
-    # Network indicator
-    if network['testnet']:
-        st.caption(f"{network['name']} (Testnet)")
-    else:
-        st.caption(f"{network['name']} (Mainnet)")
+    # V8 "Shipping Label" Address Display
+    st.markdown(f"""
+    <div style="
+        margin-top: 20px;
+        padding: 20px;
+        background: white;
+        color: black;
+        text-align: center;
+        margin-bottom: 20px;
+    ">
+        <div style="font-size: 10px; font-weight: 800; font-family: 'Inter', sans-serif; margin-bottom: 6px;">SCAN FOR ROUTING</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; word-break: break-all; margin-bottom: 12px;">
+            {address}
+        </div>
+        <div style="height: 2px; width: 100%; background: black;"></div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Show chain type badge
+    # QR Code
+    qr_img = generate_qr(address)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.image(qr_img, width=180)
+
+    # Chain type badge
     chain_type = network["type"].upper()
-    st.markdown(f"**Chain:** {chain_type}")
+    network_label = "TESTNET" if network['testnet'] else "MAINNET"
 
-    # Address
-    st.code(address)
+    st.markdown(f"""
+    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+        <span style="background: #1a1a1a; color: #999; font-size: 9px; padding: 4px 8px; font-family: JetBrains Mono;">{chain_type}</span>
+        <span style="background: {'#333' if network['testnet'] else '#ccff00'}; color: {'#999' if network['testnet'] else 'black'}; font-size: 9px; padding: 4px 8px; font-family: JetBrains Mono; font-weight: 600;">{network_label}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        # Copy button with JavaScript clipboard integration
-        copy_js = f"""
-        <script>
-        function copyAddress() {{
-            navigator.clipboard.writeText("{address}");
-        }}
-        </script>
-        """
-        st.components.v1.html(copy_js, height=0)
-        if st.button("Copy address", use_container_width=True):
-            # Also set in session for JS to work
+        # Copy button
+        if st.button("COPY_ADDR", use_container_width=True):
             st.markdown(f'<script>navigator.clipboard.writeText("{address}");</script>', unsafe_allow_html=True)
-            st.toast("Copied to clipboard")
+            st.toast("Copied")
 
     with col2:
-        # Build explorer URL based on chain type
+        # Explorer link
         if network["type"] == "solana":
             cluster_param = "?cluster=devnet" if network["testnet"] else ""
             explorer_url = f"{network['explorer']}/address/{address}{cluster_param}"
         else:
             explorer_url = ChainUtils.get_explorer_url(selected_chain, address)
-        st.link_button("View on explorer", explorer_url, use_container_width=True)
+        st.link_button("VIEW_EXPLORER", explorer_url, use_container_width=True)
 
-    # QR Code
-    st.divider()
-    qr_img = generate_qr(address)
-    st.image(qr_img, width=180)
-
-    # Instructions based on network
+    # Faucet instructions
     if "sepolia" in selected_chain or "amoy" in selected_chain:
-        with st.expander("Get testnet funds"):
+        with st.expander("GET_TESTNET_FUNDS"):
             st.markdown("""
-Get testnet tokens from these faucets:
 - [Coinbase Faucet](https://portal.cdp.coinbase.com/products/faucet)
 - [Alchemy Faucet](https://sepoliafaucet.com/)
 """)
     elif "solana-devnet" in selected_chain:
-        with st.expander("Get testnet SOL"):
+        with st.expander("GET_TESTNET_SOL"):
             st.markdown("""
-Get testnet SOL from:
 - [Solana Faucet](https://faucet.solana.com/)
-- Or use CLI: `solana airdrop 2`
+- CLI: `solana airdrop 2`
 """)
     else:
-        st.warning("This is mainnet. Only deposit real funds.")
+        st.warning("MAINNET: REAL FUNDS ONLY")
 
-    # Show both addresses if multi-chain wallet
+    # Show all addresses for multi-chain wallet
     if has_solana:
-        with st.expander("All deposit addresses"):
-            st.markdown("**EVM (Base, Arbitrum, Polygon):**")
+        with st.expander("ALL_ADDRESSES"):
+            st.markdown("""
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; margin-bottom: 4px;">EVM_CHAINS</div>
+""", unsafe_allow_html=True)
             st.code(st.session_state.wallet_address)
-            st.markdown("**Solana:**")
+            st.markdown("""
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; margin-bottom: 4px; margin-top: 8px;">SOLANA</div>
+""", unsafe_allow_html=True)
             st.code(solana_address)
 
 
 def _render_send_confirmation():
-    """Render send confirmation step"""
+    """Render V8 send confirmation - "EXECUTION_ORDER" """
     from transaction_relayer import TransactionRelayer
     from meta_tx import MetaTransaction
     from spending_limits import SpendingLimits
@@ -368,32 +362,62 @@ def _render_send_confirmation():
 
     details = st.session_state.get("_send_details", {})
 
-    st.markdown("### Confirm Transaction")
-    st.warning("Please review carefully before sending.")
+    st.markdown("### EXECUTION_ORDER")
 
-    # Show transaction summary
+    # V8 Confirmation Card with volt border
+    recipient = details.get('recipient', '')
+    recipient_short = f"{recipient[:6]}...{recipient[-4:]}" if len(recipient) > 10 else recipient
+
     st.markdown(f"""
-**Sending to:**
-`{details.get('recipient', '')}`
+    <div style="
+        background: #0A0A0A;
+        border: 1px solid #ccff00;
+        padding: 20px;
+        font-family: 'JetBrains Mono', monospace;
+        margin-bottom: 20px;
+    ">
+        <div style="color: #ccff00; font-size: 9px; margin-bottom: 12px; letter-spacing: 0.1em;">STATUS: PENDING_SIGNATURE</div>
 
-**Amount:** ${details.get('amount', 0):.2f} USDC
-**Network:** {details.get('network_name', '')}
-**Total (with fees):** ${details.get('total', 0):.2f}
-""")
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+            <span style="color: #666; font-size: 11px;">AMOUNT</span>
+            <span style="color: white; font-size: 12px;">${details.get('amount', 0):.2f} USDC</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+            <span style="color: #666; font-size: 11px;">SERVICE_FEE</span>
+            <span style="color: white; font-size: 12px;">${details.get('app_fee', 0):.3f}</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+            <span style="color: #666; font-size: 11px;">TOTAL</span>
+            <span style="color: #ccff00; font-size: 12px; font-weight: 600;">${details.get('total', 0):.2f}</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span style="color: #666; font-size: 11px;">DESTINATION</span>
+            <span style="color: white; font-size: 11px;">{recipient_short}</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between;">
+            <span style="color: #666; font-size: 11px;">NETWORK</span>
+            <span style="color: white; font-size: 11px;">BASE_MAINNET</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Confirm checkbox
-    confirmed = st.checkbox("I confirm this is the correct recipient address", key="send_confirm_checkbox")
+    confirmed = st.checkbox("I CONFIRM RECIPIENT ADDRESS IS CORRECT", key="send_confirm_checkbox")
 
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("Back", use_container_width=True):
+        if st.button("ABORT", use_container_width=True):
             st.session_state._send_confirm_step = False
             st.rerun()
 
     with col2:
-        if st.button("Send Now", type="primary", use_container_width=True, disabled=not confirmed):
-            with st.spinner("Processing transaction..."):
+        if st.button("SIGN & EXECUTE", type="primary", use_container_width=True, disabled=not confirmed):
+            with st.spinner("PROCESSING..."):
                 try:
                     # Get stored transaction details
                     recipient = details.get("recipient")
@@ -405,7 +429,7 @@ def _render_send_confirmation():
                     wallet_data = WalletManager.get_wallet_from_session()
 
                     if not wallet_data:
-                        st.error("Could not load wallet. Please unlock first.")
+                        st.error("WALLET_LOAD_FAILED")
                         return
 
                     # Get chain ID for signing
@@ -442,29 +466,33 @@ def _render_send_confirmation():
                         if user_id:
                             SpendingLimits.record_spend(user_id, total)
 
-                        st.success("Transaction complete")
+                        show_success_animation()
                         st.markdown(f"""
-- Hash: `{result['tx_hash'][:20]}...`
-- Amount: ${result['amount']:.2f}
-- Fee: ${result['gas_cost']:.3f}
-""")
-                        st.link_button("View on explorer", result["explorer_url"], use_container_width=True)
+<div style="background: #0A0A0A; border: 1px solid #333; padding: 15px; font-family: 'JetBrains Mono', monospace;">
+    <div style="color: #ccff00; font-size: 9px; margin-bottom: 10px;">EXECUTION_COMPLETE</div>
+    <div style="color: #666; font-size: 10px;">TX_HASH</div>
+    <div style="color: white; font-size: 11px; margin-bottom: 8px;">{result['tx_hash'][:20]}...</div>
+    <div style="color: #666; font-size: 10px;">AMOUNT</div>
+    <div style="color: white; font-size: 11px;">${result['amount']:.2f}</div>
+</div>
+""", unsafe_allow_html=True)
+                        st.link_button("VIEW_ON_EXPLORER", result["explorer_url"], use_container_width=True)
 
                         # Clean up and close modal
                         st.session_state._send_confirm_step = False
                         st.session_state._send_details = None
                         st.session_state.show_send_modal = False
                     else:
-                        st.error(f"Transaction failed: {result['error']}")
+                        st.error(f"EXECUTION_FAILED: {result['error']}")
 
                 except Exception as e:
                     from utils.logger import logger
                     logger.error(f"Send transaction failed: {str(e)}")
-                    st.error("Transaction could not be completed. Please try again.")
+                    st.error("TRANSACTION_ABORTED")
 
 
 def send_modal():
-    """Show send transaction modal with gasless transfer and confirmation"""
+    """V8 send modal - "OUTBOUND_TRANSFER" """
     from transaction_relayer import TransactionRelayer
     from spending_limits import check_spending_limit
 
@@ -473,21 +501,21 @@ def send_modal():
         _render_send_confirmation()
         return
 
-    st.markdown("### Send USDC")
-    st.caption("Gasless—network fees are covered.")
+    st.markdown("### OUTBOUND_TRANSFER")
+    st.caption("GASLESS_EXECUTION: NETWORK FEES COVERED")
 
     # Network selector
     network_options = {
         "Base Sepolia (Testnet)": "base-sepolia",
     }
-    selected_network = st.selectbox("Network", list(network_options.keys()))
+    selected_network = st.selectbox("NETWORK", list(network_options.keys()))
     network_key = network_options[selected_network]
 
     # Recipient address
-    recipient = st.text_input("Recipient Address", placeholder="0x...")
+    recipient = st.text_input("DESTINATION_ADDR", placeholder="0x...")
 
     # Amount
-    amount = st.number_input("Amount (USDC)", min_value=0.01, step=0.01, format="%.2f")
+    amount = st.number_input("QUANTITY (USDC)", min_value=0.01, step=0.01, format="%.2f")
 
     # Estimate fees
     total = amount
@@ -500,14 +528,27 @@ def send_modal():
             total = amount + gas_cost + app_fee
 
             st.markdown(f"""
-**Fee breakdown**
-- Amount: ${amount:.2f}
-- Network fee: ${gas_cost:.3f} (covered)
-- Service fee: ${app_fee:.3f}
-- **Total: ${total:.2f}**
-""")
+<div style="background: #0A0A0A; border: 1px solid #1a1a1a; padding: 12px; margin: 10px 0; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="color: #666;">AMOUNT</span>
+        <span style="color: white;">${amount:.2f}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="color: #666;">NETWORK_FEE</span>
+        <span style="color: #525252;">${gas_cost:.3f} <span style="color: #ccff00;">COVERED</span></span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="color: #666;">SERVICE_FEE</span>
+        <span style="color: white;">${app_fee:.3f}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; border-top: 1px solid #333; padding-top: 6px;">
+        <span style="color: #999;">TOTAL</span>
+        <span style="color: #ccff00; font-weight: 600;">${total:.2f}</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
         except Exception:
-            st.caption("Could not estimate fees")
+            st.caption("FEE_ESTIMATION_UNAVAILABLE")
             total = amount
 
     # Validate inputs with EIP-55 checksum
@@ -517,22 +558,19 @@ def send_modal():
 
     if recipient:
         if not recipient.startswith("0x"):
-            recipient_error = "Address must start with 0x"
+            recipient_error = "ADDR_MUST_START_WITH_0x"
         elif len(recipient) != 42:
-            recipient_error = "Address must be 42 characters"
+            recipient_error = "ADDR_LENGTH_INVALID"
         else:
-            # Check if valid hex and validate/convert checksum
             try:
                 from web3 import Web3
-                # This validates the address and returns checksummed version
                 checksummed_recipient = Web3.to_checksum_address(recipient)
                 valid_recipient = True
 
-                # Warn if user entered non-checksummed address (potential typo risk)
                 if recipient != checksummed_recipient and recipient.lower() != recipient:
-                    st.warning("Address checksum mismatch. Please verify this is correct.")
+                    st.warning("CHECKSUM_MISMATCH: VERIFY ADDRESS")
             except ValueError:
-                recipient_error = "Invalid address format"
+                recipient_error = "ADDR_FORMAT_INVALID"
 
     if recipient and not valid_recipient:
         st.warning(recipient_error)
@@ -554,13 +592,13 @@ def send_modal():
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("Cancel", use_container_width=True):
+        if st.button("CANCEL", use_container_width=True):
             st.session_state.show_send_modal = False
             st.rerun()
 
     with col2:
-        if st.button("Review", type="primary", use_container_width=True, disabled=not can_send):
-            # Store transaction details for confirmation step (use checksummed address)
+        if st.button("PREPARE_ORDER →", type="primary", use_container_width=True, disabled=not can_send):
+            # Store transaction details for confirmation step
             st.session_state._send_confirm_step = True
             st.session_state._send_details = {
                 "recipient": checksummed_recipient or recipient,
