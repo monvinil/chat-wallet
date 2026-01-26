@@ -80,8 +80,30 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
+## 4. Nonce Persistence Table (Required for Replay Protection)
+
+**Status:** Code updated to use database, table creation required
+
+**Create this table in Supabase:**
+```sql
+CREATE TABLE used_nonces (
+    wallet_address VARCHAR(42) NOT NULL,
+    nonce BIGINT NOT NULL,
+    used_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (wallet_address, nonce)
+);
+
+-- Index for efficient lookups
+CREATE INDEX idx_used_nonces_wallet ON used_nonces(wallet_address);
+
+-- Optional: Clean up old nonces (older than 30 days)
+-- Run periodically via cron job or Supabase Edge Function
+-- DELETE FROM used_nonces WHERE used_at < NOW() - INTERVAL '30 days';
+```
+
 ## Priority
 
 1. **High:** Internal Balance Ledger - Critical for financial integrity
-2. **Medium:** Supabase RLS - Important for defense in depth
-3. **Low:** Atomic Increment - Rate limiting provides adequate protection
+2. **High:** Nonce Persistence Table - Required for replay protection
+3. **Medium:** Supabase RLS - Important for defense in depth
+4. **Low:** Atomic Increment - Rate limiting provides adequate protection

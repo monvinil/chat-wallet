@@ -64,13 +64,42 @@ class TransactionRelayer:
         return f"_used_nonces_{user_address.lower()}"
 
     def _is_nonce_used(self, user_address: str, nonce: int) -> bool:
-        """Check if a nonce has been used (replay protection)"""
+        """Check if a nonce has been used (replay protection)
+
+        Uses both session cache and database for persistence across servers/restarts.
+        """
+        # Quick check session cache first
         key = self._get_used_nonces_key(user_address)
-        used_nonces = st.session_state.get(key, set())
-        return nonce in used_nonces
+        session_nonces = st.session_state.get(key, set())
+        if nonce in session_nonces:
+            return True
+
+        # Check database for persistence across servers
+        try:
+            from supabase_client import get_supabase_client
+            client = get_supabase_client(use_service_key=True)
+            if client:
+                result = client.table("used_nonces").select("nonce").eq(
+                    "wallet_address", user_address.lower()
+                ).eq("nonce", nonce).execute()
+                if result.data:
+                    # Add to session cache for faster future lookups
+                    if key not in st.session_state:
+                        st.session_state[key] = set()
+                    st.session_state[key].add(nonce)
+                    return True
+        except Exception as e:
+            logger.warning(f"Failed to check nonce in database: {e}")
+            # Fall back to session-only check (already done above)
+
+        return False
 
     def _mark_nonce_used(self, user_address: str, nonce: int) -> None:
-        """Mark a nonce as used to prevent replay"""
+        """Mark a nonce as used to prevent replay
+
+        Persists to both session cache and database for durability.
+        """
+        # Mark in session cache for quick lookups
         key = self._get_used_nonces_key(user_address)
         if key not in st.session_state:
             st.session_state[key] = set()
@@ -80,6 +109,20 @@ class TransactionRelayer:
         if len(st.session_state[key]) > 1000:
             sorted_nonces = sorted(st.session_state[key])
             st.session_state[key] = set(sorted_nonces[-500:])
+
+        # Persist to database for cross-server/restart durability
+        try:
+            from supabase_client import get_supabase_client
+            from datetime import datetime
+            client = get_supabase_client(use_service_key=True)
+            if client:
+                client.table("used_nonces").upsert({
+                    "wallet_address": user_address.lower(),
+                    "nonce": nonce,
+                    "used_at": datetime.utcnow().isoformat()
+                }, on_conflict="wallet_address,nonce").execute()
+        except Exception as e:
+            logger.warning(f"Failed to persist nonce to database: {e}")
 
     def get_internal_balance(self, user_address: str, currency: str = "USDC") -> Decimal:
         """

@@ -208,8 +208,18 @@ def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-s
         return json.dumps({"error": "No wallet connected"})
 
     network = NETWORKS.get(chain, NETWORKS["base-sepolia"])
-    fee = calculate_fee(amount_usd)
-    total = amount_usd + fee
+
+    # Calculate gas cost and app fee using relayer estimation
+    try:
+        from transaction_relayer import TransactionRelayer
+        relayer = TransactionRelayer(chain)
+        gas_cost, app_fee = relayer.estimate_gas_cost(amount_usd)
+    except Exception:
+        # Fallback to simple fee calculation if relayer unavailable
+        gas_cost = 0.02  # Default gas estimate
+        app_fee = calculate_fee(amount_usd)
+
+    total = amount_usd + gas_cost + app_fee
 
     preview = {
         "action": "Send USDC",
@@ -217,7 +227,8 @@ def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-s
         "to": ChainUtils.format_address(to_address),
         "to_full_address": to_address,
         "network": network["name"],
-        "fee": f"${fee:.3f}",
+        "gas_fee": f"${gas_cost:.3f} (covered)",
+        "service_fee": f"${app_fee:.3f}",
         "total_cost": f"${total:.2f}",
         "estimated_time": "~3-5 seconds",
         "from": ChainUtils.format_address(st.session_state.wallet_address),
