@@ -243,7 +243,7 @@ def chat_interface(create_agent_func):
         with c1:
             render_fashion_card("Wallet", wallet_short)
         with c2:
-            render_fashion_card("Network", "Base")
+            render_fashion_card("Network", "Arc")
         with c3:
             render_fashion_card("Status", "Active", "●")
 
