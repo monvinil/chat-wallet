@@ -1,6 +1,6 @@
 """
-Chat02 - Your money, your words
-AI-powered wallet that turns conversation into action
+Chat02 - Financial Operating System
+V10 "Brutalist Fintech" - AI-powered wallet
 """
 
 import os
@@ -350,57 +350,209 @@ def init_state():
 
 
 def wallet_setup_ui():
-    """Show wallet setup screen with email/password account"""
-    st.title("Chat Wallet")
-    st.caption("Self-custodial wallet with AI-powered transactions")
+    """Show V10 wallet setup screen - Access Portal"""
+    # V10 Brutalist header
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 3rem; margin-top: 2rem;">
+        <div style="font-family: 'Inter', sans-serif; font-size: 48px; letter-spacing: 0.2em; margin-bottom: 12px;">
+            <span style="font-weight: 300;">CHAT</span><span style="font-weight: 800;">02</span>
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #525252;
+                    letter-spacing: 0.2em;">FINANCIAL_OPERATING_SYSTEM</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.info("Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.")
+    # Info card - V10 brutalist style
+    st.markdown("""
+    <div style="
+        border: 1px solid #1a1a1a;
+        padding: 16px 20px;
+        margin-bottom: 2rem;
+        position: relative;
+    ">
+        <div style="position: absolute; top: 0; left: 0; width: 6px; height: 6px; border-top: 1px solid #3b82f6; border-left: 1px solid #3b82f6;"></div>
+        <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #a3a3a3;">
+            Self-custodial. Encrypted locally. Only you control access.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    tab1, tab2, tab3 = st.tabs(["Create Account", "Sign In", "Import Wallet"])
+    tab1, tab2, tab3 = st.tabs(["ACCESS", "CREATE", "RECOVER"])
 
-    # ========== TAB 1: SIGN UP ==========
+    # ========== TAB 1: LOG IN (ACCESS) ==========
     with tab1:
-        st.markdown("#### Create Account")
-        st.caption("Create a new wallet that syncs across all your devices.")
+        st.markdown("""
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                    letter-spacing: 0.15em; margin-bottom: 1rem;">EXISTING_USER</div>
+        """, unsafe_allow_html=True)
+
+        # Use form to prevent sidebar closing and enable password autofill
+        with st.form(key="login_form_v10", clear_on_submit=False):
+            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                        letter-spacing: 0.1em; margin-bottom: 4px;">IDENTITY</div>""", unsafe_allow_html=True)
+            login_email = st.text_input(
+                "Email",
+                key="login_email_v10",
+                placeholder="user@domain.com",
+                autocomplete="username",
+                label_visibility="collapsed"
+            )
+
+            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                        letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">KEY</div>""", unsafe_allow_html=True)
+            login_password = st.text_input(
+                "Password",
+                type="password",
+                key="login_pwd_v10",
+                placeholder="ACCESS KEY_",
+                autocomplete="current-password",
+                label_visibility="collapsed"
+            )
+
+            submit_login = st.form_submit_button("ENTER SYSTEM", type="primary", use_container_width=True)
+
+        if submit_login:
+            if not login_email or not login_password:
+                st.error("REQUIRED: IDENTITY AND KEY")
+            else:
+                with st.spinner("AUTHENTICATING_"):
+                    # Check rate limiting before any DB queries
+                    from rate_limiter import RateLimiter
+
+                    allowed, lockout_msg = RateLimiter.check_login_allowed(login_email)
+                    if not allowed:
+                        st.error(lockout_msg)
+                    else:
+                        # OPTIMIZED: Fetch all user data in 2 queries instead of 5
+                        login_data = get_user_login_data(login_email)
+
+                        if not login_data:
+                            st.error("NO_IDENTITY_FOUND")
+                        else:
+                            user = login_data["user"]
+                            stored_hash = login_data["password_hash"]
+                            wallets = login_data["wallets"]
+                            encrypted_wallet = login_data["encrypted_wallet"]
+
+                            # Verify password
+                            if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
+                                RateLimiter.record_login_attempt(login_email, success=False)
+                                remaining = RateLimiter.get_remaining_attempts(login_email)
+                                if remaining > 0:
+                                    st.error(f"INVALID_KEY. {remaining} attempt(s) remaining.")
+                                else:
+                                    st.error("INVALID_KEY. System locked.")
+                            elif wallets and len(wallets) > 0:
+                                # Record successful login
+                                RateLimiter.record_login_attempt(login_email, success=True)
+
+                                wallet_address = wallets[0]["wallet_address"]
+
+                                st.session_state.wallet_address = wallet_address
+                                st.session_state.user_email = login_email
+                                st.session_state.user_id = user["id"]
+                                st.session_state.show_auth_modal = False
+
+                                # Create persistent session (cookie)
+                                SessionManager.login(user["id"], login_email, wallet_address)
+
+                                # If no password hash stored (legacy), update it now
+                                if not stored_hash:
+                                    new_hash = WalletManager.hash_password(login_password)
+                                    update_user_password_hash(user["id"], new_hash)
+
+                                # Restore encrypted wallet from batched data
+                                if encrypted_wallet:
+                                    st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
+                                    st.session_state.wallet_salt = encrypted_wallet["salt"]
+
+                                    # Decrypt with password
+                                    if WalletManager.unlock_wallet_with_password(login_password):
+                                        st.session_state.wallet_locked = False
+                                        st.success("ACCESS GRANTED")
+                                    else:
+                                        st.session_state.wallet_locked = True
+                                        st.success("AUTHENTICATED")
+                                        st.warning("WALLET_LOCKED: Enter key to decrypt")
+                                else:
+                                    # No cloud backup - need manual import (legacy account)
+                                    st.session_state.wallet_locked = True
+                                    st.success("AUTHENTICATED")
+                                    st.info("IMPORT_REQUIRED: Use recovery phrase")
+
+                                # Check if onboarding was completed
+                                from settings_manager import SettingsManager
+                                user_settings = SettingsManager.get_llm_config(user["id"])
+                                has_api_key = bool(user_settings.get("api_key"))
+
+                                if not has_api_key:
+                                    # Resume onboarding at API setup step
+                                    st.session_state.onboarding_step = 2
+                                    st.session_state.onboarding_complete = False
+                                    st.info("CONNECT AI ENGINE TO CONTINUE")
+
+                                st.rerun()
+                            else:
+                                st.error("NO_WALLET_FOUND")
+
+    # ========== TAB 2: SIGN UP (CREATE) ==========
+    with tab2:
+        st.markdown("""
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                    letter-spacing: 0.15em; margin-bottom: 1rem;">NEW_USER</div>
+        """, unsafe_allow_html=True)
 
         # Use form to prevent sidebar closing and enable password autofill
         with st.form(key="signup_form", clear_on_submit=False):
+            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                        letter-spacing: 0.1em; margin-bottom: 4px;">NEW_IDENTITY</div>""", unsafe_allow_html=True)
             email = st.text_input(
                 "Email",
                 key="signup_email",
-                placeholder="your@email.com",
-                autocomplete="username"
+                placeholder="user@domain.com",
+                autocomplete="username",
+                label_visibility="collapsed"
             )
+
+            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                        letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">CREATE_KEY</div>""", unsafe_allow_html=True)
             password = st.text_input(
                 "Password (min 8 characters)",
                 type="password",
                 key="signup_pwd",
-                autocomplete="new-password"
+                placeholder="MIN 8 CHARACTERS_",
+                autocomplete="new-password",
+                label_visibility="collapsed"
             )
+
+            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                        letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">CONFIRM_KEY</div>""", unsafe_allow_html=True)
             password_confirm = st.text_input(
                 "Confirm Password",
                 type="password",
                 key="signup_pwd_confirm",
-                autocomplete="new-password"
+                placeholder="VERIFY KEY_",
+                autocomplete="new-password",
+                label_visibility="collapsed"
             )
 
-            submit_signup = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+            submit_signup = st.form_submit_button("GENERATE ID", type="primary", use_container_width=True)
 
         if submit_signup:
             if not email or not password:
-                st.error("Please enter both email and password")
+                st.error("REQUIRED: IDENTITY AND KEY")
             elif password != password_confirm:
-                st.error("Passwords do not match")
+                st.error("KEY_MISMATCH")
             elif len(password) < 8:
-                st.error("Password must be at least 8 characters")
+                st.error("KEY_TOO_SHORT: MIN 8 CHARACTERS")
             elif "@" not in email:
-                st.error("Please enter a valid email address")
+                st.error("INVALID_IDENTITY_FORMAT")
             else:
-                with st.spinner("Creating your account..."):
+                with st.spinner("GENERATING_WALLET_"):
                     # Check if user exists
                     existing_user = get_user_by_email(email)
                     if existing_user:
-                        st.error("Account already exists. Please log in.")
+                        st.error("IDENTITY_EXISTS: Use ACCESS tab")
                     else:
                         # Create wallet
                         wallet_info = WalletManager.create_new_wallet()
@@ -459,7 +611,7 @@ def wallet_setup_ui():
                                 # Create persistent session (cookie)
                                 SessionManager.login(user["id"], email, wallet_info["address"])
 
-                                st.success("Account created")
+                                st.success("WALLET_GENERATED")
 
                                 # Store mnemonic for seed phrase modal and trigger it
                                 if wallet_info.get("mnemonic"):
@@ -474,135 +626,49 @@ def wallet_setup_ui():
                                     st.session_state.onboarding_complete = False
                                     st.rerun()
                             else:
-                                st.error("Could not create account. Please try again.")
+                                st.error("GENERATION_FAILED: RETRY")
 
-        st.caption("Your wallet syncs across all your devices automatically.")
+        st.markdown("""
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #404040;
+                    letter-spacing: 0.1em; margin-top: 1rem;">SYNC_ENABLED</div>
+        """, unsafe_allow_html=True)
 
-    # ========== TAB 2: LOG IN ==========
-    with tab2:
-        st.markdown("#### Sign In")
-        st.caption("Access your existing wallet.")
-
-        # Use form to prevent sidebar closing and enable password autofill
-        with st.form(key="login_form", clear_on_submit=False):
-            login_email = st.text_input(
-                "Email",
-                key="login_email",
-                placeholder="your@email.com",
-                autocomplete="username"
-            )
-            login_password = st.text_input(
-                "Password",
-                type="password",
-                key="login_pwd",
-                autocomplete="current-password"
-            )
-
-            submit_login = st.form_submit_button("Log In", type="primary", use_container_width=True)
-
-        if submit_login:
-            if not login_email or not login_password:
-                st.error("Please enter email and password")
-            else:
-                with st.spinner("Signing in..."):
-                    # Check rate limiting before any DB queries
-                    from rate_limiter import RateLimiter
-
-                    allowed, lockout_msg = RateLimiter.check_login_allowed(login_email)
-                    if not allowed:
-                        st.error(lockout_msg)
-                    else:
-                        # OPTIMIZED: Fetch all user data in 2 queries instead of 5
-                        login_data = get_user_login_data(login_email)
-
-                        if not login_data:
-                            st.error("No account found with this email")
-                        else:
-                            user = login_data["user"]
-                            stored_hash = login_data["password_hash"]
-                            wallets = login_data["wallets"]
-                            encrypted_wallet = login_data["encrypted_wallet"]
-
-                            # Verify password
-                            if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
-                                RateLimiter.record_login_attempt(login_email, success=False)
-                                remaining = RateLimiter.get_remaining_attempts(login_email)
-                                if remaining > 0:
-                                    st.error(f"Incorrect password. {remaining} attempt(s) remaining.")
-                                else:
-                                    st.error("Incorrect password. Account temporarily locked.")
-                            elif wallets and len(wallets) > 0:
-                                # Record successful login
-                                RateLimiter.record_login_attempt(login_email, success=True)
-
-                                wallet_address = wallets[0]["wallet_address"]
-
-                                st.session_state.wallet_address = wallet_address
-                                st.session_state.user_email = login_email
-                                st.session_state.user_id = user["id"]
-                                st.session_state.show_auth_modal = False
-
-                                # Create persistent session (cookie)
-                                SessionManager.login(user["id"], login_email, wallet_address)
-
-                                # If no password hash stored (legacy), update it now
-                                if not stored_hash:
-                                    new_hash = WalletManager.hash_password(login_password)
-                                    update_user_password_hash(user["id"], new_hash)
-
-                                # Restore encrypted wallet from batched data
-                                if encrypted_wallet:
-                                    st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
-                                    st.session_state.wallet_salt = encrypted_wallet["salt"]
-
-                                    # Decrypt with password
-                                    if WalletManager.unlock_wallet_with_password(login_password):
-                                        st.session_state.wallet_locked = False
-                                        st.success("Signed in. Wallet restored.")
-                                    else:
-                                        st.session_state.wallet_locked = True
-                                        st.success("Signed in")
-                                        st.warning("Could not decrypt wallet. Enter your password to unlock.")
-                                else:
-                                    # No cloud backup - need manual import (legacy account)
-                                    st.session_state.wallet_locked = True
-                                    st.success("Signed in")
-                                    st.info("Import your wallet using your recovery phrase to access your funds.")
-
-                                # Check if onboarding was completed
-                                from settings_manager import SettingsManager
-                                user_settings = SettingsManager.get_llm_config(user["id"])
-                                has_api_key = bool(user_settings.get("api_key"))
-
-                                if not has_api_key:
-                                    # Resume onboarding at API setup step
-                                    st.session_state.onboarding_step = 2
-                                    st.session_state.onboarding_complete = False
-                                    st.info("Connect an AI provider to start chatting.")
-
-                                st.rerun()
-                            else:
-                                st.error("No wallet found for this account")
-
-    # ========== TAB 3: IMPORT WALLET ==========
+    # ========== TAB 3: IMPORT WALLET (RECOVER) ==========
     with tab3:
-        st.markdown("#### Import Wallet")
-        st.caption("Import an existing wallet using your recovery phrase or private key.")
+        st.markdown("""
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                    letter-spacing: 0.15em; margin-bottom: 1rem;">RESTORE_EXISTING</div>
+        """, unsafe_allow_html=True)
 
-        import_email = st.text_input("Email (optional)", key="import_email", placeholder="your@email.com")
+        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                    letter-spacing: 0.1em; margin-bottom: 4px;">IDENTITY (OPTIONAL)</div>""", unsafe_allow_html=True)
+        import_email = st.text_input("Email (optional)", key="import_email", placeholder="user@domain.com",
+                                     label_visibility="collapsed")
+
+        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                    letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">RECOVERY_PHRASE</div>""", unsafe_allow_html=True)
         recovery_input = st.text_area(
             "Recovery phrase or private key",
             key="import_recovery",
-            placeholder="12-word phrase or 0x...",
-            help="Enter your 12-word seed phrase or private key",
-            height=100
+            placeholder="12 WORD PHRASE OR 0x PRIVATE KEY_",
+            height=100,
+            label_visibility="collapsed"
         )
-        import_password = st.text_input("Password", type="password", key="import_pwd", help="This password will encrypt your wallet locally")
 
-        st.caption("Your wallet is encrypted locally before storage.")
+        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
+                    letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">ENCRYPTION_KEY</div>""", unsafe_allow_html=True)
+        import_password = st.text_input("Password", type="password", key="import_pwd",
+                                        placeholder="LOCAL ENCRYPTION KEY_",
+                                        label_visibility="collapsed")
 
-        if st.button("Import Wallet", type="primary", disabled=not (recovery_input and import_password)):
-            with st.spinner("Importing wallet..."):
+        st.markdown("""
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #404040;
+                    letter-spacing: 0.1em; margin-top: 1rem; margin-bottom: 1rem;">ENCRYPTED_LOCALLY</div>
+        """, unsafe_allow_html=True)
+
+        if st.button("RESTORE WALLET", type="primary", use_container_width=True,
+                     disabled=not (recovery_input and import_password)):
+            with st.spinner("RESTORING_"):
                 wallet_info = WalletManager.import_wallet(recovery_input.strip())
 
                 if wallet_info:
@@ -627,15 +693,15 @@ def wallet_setup_ui():
                             st.session_state.user_email = import_email
                             st.session_state.user_id = user["id"]
 
-                    st.success("Wallet imported")
+                    st.success("WALLET_RESTORED")
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("Invalid recovery phrase or private key")
+                    st.error("INVALID_RECOVERY_DATA")
 
 
 def _load_theme_css():
-    """Load V8 'The Drop' theme CSS from static file"""
+    """Load V10 'Brutalist Fintech' theme CSS from static file"""
     css_path = os.path.join(os.path.dirname(__file__), "static", "theme.css")
     try:
         with open(css_path, "r") as f:
@@ -650,13 +716,13 @@ def _load_theme_css():
 def main():
     """Main app entry point"""
     st.set_page_config(
-        page_title="Chat Wallet",
+        page_title="Chat02",
         page_icon="◈",
         layout="wide",
-        initial_sidebar_state="expanded"
+        initial_sidebar_state="collapsed"
     )
 
-    # V8 Design System: "The Drop" - Load from static file
+    # V10 Design System: "Brutalist Fintech" - Load from static file
     _load_theme_css()
 
     init_state()

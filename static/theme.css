@@ -1,37 +1,50 @@
-/* V9 Design System: "The Edit" - Soft-Cyber / Y2K Luxe Aesthetic */
+/* V10 Design System: "Brutalist Fintech" - Revolut x Gentle Monster */
 
 /* --- 1. CORE VARIABLES --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-    --bg-app: #050505;
-    --bg-card: #0F0F0F;
+    /* The Void - Pure black foundation */
+    --bg-void: #030303;
+    --bg-surface: #0a0a0a;
+    --bg-elevated: #111111;
 
-    /* "Electric Lilac" - Soft-cyber, Y2K luxe */
-    --accent-lux: #d8b4fe;
-    --accent-chrome: #e5e5e5;
+    /* Chrome Gradient - Metallic signature */
+    --chrome-start: #e5e5e5;
+    --chrome-end: #a3a3a3;
+    --chrome-gradient: linear-gradient(135deg, var(--chrome-start) 0%, var(--chrome-end) 100%);
 
-    --border-glass: rgba(255, 255, 255, 0.08);
-    --border-subtle: #1a1a1a;
-    --border-medium: #333;
+    /* Cobalt - Primary accent (replacing lilac) */
+    --accent-cobalt: #3b82f6;
+    --accent-cobalt-glow: rgba(59, 130, 246, 0.15);
 
+    /* Borders - Architectural lines */
+    --border-void: #1a1a1a;
+    --border-subtle: #262626;
+    --border-medium: #404040;
+
+    /* Text hierarchy */
     --text-primary: #ffffff;
+    --text-secondary: #a3a3a3;
     --text-muted: #525252;
 
-    --font-sans: 'Inter', sans-serif;
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 
-    /* V9 Squircle Geometry */
-    --radius-sm: 12px;
-    --radius-md: 18px;
-    --radius-lg: 24px;
+    /* V10 Brutalist Geometry - Sharp corners + pill CTAs */
+    --radius-none: 0px;
+    --radius-brutalist: 2px;
     --radius-pill: 99px;
 }
 
-/* --- 2. GLOBAL RESET --- */
+/* --- 2. GLOBAL RESET + ARCHITECTURAL GRID --- */
 .stApp {
-    background-color: var(--bg-app);
-    background-image: radial-gradient(circle at 50% 0%, rgba(20, 20, 20, 1) 0%, var(--bg-app) 60%);
+    background-color: var(--bg-void) !important;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 100px 100px;
 }
 
 html, body, [class*="css"] {
@@ -39,107 +52,127 @@ html, body, [class*="css"] {
     color: var(--text-primary);
 }
 
+/* V10 Headers - Wide tracking, uppercase, weight contrast */
 h1, h2, h3 {
     font-family: var(--font-sans);
-    font-weight: 800;
-    letter-spacing: -0.04em;
+    font-weight: 300;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     color: white !important;
 }
 
-/* --- 3. INPUTS: "THE PILL" --- */
+h1 {
+    font-size: 42px;
+}
+
+/* --- 3. INPUTS: BRUTALIST VOID --- */
 .stTextInput > div > div > input,
 .stTextArea > div > div > textarea,
 .stChatInput > div > div > textarea {
-    background-color: var(--bg-card) !important;
-    border: 1px solid #262626 !important;
-    border-radius: var(--radius-pill) !important;
+    background-color: transparent !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-none) !important;
     color: white !important;
-    font-family: var(--font-sans) !important;
-    font-weight: 500;
-    padding: 14px 24px !important;
-    font-size: 14px !important;
-    transition: all 0.2s ease;
+    font-family: var(--font-mono) !important;
+    font-weight: 400;
+    font-size: 13px !important;
+    padding: 16px 20px !important;
+    transition: border-color 0.2s ease;
 }
 
 .stTextInput > div > div > input:focus,
 .stTextArea > div > div > textarea:focus,
 .stChatInput > div > div > textarea:focus {
-    border-color: var(--accent-lux) !important;
-    background-color: var(--bg-card) !important;
-    box-shadow: 0 0 0 2px rgba(216, 180, 254, 0.15) !important;
+    border-color: var(--accent-cobalt) !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .stTextInput > div > div > input::placeholder,
 .stChatInput > div > div > textarea::placeholder {
     color: var(--text-muted) !important;
+    font-family: var(--font-mono) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-/* --- 4. BUTTONS: "SOFT TAGS" --- */
+/* Input labels */
+.stTextInput > label,
+.stTextArea > label,
+.stSelectbox > label {
+    font-family: var(--font-mono) !important;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
+    color: var(--text-muted) !important;
+}
+
+/* --- 4. BUTTONS: BRUTALIST HIERARCHY --- */
+/* Secondary: 0px radius, chrome border */
 .stButton > button {
     background-color: transparent !important;
     border: 1px solid var(--border-medium) !important;
+    border-radius: var(--radius-none) !important;
     color: white !important;
-    border-radius: var(--radius-sm) !important;
     font-family: var(--font-sans) !important;
     font-size: 11px !important;
-    font-weight: 500;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 12px 0 !important;
-    transition: all 0.25s ease;
+    letter-spacing: 0.1em;
+    padding: 14px 24px !important;
+    transition: all 0.15s ease;
 }
 
 .stButton > button:hover {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    border-color: var(--accent-lux) !important;
-    transform: translateY(-1px);
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-color: var(--chrome-start) !important;
 }
 
-/* Primary Action: LILAC */
+/* Primary: 99px pill, cobalt accent */
 .stButton > button[kind="primary"],
 .stButton > button[data-testid="baseButton-primary"],
 button[kind="primary"] {
-    background-color: var(--accent-lux) !important;
-    color: black !important;
-    border: 1px solid var(--accent-lux) !important;
+    background: var(--accent-cobalt) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: var(--radius-pill) !important;
     font-weight: 600 !important;
 }
 
 .stButton > button[kind="primary"]:hover,
 .stButton > button[data-testid="baseButton-primary"]:hover {
-    box-shadow: 0 0 24px rgba(216, 180, 254, 0.4);
+    box-shadow: 0 0 30px var(--accent-cobalt-glow);
     transform: translateY(-1px);
 }
 
 .stButton > button[kind="primary"] p,
 .stButton > button[kind="primary"] span {
-    color: black !important;
+    color: white !important;
 }
 
 .stButton > button:disabled {
-    opacity: 0.3 !important;
+    opacity: 0.25 !important;
     transform: none !important;
 }
 
-/* --- 5. CHAT FEED: "EDITORIAL" --- */
+/* --- 5. CHAT FEED: GALLERY MODE --- */
 [data-testid="stChatMessage"] {
     background: transparent !important;
-    padding: 2rem 0 !important;
-    border-bottom: 1px solid var(--border-subtle);
+    padding: 24px 0 !important;
+    border-bottom: 1px solid var(--border-void);
 }
 
 [data-testid="stChatMessage"] [data-testid="stImage"] {
-    background: var(--accent-lux);
+    background: var(--accent-cobalt);
     padding: 2px;
     border-radius: 50%;
-    filter: grayscale(100%) contrast(120%);
 }
 
-/* --- 6. SIDEBAR: "MATTE SLEEVE" --- */
+/* --- 6. SIDEBAR: CONTROL SPIRE --- */
 [data-testid="stSidebar"] {
-    background-color: #000000 !important;
-    border-right: 1px solid var(--border-subtle);
+    background-color: var(--bg-void) !important;
+    border-right: 1px solid var(--border-void);
 }
 
 [data-testid="stSidebar"] > div:first-child {
@@ -148,15 +181,16 @@ button[kind="primary"] {
 
 /* --- 7. METRIC CARDS --- */
 [data-testid="stMetric"] {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    padding: 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-void);
+    border-radius: var(--radius-none);
+    padding: 1.25rem;
 }
 
 [data-testid="stMetricValue"] {
     font-family: var(--font-sans) !important;
-    font-weight: 600;
+    font-weight: 300;
+    font-size: 32px !important;
     color: var(--text-primary) !important;
 }
 
@@ -164,59 +198,63 @@ button[kind="primary"] {
     font-family: var(--font-mono) !important;
     font-size: 9px !important;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em;
     color: var(--text-muted) !important;
 }
 
-/* --- 8. TABS: "MINIMAL TEXT" --- */
+/* --- 8. TABS: ARCHITECTURAL --- */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 20px;
+    gap: 0;
     background: transparent;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-void);
 }
 
 .stTabs [data-baseweb="tab"] {
     background: transparent;
     border: none !important;
+    border-bottom: 2px solid transparent;
     color: var(--text-muted);
-    font-family: var(--font-sans);
-    font-size: 11px;
+    font-family: var(--font-mono);
+    font-size: 10px;
     font-weight: 500;
     text-transform: uppercase;
-    padding: 8px 0;
+    letter-spacing: 0.1em;
+    padding: 12px 24px;
+    margin: 0;
 }
 
 .stTabs [data-baseweb="tab"]:hover {
-    color: var(--text-primary);
+    color: var(--text-secondary);
 }
 
 .stTabs [data-baseweb="tab"][aria-selected="true"] {
-    color: var(--accent-lux);
+    color: var(--accent-cobalt);
     font-weight: 600;
     background: transparent;
+    border-bottom: 2px solid var(--accent-cobalt);
 }
 
 /* --- 9. CODE BLOCKS --- */
 code {
-    background: var(--bg-card) !important;
-    color: var(--accent-lux) !important;
-    padding: 2px 6px !important;
-    border-radius: var(--radius-sm) !important;
+    background: var(--bg-surface) !important;
+    color: var(--accent-cobalt) !important;
+    padding: 3px 8px !important;
+    border-radius: var(--radius-none) !important;
     font-size: 12px !important;
     font-family: var(--font-mono) !important;
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-void);
 }
 
 pre {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-subtle) !important;
-    border-radius: var(--radius-sm) !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-void) !important;
+    border-radius: var(--radius-none) !important;
 }
 
 /* --- 10. DIVIDERS & MISC --- */
 hr {
-    border-color: var(--border-subtle) !important;
-    margin: 1.5rem 0 !important;
+    border-color: var(--border-void) !important;
+    margin: 2rem 0 !important;
 }
 
 #MainMenu {visibility: hidden;}
@@ -224,41 +262,42 @@ footer {visibility: hidden;}
 
 /* --- 11. EXPANDERS --- */
 .streamlit-expanderHeader {
-    font-family: var(--font-sans) !important;
-    font-size: 11px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 10px !important;
     font-weight: 500 !important;
     color: var(--text-muted) !important;
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-subtle) !important;
-    border-radius: var(--radius-sm) !important;
+    background: transparent !important;
+    border: 1px solid var(--border-void) !important;
+    border-radius: var(--radius-none) !important;
     text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 details {
     background: transparent !important;
-    border: 1px solid var(--border-subtle) !important;
-    border-radius: var(--radius-sm) !important;
+    border: 1px solid var(--border-void) !important;
+    border-radius: var(--radius-none) !important;
 }
 
 details:hover {
-    border-color: var(--border-medium) !important;
+    border-color: var(--border-subtle) !important;
 }
 
 /* --- 12. ALERTS --- */
 .stAlert {
-    border-radius: var(--radius-md) !important;
-    border: 1px solid var(--border-subtle) !important;
-    background: var(--bg-card) !important;
+    border-radius: var(--radius-none) !important;
+    border: 1px solid var(--border-void) !important;
+    background: var(--bg-surface) !important;
 }
 
 /* --- 13. SELECT/NUMBER INPUTS --- */
 .stSelectbox > div > div,
 .stNumberInput > div > div > input {
-    background: var(--bg-card) !important;
+    background: transparent !important;
     border: 1px solid var(--border-subtle) !important;
-    border-radius: var(--radius-sm) !important;
+    border-radius: var(--radius-none) !important;
     color: var(--text-primary) !important;
-    font-family: var(--font-sans) !important;
+    font-family: var(--font-mono) !important;
 }
 
 .stSelectbox > div > div:hover,
@@ -269,27 +308,28 @@ details:hover {
 /* --- 14. CAPTIONS --- */
 .stCaption, [data-testid="stCaptionContainer"] p {
     color: var(--text-muted) !important;
-    font-size: 0.75rem !important;
-    font-family: var(--font-sans) !important;
-    letter-spacing: 0.02em;
+    font-size: 10px !important;
+    font-family: var(--font-mono) !important;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 /* --- 15. LINK BUTTONS --- */
 .stLinkButton > a {
-    border-radius: var(--radius-sm) !important;
-    font-weight: 500 !important;
+    border-radius: var(--radius-none) !important;
+    font-weight: 600 !important;
     border: 1px solid var(--border-medium) !important;
     background: transparent !important;
     color: white !important;
     font-size: 11px !important;
     font-family: var(--font-sans) !important;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
 }
 
 .stLinkButton > a:hover {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    border-color: var(--accent-lux) !important;
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-color: var(--chrome-start) !important;
 }
 
 /* --- 16. SCROLLBAR --- */
@@ -303,17 +343,42 @@ details:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--border-subtle);
-    border-radius: 2px;
+    background: var(--border-void);
+    border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--border-medium);
+    background: var(--border-subtle);
 }
 
 /* --- 17. DIALOGS/MODALS --- */
 [data-testid="stModal"] > div {
-    border-radius: var(--radius-lg) !important;
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-none) !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-void) !important;
+}
+
+/* --- 18. FORM SUBMIT BUTTON --- */
+.stFormSubmitButton > button {
+    background: var(--accent-cobalt) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: var(--radius-pill) !important;
+    font-weight: 600 !important;
+}
+
+.stFormSubmitButton > button:hover {
+    box-shadow: 0 0 30px var(--accent-cobalt-glow);
+}
+
+/* --- 19. SPINNERS --- */
+.stSpinner > div {
+    border-top-color: var(--accent-cobalt) !important;
+}
+
+/* --- 20. TOAST --- */
+[data-testid="stToast"] {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-void) !important;
+    border-radius: var(--radius-none) !important;
 }
