@@ -811,21 +811,64 @@ def main():
         background: transparent;
     }
 
-    /* 8. CODE BLOCKS */
+    /* 8. CODE BLOCKS - V12 Minimal */
     code {
-        background: rgba(255,255,255,0.05) !important;
-        color: #ccc !important;
-        padding: 2px 6px !important;
-        border-radius: 2px !important;
-        font-size: 12px !important;
+        background: transparent !important;
+        color: #888 !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        font-size: 11px !important;
         font-family: var(--font-mono) !important;
-        border: none;
+        border: none !important;
     }
 
     pre {
-        background: rgba(255,255,255,0.03) !important;
-        border: 1px solid var(--border-hairline) !important;
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 1px solid var(--border-hairline) !important;
         border-radius: 0 !important;
+        padding: 12px 0 !important;
+        margin: 0 !important;
+    }
+
+    /* st.code widget - minimal with subtle copy button */
+    [data-testid="stCode"] {
+        background: transparent !important;
+    }
+
+    [data-testid="stCode"] > div {
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 1px solid var(--border-hairline) !important;
+        border-radius: 0 !important;
+    }
+
+    [data-testid="stCode"] pre {
+        background: transparent !important;
+        border: none !important;
+        padding: 12px 0 !important;
+    }
+
+    [data-testid="stCode"] code {
+        background: transparent !important;
+        color: #888 !important;
+        font-size: 11px !important;
+        word-break: break-all !important;
+        white-space: pre-wrap !important;
+    }
+
+    /* Copy button - minimal */
+    [data-testid="stCode"] button {
+        background: transparent !important;
+        border: none !important;
+        color: #444 !important;
+        opacity: 0.5;
+        transition: opacity 0.2s ease;
+    }
+
+    [data-testid="stCode"] button:hover {
+        opacity: 1;
+        color: #888 !important;
     }
 
     /* 9. DIVIDERS & MISC */
