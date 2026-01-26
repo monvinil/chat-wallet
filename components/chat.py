@@ -43,29 +43,45 @@ def render_header():
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
 
-# --- THE PULSE DECK (V12 Brand Edition) ---
+# --- THE PULSE DECK (V13 Brand Edition) ---
 def render_pulse_deck():
     """
-    Brand-aware action + reward strip. Premium wallet card aesthetic.
-    Features: Brand gradients, icons, color-matched progress bars.
+    Premium wallet card aesthetic with brand immersion.
+    Features: SVG logos, cinematic gradients, frosted glass, neon progress.
     """
 
-    # === BRAND DEFINITIONS ===
+    # === BRAND DEFINITIONS (with explicit gradients for control) ===
     BRANDS = {
-        "spotify": {"color": "#1DB954", "icon": "♫"},
-        "metal": {"color": "#e5e5e5", "icon": "✦"},
-        "pro": {"color": "#a855f7", "icon": "◆"},
-        "netflix": {"color": "#E50914", "icon": "▶"},
-        "yield": {"color": "#3b82f6", "icon": "📈"},
-        "system": {"color": "#3b82f6", "icon": "⚡"},
-        "alert": {"color": "#ef4444", "icon": "⚠"},
+        "spotify": {
+            "color": "#1DB954",
+            "gradient": "linear-gradient(135deg, rgba(29,185,84,0.15) 0%, rgba(29,185,84,0.02) 100%)",
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg"
+        },
+        "metal": {
+            "color": "#e5e5e5",
+            "gradient": "linear-gradient(135deg, rgba(229,229,229,0.15) 0%, rgba(229,229,229,0.02) 100%)",
+            "icon": "✦"
+        },
+        "pro": {
+            "color": "#a855f7",
+            "gradient": "linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(168,85,247,0.02) 100%)",
+            "icon": "◆"
+        },
+        "netflix": {
+            "color": "#E50914",
+            "gradient": "linear-gradient(135deg, rgba(229,9,20,0.15) 0%, rgba(229,9,20,0.02) 100%)",
+            "icon": "▶"
+        },
+        "system": {
+            "color": "#e5e5e5",
+            "gradient": "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.01) 100%)",
+            "icon": "⚡"
+        },
     }
 
     # === DATA SOURCES (mock - replace with real queries) ===
-    # TODO: Pull from pending_approvals table
-    active_tasks = []  # e.g., [{"type": "urgent", "label": "APPROVAL", "value": "Send $500", "action": "Sign", "brand": "alert"}]
+    active_tasks = []  # TODO: Pull from pending_approvals table
 
-    # TODO: Pull from user spending + perks config
     perks = [
         {"brand": "spotify", "progress": 75, "target": 100, "reward": "1 Mo Free"},
         {"brand": "metal", "progress": 2, "target": 5, "reward": "Unlock"},
@@ -74,35 +90,34 @@ def render_pulse_deck():
     # === SLOT BUILDER ===
     slots = []
 
-    # Slot 1: Priority Action or Yield Stat
+    # Slot 1: Priority Action or Stat fallback
     if active_tasks:
         t = active_tasks[0]
-        brand_key = t.get("brand", "system")
-        brand = BRANDS.get(brand_key, BRANDS["system"])
+        brand = BRANDS.get(t.get("brand", "system"), BRANDS["system"])
         slots.append({
             "mode": "task",
             "title": t["label"],
             "main": t["value"],
             "sub": t["action"],
-            "color": brand["color"],
+            "accent": brand["color"],
+            "bg": brand["gradient"],
             "icon": brand["icon"],
         })
     else:
-        # Fallback: Yield stat
-        brand = BRANDS["yield"]
+        brand = BRANDS["system"]
         slots.append({
             "mode": "stat",
             "title": "THIS MONTH",
             "main": "$0.00",
             "sub": "spent",
-            "color": brand["color"],
-            "icon": brand["icon"],
+            "accent": brand["color"],
+            "bg": brand["gradient"],
+            "icon": "📈",
         })
 
     # Slots 2-3: Perks
     for p in perks[:2]:
-        brand_key = p["brand"].lower()
-        brand = BRANDS.get(brand_key, {"color": "#888", "icon": "●"})
+        brand = BRANDS.get(p["brand"].lower(), {"color": "#888", "gradient": "linear-gradient(135deg, rgba(136,136,136,0.1) 0%, rgba(136,136,136,0.02) 100%)", "icon": "●"})
         pct = int((p["progress"] / p["target"]) * 100)
         slots.append({
             "mode": "perk",
@@ -110,7 +125,8 @@ def render_pulse_deck():
             "main": f"{p['progress']}/{p['target']}",
             "sub": p["reward"],
             "pct": pct,
-            "color": brand["color"],
+            "accent": brand["color"],
+            "bg": brand["gradient"],
             "icon": brand["icon"],
         })
 
@@ -122,34 +138,30 @@ def render_pulse_deck():
 
 
 def _render_brand_card(slot: dict):
-    """Render brand-aware pulse card with gradient and icon."""
+    """Render premium brand card with frosted glass and neon accents."""
 
     mode = slot["mode"]
-    color = slot["color"]
+    accent = slot["accent"]
+    bg = slot["bg"]
     icon = slot["icon"]
     pct = slot.get("pct", 0)
 
-    # Gradient background from brand color
-    gradient = f"linear-gradient(135deg, {color}26 0%, {color}08 100%)"
-    border = f"1px solid {color}40"
-
-    # Icon HTML
-    icon_html = f'<span style="font-size:12px;color:{color};">{icon}</span>'
+    # Icon: SVG image or text symbol
+    if icon.startswith("http"):
+        icon_html = f'<img src="{icon}" style="width:16px;height:16px;opacity:0.9;filter:grayscale(100%) brightness(200%);">'
+    else:
+        icon_html = f'<span style="font-size:14px;color:{accent};">{icon}</span>'
 
     # Build bottom section based on mode
     if mode == "perk":
-        # Progress bar with glow
-        glow = f"box-shadow:0 0 6px {color};" if pct > 30 else ""
-        bottom = f'<div style="margin-top:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:8px;color:#888;font-family:Inter;">{slot["sub"]}</span><span style="font-size:8px;color:{color};font-family:Inter;">{pct}%</span></div><div style="width:100%;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;"><div style="width:{pct}%;height:100%;background:{color};border-radius:2px;{glow}"></div></div></div>'
+        bottom = f'<div style="margin-top:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:9px;color:#888;font-family:Inter;">{slot["sub"]}</span><span style="font-size:9px;color:{accent};font-family:JetBrains Mono;opacity:0.8;">{pct}%</span></div><div style="width:100%;height:2px;background:rgba(255,255,255,0.05);border-radius:2px;"><div style="width:{pct}%;height:100%;background:{accent};border-radius:2px;box-shadow:0 0 8px {accent};"></div></div></div>'
     elif mode == "task":
-        # Action button style
-        bottom = f'<div style="font-family:JetBrains Mono;font-size:9px;color:{color};text-align:right;margin-top:auto;border:1px solid {color}40;border-radius:4px;padding:2px 6px;display:inline-block;align-self:flex-end;">{slot["sub"]}</div>'
+        bottom = f'<div style="font-family:JetBrains Mono;font-size:9px;color:{accent};text-align:right;margin-top:auto;border:1px solid {accent}40;border-radius:4px;padding:3px 8px;display:inline-block;align-self:flex-end;">{slot["sub"]} →</div>'
     else:
-        # Stat subtitle
-        bottom = f'<div style="font-family:JetBrains Mono;font-size:10px;color:#666;margin-top:6px;">{slot["sub"]}</div>'
+        bottom = f'<div style="font-family:JetBrains Mono;font-size:9px;color:{accent};text-align:right;margin-top:auto;border:1px solid {accent}40;border-radius:4px;padding:3px 8px;display:inline-block;align-self:flex-end;">{slot["sub"]} →</div>'
 
     # Single-line HTML for reliable Streamlit parsing
-    card_html = f'<div style="border:{border};background:{gradient};border-radius:12px;padding:14px;height:105px;display:flex;flex-direction:column;overflow:hidden;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:{color};letter-spacing:0.05em;font-weight:600;">{slot["title"]}</span>{icon_html}</div><div style="font-family:Inter;font-size:14px;font-weight:500;color:white;margin:8px 0;white-space:nowrap;overflow:visible;">{slot["main"]}</div>{bottom}</div>'
+    card_html = f'<div style="border:1px solid {accent}40;background:{bg};border-radius:12px;padding:16px;height:100px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;backdrop-filter:blur(10px);"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:{accent};letter-spacing:0.1em;font-weight:600;">{slot["title"]}</span>{icon_html}</div><div style="font-family:Inter;font-size:15px;font-weight:500;color:white;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">{slot["main"]}</div>{bottom}</div>'
 
     st.markdown(card_html, unsafe_allow_html=True)
 
