@@ -4,8 +4,15 @@ V9 Design: "The Edit" (Soft-Cyber / Y2K Luxe)
 Electric Lilac accent with squircle geometry.
 """
 
+import html
 import streamlit as st
 from chain_utils import ChainUtils
+
+
+def _escape_content(content: str) -> str:
+    """Escape HTML in content to prevent XSS while preserving markdown formatting"""
+    # Escape HTML special chars to prevent script injection
+    return html.escape(content)
 
 
 # --- HELPER: LUXE CARD (V9 Squircle) ---
@@ -275,12 +282,14 @@ def chat_interface(create_agent_func):
     # Render chat history with V9 styling
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
+            # Escape content to prevent XSS
+            safe_content = _escape_content(msg["content"])
             if msg["role"] == "assistant":
                 # AI = Clean typography
-                st.markdown(f"<div style='color: #F0F0F0; font-family: Inter, sans-serif; font-weight: 400; font-size: 15px; line-height: 1.6;'>{msg['content']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: #F0F0F0; font-family: Inter, sans-serif; font-weight: 400; font-size: 15px; line-height: 1.6;'>{safe_content}</div>", unsafe_allow_html=True)
             else:
                 # User = Lilac accent
-                st.markdown(f"<div style='color: #d8b4fe; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500;'>{msg['content']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: #d8b4fe; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500;'>{safe_content}</div>", unsafe_allow_html=True)
 
     # 7. HANDLE INPUT LOGIC
     prompt = None
@@ -295,7 +304,8 @@ def chat_interface(create_agent_func):
         if prompt:
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
-                st.markdown(f"<div style='color: #d8b4fe; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500;'>{prompt}</div>", unsafe_allow_html=True)
+                safe_prompt = _escape_content(prompt)
+                st.markdown(f"<div style='color: #d8b4fe; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500;'>{safe_prompt}</div>", unsafe_allow_html=True)
 
     # 9. PROCESS MESSAGE
     if prompt:
@@ -340,7 +350,8 @@ def chat_interface(create_agent_func):
                 except Exception as e:
                     response = f"**System Error:** {str(e)}"
 
-                st.markdown(f"<div style='color: #F0F0F0; font-family: Inter, sans-serif; font-weight: 400; font-size: 15px; line-height: 1.6;'>{response}</div>", unsafe_allow_html=True)
+                safe_response = _escape_content(response)
+                st.markdown(f"<div style='color: #F0F0F0; font-family: Inter, sans-serif; font-weight: 400; font-size: 15px; line-height: 1.6;'>{safe_response}</div>", unsafe_allow_html=True)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
                 if message_success and llm_config.get("using_free_tier"):

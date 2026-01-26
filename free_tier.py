@@ -6,6 +6,7 @@ After quota exhausted, users are prompted to add their own API key.
 """
 
 import os
+import time
 import streamlit as st
 from typing import Tuple, Optional
 from datetime import datetime
@@ -52,8 +53,32 @@ class FreeTier:
 
     @staticmethod
     def increment_usage(user_id: str) -> bool:
-        """Increment message count for user atomically (call after successful message)"""
+        """
+        Increment message count for user atomically (call after successful message)
+
+        Note: For true atomicity, set up the increment_free_tier_usage RPC function:
+        CREATE OR REPLACE FUNCTION increment_free_tier_usage(p_user_id UUID)
+        RETURNS VOID AS $$
+        BEGIN
+            INSERT INTO user_settings (user_id, free_tier_messages_used, updated_at)
+            VALUES (p_user_id, 1, NOW())
+            ON CONFLICT (user_id)
+            DO UPDATE SET
+                free_tier_messages_used = COALESCE(user_settings.free_tier_messages_used, 0) + 1,
+                updated_at = NOW();
+        END;
+        $$ LANGUAGE plpgsql SECURITY DEFINER;
+        """
         from supabase_client import get_supabase_client
+        import time
+
+        # Rate limit: prevent duplicate increments within 1 second (debounce)
+        rate_key = f"_free_tier_increment_{user_id}"
+        last_increment = st.session_state.get(rate_key, 0)
+        now = time.time()
+        if now - last_increment < 1.0:
+            return True  # Already incremented recently, skip duplicate
+        st.session_state[rate_key] = now
 
         try:
             client = get_supabase_client(use_service_key=True)
@@ -67,7 +92,8 @@ class FreeTier:
             except Exception:
                 pass  # RPC not available, fall back to upsert
 
-            # Fallback: upsert with current value (not fully atomic but acceptable)
+            # Fallback: upsert with current value
+            # Note: Not fully atomic but rate limiting above prevents most race conditions
             current = FreeTier.get_usage(user_id)
             client.table("user_settings").upsert({
                 "user_id": user_id,

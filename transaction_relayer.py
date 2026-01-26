@@ -39,6 +39,10 @@ USDC_ABI = [
 class TransactionRelayer:
     """Relayer service for gasless transactions"""
 
+    # Amount validation limits
+    MIN_AMOUNT_USD = 0.01  # Minimum transaction amount
+    MAX_AMOUNT_USD = 10000.0  # Maximum single transaction amount
+
     def __init__(self, network_key: str = "base-sepolia"):
         self.network_key = network_key
         self.network = NETWORKS[network_key]
@@ -54,6 +58,28 @@ class TransactionRelayer:
             self.relayer_account = Account.from_key(relayer_key)
 
         self.relayer_address = self.relayer_account.address
+
+    def _get_used_nonces_key(self, user_address: str) -> str:
+        """Get session key for tracking used nonces"""
+        return f"_used_nonces_{user_address.lower()}"
+
+    def _is_nonce_used(self, user_address: str, nonce: int) -> bool:
+        """Check if a nonce has been used (replay protection)"""
+        key = self._get_used_nonces_key(user_address)
+        used_nonces = st.session_state.get(key, set())
+        return nonce in used_nonces
+
+    def _mark_nonce_used(self, user_address: str, nonce: int) -> None:
+        """Mark a nonce as used to prevent replay"""
+        key = self._get_used_nonces_key(user_address)
+        if key not in st.session_state:
+            st.session_state[key] = set()
+        st.session_state[key].add(nonce)
+
+        # Limit cache size to prevent memory bloat (keep last 1000 nonces)
+        if len(st.session_state[key]) > 1000:
+            sorted_nonces = sorted(st.session_state[key])
+            st.session_state[key] = set(sorted_nonces[-500:])
 
     def get_internal_balance(self, user_address: str, currency: str = "USDC") -> Decimal:
         """
@@ -111,7 +137,7 @@ class TransactionRelayer:
         user_address: str,
         user_id: Optional[str] = None
     ) -> Tuple[bool, Optional[str]]:
-        """Validate meta-transaction including spending limits"""
+        """Validate meta-transaction including spending limits and replay protection"""
 
         # Verify signature with correct chain ID
         chain_id = self.network["chain_id"]
@@ -126,8 +152,24 @@ class TransactionRelayer:
         if message["from"].lower() != user_address.lower():
             return False, "From address mismatch"
 
-        # Check internal balance
+        # Replay protection: check if nonce has been used
+        nonce = message.get("nonce", 0)
+        if self._is_nonce_used(user_address, nonce):
+            return False, "Transaction already processed (duplicate nonce)"
+
+        # Amount validation
         amount_usd = float(message["amount"]) / 1e6  # Convert from wei
+
+        if amount_usd < self.MIN_AMOUNT_USD:
+            return False, f"Amount too small. Minimum is ${self.MIN_AMOUNT_USD:.2f}"
+
+        if amount_usd > self.MAX_AMOUNT_USD:
+            return False, f"Amount too large. Maximum is ${self.MAX_AMOUNT_USD:.2f}"
+
+        if amount_usd <= 0:
+            return False, "Invalid amount: must be positive"
+
+        # Check internal balance
         gas_cost, app_fee = self.estimate_gas_cost(amount_usd)
         total_needed = Decimal(amount_usd) + Decimal(gas_cost) + Decimal(app_fee)
 
@@ -154,15 +196,16 @@ class TransactionRelayer:
         self,
         message: Dict[str, Any],
         signature: str,
-        user_address: str
+        user_address: str,
+        user_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Execute a gasless USDC transfer
         Returns transaction result with hash and status
         """
 
-        # Validate transaction
-        valid, error = self.validate_transaction(message, signature, user_address)
+        # Validate transaction (pass user_id for spending limit enforcement)
+        valid, error = self.validate_transaction(message, signature, user_address, user_id)
         if not valid:
             return {
                 "success": False,
@@ -201,6 +244,10 @@ class TransactionRelayer:
 
             # Send transaction
             tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+
+            # Mark nonce as used (replay protection)
+            nonce = message.get("nonce", 0)
+            self._mark_nonce_used(user_address, nonce)
 
             # Wait for receipt (optional, can be async)
             # receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)

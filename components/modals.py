@@ -314,9 +314,16 @@ def deposit_modal():
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        # Copy button
+        # Copy button - use safe clipboard approach with escaped address
         if st.button("Copy Address", use_container_width=True):
-            st.markdown(f'<script>navigator.clipboard.writeText("{address}");</script>', unsafe_allow_html=True)
+            import html
+            import json
+            # JSON encode ensures no script injection even with malicious input
+            safe_address = json.dumps(address)
+            st.components.v1.html(
+                f'<script>navigator.clipboard.writeText({safe_address});</script>',
+                height=0
+            )
             st.toast("Copied")
 
     with col2:
@@ -413,12 +420,13 @@ def _render_send_confirmation():
     # Confirm checkbox
     confirmed = st.checkbox("I confirm the recipient address is correct", key="send_confirm_checkbox")
 
+    def _on_cancel_confirm():
+        st.session_state._send_confirm_step = False
+
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("Cancel", use_container_width=True):
-            st.session_state._send_confirm_step = False
-            st.rerun()
+        st.button("Cancel", use_container_width=True, on_click=_on_cancel_confirm)
 
     with col2:
         if st.button("Sign & Send", type="primary", use_container_width=True, disabled=not confirmed):
@@ -457,12 +465,14 @@ def _render_send_confirmation():
                         chain_id=chain_id
                     )
 
-                    # Execute via relayer
+                    # Execute via relayer (pass user_id for spending limit enforcement)
+                    user_id = st.session_state.get("user_id")
                     relayer = TransactionRelayer(network_key)
                     result = relayer.execute_transfer(
                         message=message,
                         signature=signature,
-                        user_address=st.session_state.wallet_address
+                        user_address=st.session_state.wallet_address,
+                        user_id=user_id
                     )
 
                     if result["success"]:
@@ -597,24 +607,27 @@ def send_modal():
 
     can_send = valid_recipient and amount > 0 and not spending_blocked
 
+    def _on_cancel_send():
+        st.session_state.show_send_modal = False
+
+    def _on_continue_send():
+        # Store transaction details for confirmation step
+        st.session_state._send_confirm_step = True
+        st.session_state._send_details = {
+            "recipient": checksummed_recipient or recipient,
+            "amount": amount,
+            "total": total,
+            "gas_cost": gas_cost,
+            "app_fee": app_fee,
+            "network_key": network_key,
+            "network_name": selected_network
+        }
+
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("Cancel", use_container_width=True):
-            st.session_state.show_send_modal = False
-            st.rerun()
+        st.button("Cancel", use_container_width=True, on_click=_on_cancel_send)
 
     with col2:
-        if st.button("Continue", type="primary", use_container_width=True, disabled=not can_send):
-            # Store transaction details for confirmation step
-            st.session_state._send_confirm_step = True
-            st.session_state._send_details = {
-                "recipient": checksummed_recipient or recipient,
-                "amount": amount,
-                "total": total,
-                "gas_cost": gas_cost,
-                "app_fee": app_fee,
-                "network_key": network_key,
-                "network_name": selected_network
-            }
-            st.rerun()
+        st.button("Continue", type="primary", use_container_width=True,
+                  disabled=not can_send, on_click=_on_continue_send if can_send else None)

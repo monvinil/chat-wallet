@@ -238,7 +238,6 @@ class SessionManager:
         # Method 1: Direct JavaScript
         try:
             SessionManager._delete_cookie_js(SessionManager.COOKIE_NAME)
-            SessionManager._delete_cookie_js("chat_wallet_key")  # Also clear wallet key
         except Exception:
             pass
 
@@ -256,63 +255,28 @@ class SessionManager:
 
     @staticmethod
     def save_wallet_key(wallet_key: str):
-        """Save wallet decryption key to session cookie (for auto-unlock on refresh)"""
-        # Use session cookie (no expiry) - cleared when browser closes
-        # This keeps wallet unlocked across page refreshes but not browser restarts
-        try:
-            import base64
-            import re
-            # Encode key for cookie storage (base64 is safe for cookie values)
-            encoded_key = base64.b64encode(wallet_key.encode()).decode()
+        """Save wallet decryption key to session state only (not cookies for security)
 
-            # Validate encoded key format to prevent injection
-            if not re.match(r'^[a-zA-Z0-9+/=]+$', encoded_key):
-                raise ValueError("Invalid encoded key format")
+        Security note: Wallet keys are NOT stored in cookies because:
+        1. Cookies without HttpOnly can be stolen via XSS
+        2. Cookies with HttpOnly can't be read by our JavaScript
+        3. Storing encryption keys in cookies is a security anti-pattern
 
-            # Method 1: Direct JavaScript (session cookie with Secure flag)
-            js_code = f"""
-            <script>
-            document.cookie = "chat_wallet_key={encoded_key};path=/;SameSite=Lax;Secure";
-            </script>
-            """
-            components.html(js_code, height=0)
-
-            # Method 2: stx cookie manager (backup, with 1 day expiry for persistence)
-            cookie_manager = SessionManager.get_cookie_manager()
-            if cookie_manager:
-                cookie_manager.set(
-                    "chat_wallet_key",
-                    encoded_key,
-                    expires_at=datetime.now() + timedelta(days=1),
-                    key="set_wallet_key"
-                )
-
-        except Exception as e:
-            from utils.logger import logger
-            logger.error(f"Failed to save wallet key cookie: {type(e).__name__}")
+        Trade-off: Wallet will re-lock on page refresh (user must re-enter password)
+        """
+        # Store only in session state - secure server-side storage
+        st.session_state._wallet_key_session = wallet_key
 
     @staticmethod
     def get_wallet_key() -> Optional[str]:
-        """Get wallet decryption key from cookie (for auto-unlock)"""
-        try:
-            import base64
-            # Use cached cookies to avoid multiple get_all() component calls
-            all_cookies = SessionManager._get_all_cookies()
-            encoded_key = all_cookies.get("chat_wallet_key")
-            if encoded_key:
-                return base64.b64decode(encoded_key.encode()).decode()
-        except Exception as e:
-            from utils.logger import logger
-            logger.debug(f"Failed to get wallet key: {type(e).__name__}")
-        return None
+        """Get wallet decryption key from session state (not cookies for security)"""
+        return st.session_state.get("_wallet_key_session")
 
     @staticmethod
     def clear_wallet_key():
-        """Clear wallet key cookie (when user explicitly locks wallet)"""
-        try:
-            SessionManager._delete_cookie_js("chat_wallet_key")
-        except Exception:
-            pass
+        """Clear wallet key from session state (when user explicitly locks wallet)"""
+        if "_wallet_key_session" in st.session_state:
+            del st.session_state["_wallet_key_session"]
 
     @staticmethod
     def restore_session() -> bool:
@@ -406,6 +370,9 @@ class SessionManager:
 
         SessionManager.clear_session_cookie()
 
+        # Clear wallet key from session state
+        SessionManager.clear_wallet_key()
+
         # Clear all user-specific caches (LLM config, balance cache, spending, etc.)
         keys_to_clear = []
         for key in st.session_state:
@@ -416,7 +383,8 @@ class SessionManager:
                 "_last_activity",
                 "guest_settings_",
                 "_send_",
-                "_seed_verify"
+                "_seed_verify",
+                "_wallet_key_session"
             ]):
                 keys_to_clear.append(key)
 
