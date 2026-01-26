@@ -841,12 +841,14 @@ def main():
         border: none !important;
         border-bottom: 1px solid var(--border-hairline) !important;
         border-radius: 0 !important;
+        position: relative !important;
     }
 
     [data-testid="stCode"] pre {
         background: transparent !important;
         border: none !important;
-        padding: 12px 0 !important;
+        padding: 12px 50px 12px 0 !important;
+        margin: 0 !important;
     }
 
     [data-testid="stCode"] code {
@@ -857,18 +859,25 @@ def main():
         white-space: pre-wrap !important;
     }
 
-    /* Copy button - minimal */
+    /* Copy button - positioned right */
     [data-testid="stCode"] button {
+        position: absolute !important;
+        right: 0 !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
         background: transparent !important;
         border: none !important;
         color: #444 !important;
-        opacity: 0.5;
+        opacity: 0.4;
         transition: opacity 0.2s ease;
+        padding: 8px !important;
+        margin: 0 !important;
     }
 
     [data-testid="stCode"] button:hover {
         opacity: 1;
-        color: #888 !important;
+        color: white !important;
+        background: transparent !important;
     }
 
     /* 9. DIVIDERS & MISC */
