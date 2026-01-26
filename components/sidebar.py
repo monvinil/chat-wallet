@@ -140,65 +140,81 @@ def render_sidebar_footer():
 
 
 def render_transaction_history():
-    """Render V12 transaction history - minimal list"""
+    """Render V12 transaction history - direct display, no expander"""
     user_id = st.session_state.get("user_id")
 
     if not user_id or user_id.startswith("guest_"):
         return
 
-    with st.expander("Recent", expanded=False):
-        try:
-            from supabase_client import get_supabase_client, get_user_transactions
+    # Section header
+    st.markdown("""
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                letter-spacing: 0.1em; color: #444; margin-bottom: 8px;">RECENT</div>
+    """, unsafe_allow_html=True)
 
-            client = get_supabase_client(use_service_key=True)
-            if not client:
-                st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444; text-align: center; padding: 20px 0; width: 100%;'>Unable to load</div>", unsafe_allow_html=True)
-                return
+    try:
+        from supabase_client import get_supabase_client, get_user_transactions
 
-            transactions = get_user_transactions(client, user_id, limit=5)
+        client = get_supabase_client(use_service_key=True)
+        if not client:
+            st.markdown("""
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #333;
+                        padding: 12px 0;">—</div>
+            """, unsafe_allow_html=True)
+            return
 
-            if not transactions:
-                st.markdown("""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444;
-                            text-align: center; padding: 20px 0; width: 100%;">
-                    No transactions yet
-                </div>
-                """, unsafe_allow_html=True)
-                return
+        transactions = get_user_transactions(client, user_id, limit=3)
 
-            for tx in transactions:
-                tx_type = tx.get("type", "unknown")
-                amount = float(tx.get("amount", 0))
-                status = tx.get("status", "pending")
-                chain = tx.get("chain", "")
+        if not transactions:
+            st.markdown("""
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #333;
+                        padding: 12px 0;">No activity</div>
+            """, unsafe_allow_html=True)
+            return
 
-                # V12 minimal indicators
-                direction = "+" if tx_type == "deposit" else "-"
-                status_dot = "●" if status == "confirmed" else "○"
+        for tx in transactions:
+            tx_type = tx.get("type", "unknown")
+            amount = float(tx.get("amount", 0))
+            status = tx.get("status", "pending")
+            chain = tx.get("chain", "")
+            tx_hash = tx.get("tx_hash")
 
+            # V12 minimal indicators
+            direction = "+" if tx_type == "deposit" else "−"
+            status_color = "#888" if status == "confirmed" else "#444"
+
+            # Build explorer link if available
+            explorer_url = None
+            if tx_hash and chain:
+                explorer_url = ChainUtils.get_tx_explorer_url(chain, tx_hash)
+
+            if explorer_url:
                 st.markdown(f"""
-                <div style="display: flex; justify-content: space-between; align-items: center;
-                            padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <span style="font-family: 'Inter', sans-serif; font-size: 14px; color: white; font-weight: 300;">
+                <a href="{explorer_url}" target="_blank" style="
+                    display: flex; justify-content: space-between; align-items: center;
+                    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+                    text-decoration: none;">
+                    <span style="font-family: 'Inter', sans-serif; font-size: 14px; color: {status_color}; font-weight: 300;">
                         {direction}${amount:.2f}
                     </span>
-                    <span style="font-size: 8px; color: {'#fff' if status == 'confirmed' else '#444'};">{status_dot}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #333;">→</span>
+                </a>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style="display: flex; justify-content: space-between; align-items: center;
+                            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                    <span style="font-family: 'Inter', sans-serif; font-size: 14px; color: {status_color}; font-weight: 300;">
+                        {direction}${amount:.2f}
+                    </span>
                 </div>
                 """, unsafe_allow_html=True)
 
-                tx_hash = tx.get("tx_hash")
-                if tx_hash and chain:
-                    explorer_url = ChainUtils.get_tx_explorer_url(chain, tx_hash)
-                    if explorer_url:
-                        st.markdown(f"""
-                        <a href="{explorer_url}" target="_blank" style="font-family: 'JetBrains Mono', monospace;
-                           font-size: 9px; color: #666; text-decoration: none; letter-spacing: 0.05em;">
-                            View →
-                        </a>
-                        """, unsafe_allow_html=True)
-
-        except Exception:
-            st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444; text-align: center; padding: 20px 0; width: 100%;'>Unable to load</div>", unsafe_allow_html=True)
+    except Exception:
+        st.markdown("""
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #333;
+                    padding: 12px 0;">—</div>
+        """, unsafe_allow_html=True)
 
 
 def sidebar():
@@ -232,22 +248,23 @@ def sidebar():
             total_usdc = ChainUtils.calculate_total_usdc(balances) if balances else 0.0
             render_balance_display(total_usdc, balances)
 
-            # Addresses
+            # Addresses - floating data display
             solana_addr = _get_solana_address_from_session()
 
-            with st.expander("Addresses", expanded=False):
-                # EVM Address
-                st.markdown("""
-                <div style="font-family: JetBrains Mono; font-size: 9px; color: #555; letter-spacing: 0.1em; margin-bottom: 4px;">EVM</div>
-                """, unsafe_allow_html=True)
-                st.code(st.session_state.wallet_address, language=None)
+            # EVM Address
+            st.markdown("""
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                        letter-spacing: 0.1em; color: #444; margin-bottom: 4px;">EVM</div>
+            """, unsafe_allow_html=True)
+            st.code(st.session_state.wallet_address, language=None)
 
-                # Solana Address (if available)
-                if solana_addr:
-                    st.markdown("""
-                    <div style="font-family: JetBrains Mono; font-size: 9px; color: #555; letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">SOLANA</div>
-                    """, unsafe_allow_html=True)
-                    st.code(solana_addr, language=None)
+            # Solana Address (if available)
+            if solana_addr:
+                st.markdown("""
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                            letter-spacing: 0.1em; color: #444; margin-bottom: 4px; margin-top: 12px;">SOLANA</div>
+                """, unsafe_allow_html=True)
+                st.code(solana_addr, language=None)
 
             st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 

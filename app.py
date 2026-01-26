@@ -831,7 +831,7 @@ def main():
         margin: 0 !important;
     }
 
-    /* st.code widget - minimal with subtle copy button */
+    /* st.code widget - minimal with inline copy button */
     [data-testid="stCode"] {
         background: transparent !important;
     }
@@ -841,14 +841,18 @@ def main():
         border: none !important;
         border-bottom: 1px solid var(--border-hairline) !important;
         border-radius: 0 !important;
-        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
     }
 
     [data-testid="stCode"] pre {
         background: transparent !important;
         border: none !important;
-        padding: 12px 50px 12px 0 !important;
+        padding: 12px 0 !important;
         margin: 0 !important;
+        flex: 1 !important;
+        min-width: 0 !important;
     }
 
     [data-testid="stCode"] code {
@@ -859,12 +863,9 @@ def main():
         white-space: pre-wrap !important;
     }
 
-    /* Copy button - positioned right */
+    /* Copy button - inline at end */
     [data-testid="stCode"] button {
-        position: absolute !important;
-        right: 0 !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
+        flex-shrink: 0 !important;
         background: transparent !important;
         border: none !important;
         color: #444 !important;
