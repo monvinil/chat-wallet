@@ -5,7 +5,6 @@ Modular UI components extracted from app.py
 
 from components.sidebar import (
     sidebar,
-    render_sidebar_footer,
     render_transaction_history
 )
 from components.modals import (
@@ -29,7 +28,6 @@ from components.chat import (
 __all__ = [
     # Sidebar
     "sidebar",
-    "render_sidebar_footer",
     "render_transaction_history",
     # Modals
     "deposit_modal",
