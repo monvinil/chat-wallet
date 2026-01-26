@@ -149,7 +149,7 @@ def _render_brand_card(slot: dict):
         bottom = f'<div style="font-family:JetBrains Mono;font-size:10px;color:#666;margin-top:6px;">{slot["sub"]}</div>'
 
     # Single-line HTML for reliable Streamlit parsing
-    card_html = f'<div style="border:{border};background:{gradient};border-radius:12px;padding:14px;height:90px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:{color};letter-spacing:0.05em;font-weight:600;">{slot["title"]}</span>{icon_html}</div><div style="font-family:Inter;font-size:13px;font-weight:500;color:white;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{slot["main"]}</div>{bottom}</div>'
+    card_html = f'<div style="border:{border};background:{gradient};border-radius:12px;padding:14px;height:105px;display:flex;flex-direction:column;overflow:hidden;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:{color};letter-spacing:0.05em;font-weight:600;">{slot["title"]}</span>{icon_html}</div><div style="font-family:Inter;font-size:14px;font-weight:500;color:white;margin:8px 0;white-space:nowrap;overflow:visible;">{slot["main"]}</div>{bottom}</div>'
 
     st.markdown(card_html, unsafe_allow_html=True)
 
