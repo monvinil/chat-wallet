@@ -3,6 +3,7 @@ Chat Interface Component
 V12 Design: "Liquid Silver" - Floating Void Aesthetic
 """
 
+import html
 import streamlit as st
 from chain_utils import ChainUtils
 
@@ -401,12 +402,13 @@ def chat_interface(create_agent_func):
     # Render chat history - pure text, minimal
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
+            safe_content = html.escape(msg['content'])
             if msg["role"] == "assistant":
                 # AI: Light gray, thin weight
-                st.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{msg['content']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{safe_content}</div>", unsafe_allow_html=True)
             else:
                 # User: White, clean
-                st.markdown(f"<div style='color: white; font-family: Inter; font-size: 15px; line-height: 1.6;'>{msg['content']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: white; font-family: Inter; font-size: 15px; line-height: 1.6;'>{safe_content}</div>", unsafe_allow_html=True)
 
     # 7. HANDLE INPUT LOGIC
     prompt = None
@@ -422,7 +424,7 @@ def chat_interface(create_agent_func):
         if prompt:
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
-                st.markdown(f"<div style='color: white; font-family: Inter; font-size: 15px;'>{prompt}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: white; font-family: Inter; font-size: 15px;'>{html.escape(prompt)}</div>", unsafe_allow_html=True)
 
     # 9. PROCESS MESSAGE
     if prompt:
@@ -467,7 +469,7 @@ def chat_interface(create_agent_func):
                 except Exception as e:
                     response = f"**System Error:** {str(e)}"
 
-                st.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{response}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
                 if message_success and llm_config.get("using_free_tier"):
