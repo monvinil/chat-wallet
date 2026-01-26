@@ -35,18 +35,6 @@ def _on_logout():
     SessionManager.logout()
 
 
-def _on_unlock_wallet():
-    """Handle wallet unlock - read password from session state before rerun"""
-    unlock_pwd = st.session_state.get("unlock_pwd", "")
-    if unlock_pwd:
-        if WalletManager.unlock_wallet_with_password(unlock_pwd):
-            st.session_state.wallet_locked = False
-            # Clear the password field
-            st.session_state.unlock_pwd = ""
-        else:
-            st.session_state._unlock_error = True
-    else:
-        st.session_state._unlock_error = True
 
 
 def _get_solana_address_from_session() -> str:
@@ -89,7 +77,7 @@ def render_status_indicator(is_active: bool):
             gap: 8px;
             margin-bottom: 1.25rem;
         ">
-            <div style="width: 6px; height: 6px; background: #2563eb; border-radius: 50%;"></div>
+            <div style="width: 6px; height: 6px; background: #3b82f6; border-radius: 50%;"></div>
             <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
                          letter-spacing: 0.15em; color: #525252;">SYSTEM_ACTIVE</span>
         </div>
@@ -166,12 +154,12 @@ def render_transaction_history():
 
                 # V10 brutalist badges
                 if tx_type == "deposit":
-                    badge = '<span style="background: #2563eb; color: white; font-size: 9px; padding: 3px 8px; border-radius: 4px; font-family: JetBrains Mono, monospace; letter-spacing: 0.08em;">IN</span>'
+                    badge = '<span style="background: #3b82f6; color: white; font-size: 9px; padding: 3px 8px; font-family: JetBrains Mono, monospace; letter-spacing: 0.1em;">IN</span>'
                 else:
-                    badge = '<span style="background: #262626; color: #a3a3a3; font-size: 9px; padding: 3px 8px; border-radius: 4px; font-family: JetBrains Mono, monospace; letter-spacing: 0.08em;">OUT</span>'
+                    badge = '<span style="background: #262626; color: #a3a3a3; font-size: 9px; padding: 3px 8px; font-family: JetBrains Mono, monospace; letter-spacing: 0.1em;">OUT</span>'
 
                 # Status indicator
-                status_color = "#2563eb" if status == "confirmed" else "#fbbf24" if status == "pending" else "#ef4444"
+                status_color = "#3b82f6" if status == "confirmed" else "#fbbf24" if status == "pending" else "#ef4444"
 
                 st.markdown(f"""
                 <div style="display: flex; justify-content: space-between; align-items: center;
@@ -192,7 +180,7 @@ def render_transaction_history():
                     if explorer_url:
                         st.markdown(f"""
                         <a href="{explorer_url}" target="_blank" style="font-family: 'JetBrains Mono', monospace;
-                           font-size: 9px; color: #2563eb; text-decoration: none; letter-spacing: 0.08em;">
+                           font-size: 9px; color: #3b82f6; text-decoration: none; letter-spacing: 0.1em;">
                             VIEW_TX &rarr;
                         </a>
                         """, unsafe_allow_html=True)
@@ -297,23 +285,45 @@ def sidebar():
                 </div>
                 """, unsafe_allow_html=True)
 
-                st.markdown("""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
-                            letter-spacing: 0.15em; color: #525252; margin-bottom: 8px;">
-                    ACCESS_KEY
-                </div>
-                """, unsafe_allow_html=True)
-
-                st.text_input("Password", type="password", key="unlock_pwd",
-                              label_visibility="collapsed", placeholder="ENTER KEY_")
-
                 # Show error if previous unlock attempt failed
                 if st.session_state.get("_unlock_error"):
                     st.error("INVALID_KEY")
                     st.session_state._unlock_error = False
 
-                st.button("UNLOCK", use_container_width=True, type="primary",
-                          on_click=_on_unlock_wallet)
+                # Use form to ensure password value is available on submit
+                with st.form(key="unlock_form", clear_on_submit=True):
+                    st.markdown("""
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                                letter-spacing: 0.15em; color: #525252; margin-bottom: 8px;">
+                        ACCESS_KEY
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    unlock_password = st.text_input(
+                        "Password",
+                        type="password",
+                        key="unlock_pwd_form",
+                        label_visibility="collapsed",
+                        placeholder="ENTER KEY_"
+                    )
+
+                    submit_unlock = st.form_submit_button(
+                        "UNLOCK",
+                        use_container_width=True,
+                        type="primary"
+                    )
+
+                if submit_unlock:
+                    if unlock_password:
+                        if WalletManager.unlock_wallet_with_password(unlock_password):
+                            st.session_state.wallet_locked = False
+                            st.rerun()
+                        else:
+                            st.session_state._unlock_error = True
+                            st.rerun()
+                    else:
+                        st.session_state._unlock_error = True
+                        st.rerun()
 
                 st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 

@@ -373,15 +373,15 @@ def wallet_setup_ui():
     </div>
     """, unsafe_allow_html=True)
 
-    # Info card - V11 glass style
+    # Info card - V10 brutalist style
     st.markdown("""
     <div style="
-        background: rgba(37, 99, 235, 0.05);
-        border: 1px solid rgba(37, 99, 235, 0.15);
-        border-radius: 8px;
+        border: 1px solid #1a1a1a;
         padding: 16px 20px;
         margin-bottom: 2rem;
+        position: relative;
     ">
+        <div style="position: absolute; top: 0; left: 0; width: 6px; height: 6px; border-top: 1px solid #3b82f6; border-left: 1px solid #3b82f6;"></div>
         <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #a3a3a3;">
             Self-custodial. Encrypted locally. Only you control access.
         </div>

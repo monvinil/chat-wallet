@@ -1,4 +1,4 @@
-/* V11 Design System: "The Monolith" - Depth & Materiality */
+/* V10 Design System: "Brutalist Fintech" - Revolut x Gentle Monster */
 
 /* --- 1. CORE VARIABLES --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -9,25 +9,19 @@
     --bg-surface: #0a0a0a;
     --bg-elevated: #111111;
 
-    /* Glass effect backgrounds */
-    --bg-glass: rgba(10, 10, 10, 0.8);
-    --bg-glass-border: rgba(255, 255, 255, 0.06);
-
     /* Chrome Gradient - Metallic signature */
     --chrome-start: #e5e5e5;
     --chrome-end: #a3a3a3;
     --chrome-gradient: linear-gradient(135deg, var(--chrome-start) 0%, var(--chrome-end) 100%);
 
-    /* Cobalt - Primary accent (deeper V11 blue) */
-    --accent-cobalt: #2563eb;
-    --accent-cobalt-glow: rgba(37, 99, 235, 0.2);
-    --accent-cobalt-soft: rgba(37, 99, 235, 0.1);
+    /* Cobalt - Primary accent (replacing lilac) */
+    --accent-cobalt: #3b82f6;
+    --accent-cobalt-glow: rgba(59, 130, 246, 0.15);
 
-    /* Borders - Softer architectural lines */
+    /* Borders - Architectural lines */
     --border-void: #1a1a1a;
     --border-subtle: #262626;
     --border-medium: #404040;
-    --border-glass: rgba(255, 255, 255, 0.08);
 
     /* Text hierarchy */
     --text-primary: #ffffff;
@@ -38,27 +32,19 @@
     --font-sans: 'Inter', -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 
-    /* V11 Geometry - Rounded corners with depth */
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
+    /* V10 Brutalist Geometry - Sharp corners + pill CTAs */
+    --radius-none: 0px;
+    --radius-brutalist: 2px;
     --radius-pill: 99px;
-
-    /* Shadows for depth */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-glow: 0 0 40px var(--accent-cobalt-glow);
 }
 
-/* --- 2. GLOBAL RESET + LAYERED BACKGROUND --- */
+/* --- 2. GLOBAL RESET + ARCHITECTURAL GRID --- */
 .stApp {
     background-color: var(--bg-void) !important;
     background-image:
-        radial-gradient(ellipse at 50% 0%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 100% 100%, rgba(37, 99, 235, 0.04) 0%, transparent 40%),
-        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 80px 80px, 80px 80px;
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 100px 100px;
 }
 
 html, body, [class*="css"] {
@@ -66,42 +52,40 @@ html, body, [class*="css"] {
     color: var(--text-primary);
 }
 
-/* V11 Headers - Tighter tracking, more weight */
+/* V10 Headers - Wide tracking, uppercase, weight contrast */
 h1, h2, h3 {
     font-family: var(--font-sans);
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
     color: white !important;
 }
 
 h1 {
-    font-size: 36px;
-    font-weight: 800;
+    font-size: 42px;
 }
 
-/* --- 3. INPUTS: FROSTED GLASS --- */
+/* --- 3. INPUTS: BRUTALIST VOID --- */
 .stTextInput > div > div > input,
 .stTextArea > div > div > textarea,
 .stChatInput > div > div > textarea {
-    background: var(--bg-glass) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border-glass) !important;
-    border-radius: var(--radius-sm) !important;
+    background-color: transparent !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-none) !important;
     color: white !important;
     font-family: var(--font-mono) !important;
     font-weight: 400;
     font-size: 13px !important;
     padding: 16px 20px !important;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease;
 }
 
 .stTextInput > div > div > input:focus,
 .stTextArea > div > div > textarea:focus,
 .stChatInput > div > div > textarea:focus {
     border-color: var(--accent-cobalt) !important;
-    background: rgba(37, 99, 235, 0.05) !important;
-    box-shadow: 0 0 0 3px var(--accent-cobalt-soft) !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
     outline: none !important;
 }
 
@@ -120,34 +104,29 @@ h1 {
     font-family: var(--font-mono) !important;
     font-size: 10px !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.08em !important;
+    letter-spacing: 0.1em !important;
     color: var(--text-muted) !important;
 }
 
-/* --- 4. BUTTONS: V11 DEPTH HIERARCHY --- */
-/* Secondary: Rounded with glass effect */
+/* --- 4. BUTTONS: BRUTALIST HIERARCHY --- */
+/* Secondary: 0px radius, chrome border */
 .stButton > button {
-    background: var(--bg-glass) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid var(--border-glass) !important;
-    border-radius: var(--radius-sm) !important;
+    background-color: transparent !important;
+    border: 1px solid var(--border-medium) !important;
+    border-radius: var(--radius-none) !important;
     color: white !important;
     font-family: var(--font-sans) !important;
     font-size: 11px !important;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     padding: 14px 24px !important;
-    transition: all 0.2s ease;
-    box-shadow: var(--shadow-sm);
+    transition: all 0.15s ease;
 }
 
 .stButton > button:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border-color: var(--border-subtle) !important;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-color: var(--chrome-start) !important;
 }
 
 /* Primary: 99px pill, cobalt accent */
@@ -200,15 +179,12 @@ button[kind="primary"] {
     background: transparent !important;
 }
 
-/* --- 7. METRIC CARDS: V11 GLASS PANELS --- */
+/* --- 7. METRIC CARDS --- */
 [data-testid="stMetric"] {
-    background: var(--bg-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border-glass);
-    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-void);
+    border-radius: var(--radius-none);
     padding: 1.25rem;
-    box-shadow: var(--shadow-sm);
 }
 
 [data-testid="stMetricValue"] {
@@ -226,48 +202,44 @@ button[kind="primary"] {
     color: var(--text-muted) !important;
 }
 
-/* --- 8. TABS: V11 PILL STYLE --- */
+/* --- 8. TABS: ARCHITECTURAL --- */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 4px;
-    background: var(--bg-surface);
-    border-radius: var(--radius-md);
-    padding: 4px;
-    border: 1px solid var(--border-void);
+    gap: 0;
+    background: transparent;
+    border-bottom: 1px solid var(--border-void);
 }
 
 .stTabs [data-baseweb="tab"] {
     background: transparent;
     border: none !important;
-    border-radius: var(--radius-sm);
+    border-bottom: 2px solid transparent;
     color: var(--text-muted);
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 10px 20px;
+    letter-spacing: 0.1em;
+    padding: 12px 24px;
     margin: 0;
-    transition: all 0.2s ease;
 }
 
 .stTabs [data-baseweb="tab"]:hover {
     color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.03);
 }
 
 .stTabs [data-baseweb="tab"][aria-selected="true"] {
-    color: white;
+    color: var(--accent-cobalt);
     font-weight: 600;
-    background: var(--accent-cobalt);
-    box-shadow: var(--shadow-sm);
+    background: transparent;
+    border-bottom: 2px solid var(--accent-cobalt);
 }
 
-/* --- 9. CODE BLOCKS: V11 ROUNDED --- */
+/* --- 9. CODE BLOCKS --- */
 code {
     background: var(--bg-surface) !important;
     color: var(--accent-cobalt) !important;
     padding: 3px 8px !important;
-    border-radius: var(--radius-sm) !important;
+    border-radius: var(--radius-none) !important;
     font-size: 12px !important;
     font-family: var(--font-mono) !important;
     border: 1px solid var(--border-void);
@@ -276,8 +248,7 @@ code {
 pre {
     background: var(--bg-surface) !important;
     border: 1px solid var(--border-void) !important;
-    border-radius: var(--radius-md) !important;
-    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-none) !important;
 }
 
 /* --- 10. DIVIDERS & MISC --- */
@@ -289,57 +260,49 @@ hr {
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 
-/* --- 11. EXPANDERS: V11 GLASS --- */
+/* --- 11. EXPANDERS --- */
 .streamlit-expanderHeader {
     font-family: var(--font-mono) !important;
     font-size: 10px !important;
     font-weight: 500 !important;
     color: var(--text-muted) !important;
-    background: var(--bg-glass) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid var(--border-glass) !important;
-    border-radius: var(--radius-sm) !important;
+    background: transparent !important;
+    border: 1px solid var(--border-void) !important;
+    border-radius: var(--radius-none) !important;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
 }
 
 details {
-    background: var(--bg-glass) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid var(--border-glass) !important;
-    border-radius: var(--radius-sm) !important;
+    background: transparent !important;
+    border: 1px solid var(--border-void) !important;
+    border-radius: var(--radius-none) !important;
 }
 
 details:hover {
     border-color: var(--border-subtle) !important;
 }
 
-/* --- 12. ALERTS: V11 ROUNDED --- */
+/* --- 12. ALERTS --- */
 .stAlert {
-    border-radius: var(--radius-sm) !important;
-    border: 1px solid var(--border-glass) !important;
-    background: var(--bg-glass) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    border-radius: var(--radius-none) !important;
+    border: 1px solid var(--border-void) !important;
+    background: var(--bg-surface) !important;
 }
 
-/* --- 13. SELECT/NUMBER INPUTS: V11 GLASS --- */
+/* --- 13. SELECT/NUMBER INPUTS --- */
 .stSelectbox > div > div,
 .stNumberInput > div > div > input {
-    background: var(--bg-glass) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid var(--border-glass) !important;
-    border-radius: var(--radius-sm) !important;
+    background: transparent !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-none) !important;
     color: var(--text-primary) !important;
     font-family: var(--font-mono) !important;
 }
 
 .stSelectbox > div > div:hover,
 .stNumberInput > div > div > input:hover {
-    border-color: var(--border-subtle) !important;
+    border-color: var(--border-medium) !important;
 }
 
 /* --- 14. CAPTIONS --- */
@@ -351,26 +314,22 @@ details:hover {
     text-transform: uppercase;
 }
 
-/* --- 15. LINK BUTTONS: V11 GLASS --- */
+/* --- 15. LINK BUTTONS --- */
 .stLinkButton > a {
-    border-radius: var(--radius-sm) !important;
+    border-radius: var(--radius-none) !important;
     font-weight: 600 !important;
-    border: 1px solid var(--border-glass) !important;
-    background: var(--bg-glass) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--border-medium) !important;
+    background: transparent !important;
     color: white !important;
     font-size: 11px !important;
     font-family: var(--font-sans) !important;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    box-shadow: var(--shadow-sm);
+    letter-spacing: 0.1em;
 }
 
 .stLinkButton > a:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border-color: var(--border-subtle) !important;
-    transform: translateY(-1px);
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-color: var(--chrome-start) !important;
 }
 
 /* --- 16. SCROLLBAR --- */
@@ -392,14 +351,11 @@ details:hover {
     background: var(--border-subtle);
 }
 
-/* --- 17. DIALOGS/MODALS: V11 GLASS PANELS --- */
+/* --- 17. DIALOGS/MODALS --- */
 [data-testid="stModal"] > div {
-    border-radius: var(--radius-lg) !important;
-    background: var(--bg-glass) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-glass) !important;
-    box-shadow: var(--shadow-md), 0 0 60px rgba(37, 99, 235, 0.1);
+    border-radius: var(--radius-none) !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-void) !important;
 }
 
 /* --- 18. FORM SUBMIT BUTTON --- */
@@ -420,12 +376,9 @@ details:hover {
     border-top-color: var(--accent-cobalt) !important;
 }
 
-/* --- 20. TOAST: V11 GLASS --- */
+/* --- 20. TOAST --- */
 [data-testid="stToast"] {
-    background: var(--bg-glass) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border-glass) !important;
-    border-radius: var(--radius-md) !important;
-    box-shadow: var(--shadow-md);
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-void) !important;
+    border-radius: var(--radius-none) !important;
 }
