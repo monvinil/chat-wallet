@@ -1,6 +1,6 @@
 """
 API key setup experience for Chat Wallet
-Clean modal interface with clear instructions
+V12 "Liquid Silver" - Config modal with void aesthetic
 """
 
 import streamlit as st
@@ -69,29 +69,36 @@ def validate_openai_key(api_key: str) -> tuple[bool, str]:
 
 @st.dialog("Connect AI Provider", width="large")
 def show_api_key_setup_modal():
-    """Modal dialog for API key setup"""
+    """Modal dialog for API key setup - V12 void aesthetic"""
 
     st.markdown("""
-Chat Wallet uses your own AI provider to power the assistant. Your conversations stay private—we never see them.
-
-**Recommended:** Google Gemini is free and includes 1,500 requests per day.
-""")
+    <div style="margin-bottom: 24px;">
+        <div style="font-family: 'Inter'; font-size: 14px; color: #888; line-height: 1.6;">
+            Chat Wallet uses your own AI provider to power the assistant. Your conversations stay private—we never see them.
+        </div>
+        <div style="font-family: 'Inter'; font-size: 13px; color: #666; margin-top: 12px;">
+            <strong style="color: #888;">Recommended:</strong> Google Gemini is free and includes 1,500 requests per day.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Provider selection tabs
     tab1, tab2, tab3 = st.tabs(["Google Gemini (Free)", "Anthropic Claude", "OpenAI GPT"])
 
     with tab1:
         st.markdown("""
-#### Google Gemini
-
-Free tier with generous limits. No credit card required.
-
-**To get your API key:**
-1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-2. Sign in with Google
-3. Click **Get API Key** → **Create in new project**
-4. Copy the key (starts with "AIza...")
-""")
+        <div style="margin-bottom: 20px;">
+            <div style="font-family: 'Inter'; font-size: 15px; font-weight: 400; color: white; margin-bottom: 8px;">Google Gemini</div>
+            <div style="font-size: 12px; color: #666; line-height: 1.6;">Free tier with generous limits. No credit card required.</div>
+        </div>
+        <div style="font-size: 12px; color: #555; line-height: 1.8; margin-bottom: 16px;">
+            <span style="color: #888;">To get your API key:</span><br>
+            1. Go to <a href="https://aistudio.google.com/apikey" target="_blank" style="color: #888;">aistudio.google.com/apikey</a><br>
+            2. Sign in with Google<br>
+            3. Click <strong style="color: #888;">Get API Key</strong> → <strong style="color: #888;">Create in new project</strong><br>
+            4. Copy the key (starts with "AIza...")
+        </div>
+        """, unsafe_allow_html=True)
 
         gemini_key = st.text_input(
             "API Key",
@@ -128,15 +135,17 @@ Free tier with generous limits. No credit card required.
 
     with tab2:
         st.markdown("""
-#### Anthropic Claude
-
-Strong reasoning capabilities. Requires prepaid credits.
-
-**To get your API key:**
-1. Go to [console.anthropic.com](https://console.anthropic.com)
-2. Create an account and add credits ($5–10 to start)
-3. Create an API key in Settings → API Keys
-""")
+        <div style="margin-bottom: 20px;">
+            <div style="font-family: 'Inter'; font-size: 15px; font-weight: 400; color: white; margin-bottom: 8px;">Anthropic Claude</div>
+            <div style="font-size: 12px; color: #666; line-height: 1.6;">Strong reasoning capabilities. Requires prepaid credits.</div>
+        </div>
+        <div style="font-size: 12px; color: #555; line-height: 1.8; margin-bottom: 16px;">
+            <span style="color: #888;">To get your API key:</span><br>
+            1. Go to <a href="https://console.anthropic.com" target="_blank" style="color: #888;">console.anthropic.com</a><br>
+            2. Create an account and add credits ($5–10 to start)<br>
+            3. Create an API key in Settings → API Keys
+        </div>
+        """, unsafe_allow_html=True)
 
         anthropic_key = st.text_input(
             "API Key",
@@ -183,15 +192,17 @@ Strong reasoning capabilities. Requires prepaid credits.
 
     with tab3:
         st.markdown("""
-#### OpenAI GPT
-
-General-purpose AI with broad capabilities. Requires prepaid credits.
-
-**To get your API key:**
-1. Go to [platform.openai.com](https://platform.openai.com)
-2. Create an account and add credits
-3. Create an API key in Settings → API Keys
-""")
+        <div style="margin-bottom: 20px;">
+            <div style="font-family: 'Inter'; font-size: 15px; font-weight: 400; color: white; margin-bottom: 8px;">OpenAI GPT</div>
+            <div style="font-size: 12px; color: #666; line-height: 1.6;">General-purpose AI with broad capabilities. Requires prepaid credits.</div>
+        </div>
+        <div style="font-size: 12px; color: #555; line-height: 1.8; margin-bottom: 16px;">
+            <span style="color: #888;">To get your API key:</span><br>
+            1. Go to <a href="https://platform.openai.com" target="_blank" style="color: #888;">platform.openai.com</a><br>
+            2. Create an account and add credits<br>
+            3. Create an API key in Settings → API Keys
+        </div>
+        """, unsafe_allow_html=True)
 
         openai_key = st.text_input(
             "API Key",
@@ -254,12 +265,15 @@ def check_api_key_status() -> tuple[bool, str]:
 
 
 def show_api_key_banner():
-    """Show banner when API key is missing"""
-    st.warning("""
-**AI provider required**
-
-To use the chat assistant, connect an AI provider. We recommend Google Gemini—it's free and takes 30 seconds to set up.
-""")
+    """Show banner when API key is missing - V12 styling"""
+    st.markdown("""
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 20px; margin: 20px 0;">
+        <div style="font-family: 'Inter'; font-size: 14px; color: #888; margin-bottom: 8px;">AI provider required</div>
+        <div style="font-size: 13px; color: #555; line-height: 1.6;">
+            To use the chat assistant, connect an AI provider. We recommend Google Gemini—it's free and takes 30 seconds to set up.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 2, 1])
 
@@ -269,7 +283,7 @@ To use the chat assistant, connect an AI provider. We recommend Google Gemini—
 
 
 def render_api_status_indicator():
-    """Show current API provider status"""
+    """Show current API provider status - V12 floating text"""
     has_key, provider = check_api_key_status()
 
     if has_key:
@@ -279,6 +293,6 @@ def render_api_status_indicator():
             "openai": "GPT"
         }
         provider_name = provider_labels.get(provider, "AI")
-        st.caption(f"◆ {provider_name}")
+        st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 10px; color: #555;'>● {provider_name}</div>", unsafe_allow_html=True)
     else:
-        st.caption("○ No AI connected")
+        st.markdown("<div style='font-family: JetBrains Mono; font-size: 10px; color: #444;'>○ No AI connected</div>", unsafe_allow_html=True)

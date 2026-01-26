@@ -1,6 +1,6 @@
 """
 Chat02 Onboarding Flow
-Streamlined for instant chat access with free tier
+V12 "Liquid Silver" - The Gateway
 """
 
 import streamlit as st
@@ -52,85 +52,115 @@ def show_welcome_message(llm_config: dict):
     """Show brief welcome for users with free tier access"""
     if llm_config.get("using_free_tier"):
         remaining = llm_config.get("remaining_messages", 50)
-        st.success(f"You're ready to chat! ({remaining} free messages)")
+        st.markdown(f"""
+        <div style="color: #888; font-size: 13px; padding: 10px 0;">
+            Ready to chat — {remaining} free messages
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.success("You're connected and ready to chat!")
+        st.markdown("""
+        <div style="color: #888; font-size: 13px; padding: 10px 0;">
+            Connected and ready
+        </div>
+        """, unsafe_allow_html=True)
 
 
 def show_step_1_welcome():
-    """Step 1: Warm wallet confirmation - educational, flowing"""
-    st.markdown("### Your wallet is ready")
-    st.progress(0.5, text="Step 1 of 2")
+    """Step 1: V12 wallet confirmation - centered void"""
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="text-align: center;">
+            <h2 style="font-weight: 300; margin-bottom: 16px;">Wallet Secured</h2>
+            <div style="color: #555; font-size: 13px; line-height: 1.6;">
+                One more step — connect an AI to start chatting.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Show wallet address as accessible detail
-    address = st.session_state.get("wallet_address", "")
-    if address:
-        with st.expander("Your wallet address", expanded=False):
-            st.code(address)
-            st.caption("This is your payment address")
+        # Show wallet address
+        address = st.session_state.get("wallet_address", "")
+        if address:
+            st.markdown(f"""
+            <div style="text-align: center; margin: 30px 0; font-family: 'JetBrains Mono'; font-size: 11px; color: #444;">
+                {address[:8]}...{address[-6:]}
+            </div>
+            """, unsafe_allow_html=True)
 
-    st.markdown("""
-Great! Your wallet is secured and only you can access it.
+        st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
 
-One more step: connect an AI assistant to start chatting.
-""")
-
-    if st.button("Continue", type="primary", use_container_width=True):
-        st.session_state.onboarding_step = 2
+        if st.button("Continue", type="primary", use_container_width=True):
+            st.session_state.onboarding_step = 2
 
 
 def show_step_2_connect_ai(user_id: str):
-    """Step 2: Connect AI - flowing, educational"""
+    """Step 2: V12 Connect AI - centered void"""
     from api_key_setup import show_api_key_setup_modal, check_api_key_status
-
-    st.markdown("### Almost there!")
-    st.progress(1.0, text="Step 2 of 2")
 
     # Check if already configured
     has_key, provider = check_api_key_status()
 
-    if has_key:
-        provider_labels = {
-            "google": "Gemini",
-            "anthropic": "Claude",
-            "openai": "GPT"
-        }
-        model_name = provider_labels.get(provider, "AI")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
 
-        st.success(f"Connected to {model_name}")
+        if has_key:
+            provider_labels = {
+                "google": "Gemini",
+                "anthropic": "Claude",
+                "openai": "GPT"
+            }
+            model_name = provider_labels.get(provider, "AI")
 
-        # Clear celebration - satisfying moment
-        if not st.session_state.get("_api_setup_celebration_shown"):
-            st.balloons()
-            st.session_state._api_setup_celebration_shown = True
+            st.markdown(f"""
+            <div style="text-align: center;">
+                <h2 style="font-weight: 300; margin-bottom: 16px;">Connected</h2>
+                <div style="color: #888; font-size: 13px;">{model_name}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.markdown("You're all set! Start typing to buy gift cards, pay bills, send money, and more.")
+            # Celebration
+            if not st.session_state.get("_api_setup_celebration_shown"):
+                st.balloons()
+                st.session_state._api_setup_celebration_shown = True
 
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            if st.button("Change provider", use_container_width=True):
-                st.session_state._api_setup_celebration_shown = False
-                show_api_key_setup_modal()
-        with col2:
-            if st.button("Start chatting", type="primary", use_container_width=True):
-                st.session_state.onboarding_complete = True
+            st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
-        return True
+            col_a, col_b = st.columns([1, 1])
+            with col_a:
+                if st.button("Change", use_container_width=True):
+                    st.session_state._api_setup_celebration_shown = False
+                    show_api_key_setup_modal()
+            with col_b:
+                if st.button("Start", type="primary", use_container_width=True):
+                    st.session_state.onboarding_complete = True
 
-    st.markdown("""
-To chat with your wallet, you need a free AI key from Google:
+            return True
 
-1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-2. Click **Get API Key** → **Create in new project**
-3. Come back and paste it here
-""")
+        st.markdown("""
+        <div style="text-align: center;">
+            <h2 style="font-weight: 300; margin-bottom: 16px;">Intelligence</h2>
+            <div style="color: #555; font-size: 13px; line-height: 1.8;">
+                Connect an AI to activate chat commands.<br>
+                <a href="https://aistudio.google.com/apikey" target="_blank" style="color: #888;">Get a free key from Google →</a>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    if st.button("Add my API key", type="primary", use_container_width=True, key="connect_ai_main"):
-        show_api_key_setup_modal()
+        st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
-    with st.expander("Other options"):
-        st.caption("**Claude** — Best quality (paid)")
-        st.caption("**GPT** — Popular choice (paid)")
-        st.caption("You can change this anytime in Settings.")
+        if st.button("Connect Provider", type="primary", use_container_width=True, key="connect_ai_main"):
+            show_api_key_setup_modal()
+
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+
+        with st.expander("Other options"):
+            st.markdown("""
+            <div style="font-size: 12px; color: #555; line-height: 1.8;">
+                <strong style="color: #888;">Claude</strong> — Best quality (paid)<br>
+                <strong style="color: #888;">GPT</strong> — Popular choice (paid)
+            </div>
+            """, unsafe_allow_html=True)
 
     return False

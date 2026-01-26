@@ -1,5 +1,6 @@
 """
 Settings UI - User settings, LLM configuration, and account connections
+V12 "Liquid Silver" - The List: Minimal rows, floating text
 """
 
 import streamlit as st
@@ -8,8 +9,13 @@ from typing import Optional
 
 
 def settings_page():
-    """Render settings page"""
-    st.title("Settings")
+    """Render settings page with V12 styling"""
+    # V12 header
+    st.markdown("""
+    <div style="margin: 30px 0 40px 0;">
+        <h1 style="font-family: 'Inter'; font-size: 24px; font-weight: 300; letter-spacing: -0.02em; margin: 0;">Settings</h1>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Check if user is logged in
     if not st.session_state.get("wallet_address"):
@@ -51,8 +57,12 @@ def settings_page():
     # TAB 1: AI Model Configuration
     # ============================================================================
     with tab1:
-        st.subheader("Connect Your AI")
-        st.caption("Choose which AI powers your assistant")
+        st.markdown("""
+        <div style="margin-bottom: 24px;">
+            <div style="font-family: 'Inter'; font-size: 16px; font-weight: 400; color: white;">Connect Your AI</div>
+            <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #555; margin-top: 4px;">Choose which AI powers your assistant</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Current model display with friendly messaging
         llm_config = SettingsManager.get_llm_config(user_id)
@@ -62,10 +72,10 @@ def settings_page():
         else:
             st.success(f"Connected: {llm_config['provider'].title()} - {llm_config['model']}")
 
-        st.divider()
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
         # LLM Provider selection with friendly descriptions
-        st.markdown("**Which AI do you want to use?**")
+        st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 8px;'>Which AI do you want to use?</div>", unsafe_allow_html=True)
         provider_options = ["google", "anthropic", "openai"]
         provider_labels = {
             "google": "Google Gemini - Free tier available (Recommended)",
@@ -84,7 +94,7 @@ def settings_page():
         )
 
         # Model selection based on provider
-        st.markdown("**Which version?**")
+        st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 8px;'>Which version?</div>", unsafe_allow_html=True)
         if provider == "google":
             model_options = {
                 "gemini-2.0-flash": "Gemini 2.0 Flash - Fast & free (Recommended)",
@@ -113,11 +123,11 @@ def settings_page():
             label_visibility="collapsed"
         )
 
-        st.divider()
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
         # API Key input - always shown, required for production
-        st.markdown("**Your API Key**")
-        st.caption("Required to use the AI assistant")
+        st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 4px;'>Your API Key</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 11px; color: #555;'>Required to use the AI assistant</div>", unsafe_allow_html=True)
 
         # Show if key is already configured
         has_existing_key = bool(existing_settings and existing_settings.get("llm_api_key_encrypted"))
@@ -170,8 +180,12 @@ def settings_page():
     # TAB: Display Settings
     # ============================================================================
     with tab_display:
-        st.subheader("Display")
-        st.caption("Customize how Chat02 looks")
+        st.markdown("""
+        <div style="margin-bottom: 24px;">
+            <div style="font-family: 'Inter'; font-size: 16px; font-weight: 400; color: white;">Display</div>
+            <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #555; margin-top: 4px;">Customize how Chat02 looks</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Theme selection (light/dark)
         current_theme = existing_settings.get("theme", "dark") if existing_settings else "dark"
@@ -183,9 +197,9 @@ def settings_page():
             horizontal=True
         )
 
-        st.caption("Dark mode is easier on the eyes, especially at night.")
+        st.markdown("<div style='font-size: 11px; color: #444; margin-top: 8px;'>Dark mode is easier on the eyes, especially at night.</div>", unsafe_allow_html=True)
 
-        st.divider()
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
         # Save display settings
         if st.button("Save", type="primary", key="save_display"):
@@ -205,7 +219,11 @@ def settings_page():
     # TAB 2: Connected Accounts
     # ============================================================================
     with tab2:
-        st.subheader("Connected Accounts")
+        st.markdown("""
+        <div style="margin-bottom: 24px;">
+            <div style="font-family: 'Inter'; font-size: 16px; font-weight: 400; color: white;">Connected Accounts</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # List connected accounts
         connected = SettingsManager.list_connected_accounts(user_id)
@@ -223,19 +241,19 @@ def settings_page():
                         if st.button("Disconnect", key=f"disconnect_{conn['provider']}", use_container_width=True):
                             if SettingsManager.disconnect_account(user_id, conn['provider']):
                                 st.rerun()
-            st.divider()
+            st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
         # Email connection
-        st.markdown("**Email**")
-        st.caption("Connect email for AI automation and verification codes")
+        st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 4px;'>Email</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 11px; color: #555; margin-bottom: 12px;'>Connect email for AI automation and verification codes</div>", unsafe_allow_html=True)
 
         from email_manager import show_email_connection_ui
         show_email_connection_ui(user_id)
 
-        st.divider()
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
         # Other providers
-        st.markdown("**Coming Soon**")
+        st.markdown("<div style='font-size: 13px; color: #555; margin-bottom: 12px;'>Coming Soon</div>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
             st.button("Amazon", use_container_width=True, disabled=True)
@@ -246,7 +264,11 @@ def settings_page():
     # TAB 3: Spending & Approvals
     # ============================================================================
     with tab3:
-        st.subheader("Spending Limits")
+        st.markdown("""
+        <div style="margin-bottom: 24px;">
+            <div style="font-family: 'Inter'; font-size: 16px; font-weight: 400; color: white;">Spending Limits</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
 
@@ -258,7 +280,7 @@ def settings_page():
                 value=float(existing_settings.get("daily_spend_limit", 100.0)) if existing_settings else 100.0,
                 step=10.0
             )
-            st.caption("Max AI can spend per day")
+            st.markdown("<div style='font-size: 11px; color: #555;'>Max AI can spend per day</div>", unsafe_allow_html=True)
 
         with col2:
             approval_threshold = st.number_input(
@@ -268,11 +290,11 @@ def settings_page():
                 value=float(existing_settings.get("require_approval_above", 50.0)) if existing_settings else 50.0,
                 step=5.0
             )
-            st.caption("Require approval above this amount")
+            st.markdown("<div style='font-size: 11px; color: #555;'>Require approval above this amount</div>", unsafe_allow_html=True)
 
-        st.divider()
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
-        st.markdown("**Permissions**")
+        st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 12px;'>Permissions</div>", unsafe_allow_html=True)
 
         allow_recurring = st.checkbox(
             "Allow recurring payments",
@@ -284,7 +306,7 @@ def settings_page():
             value=existing_settings.get("allow_account_access", False) if existing_settings else False
         )
 
-        st.divider()
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
         if st.button("Save", type="primary", key="save_limits"):
             success = SettingsManager.save_user_settings(
@@ -305,10 +327,14 @@ def settings_page():
     # TAB 4: Security
     # ============================================================================
     with tab4:
-        st.subheader("Security")
+        st.markdown("""
+        <div style="margin-bottom: 24px;">
+            <div style="font-family: 'Inter'; font-size: 16px; font-weight: 400; color: white;">Security</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Export wallet section
-        st.markdown("**Export Wallet**")
+        st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 12px;'>Export Wallet</div>", unsafe_allow_html=True)
 
         if st.button("Show Private Key", type="secondary", key="show_pk"):
             st.session_state.show_private_key = True
@@ -321,10 +347,10 @@ def settings_page():
                 st.warning("Never share your private key with anyone")
 
                 if wallet_data.get("mnemonic"):
-                    st.markdown("**Seed Phrase**")
+                    st.markdown("<div style='font-size: 12px; color: #888; margin-bottom: 8px;'>Seed Phrase</div>", unsafe_allow_html=True)
                     st.code(wallet_data["mnemonic"], language=None)
 
-                st.markdown("**Private Key**")
+                st.markdown("<div style='font-size: 12px; color: #888; margin-bottom: 8px;'>Private Key</div>", unsafe_allow_html=True)
                 st.code(wallet_data["private_key"], language=None)
 
                 if st.button("Hide", key="hide_pk"):
@@ -336,20 +362,22 @@ def settings_page():
                     st.session_state.show_private_key = False
                     st.rerun()
 
-        st.divider()
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
         # Data info
-        st.markdown("**Data Storage**")
-        st.caption("""
-        Wallet keys: Encrypted in session
-        API keys: AES-256 encrypted
-        OAuth tokens: AES-256 encrypted
-        """)
+        st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 8px;'>Data Storage</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-size: 11px; color: #555; line-height: 1.8;">
+            Wallet keys: Encrypted in session<br>
+            API keys: AES-256 encrypted<br>
+            OAuth tokens: AES-256 encrypted
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.divider()
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
         # Danger zone - these actions are available
-        st.markdown("**Danger Zone**")
+        st.markdown("<div style='font-size: 13px; color: #666; margin-bottom: 12px;'>Danger Zone</div>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Clear Settings", type="secondary", use_container_width=True):
