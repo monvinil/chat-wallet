@@ -1,4 +1,4 @@
-/* V8 Design System: "The Drop" - High-End Streetwear Aesthetic */
+/* V9 Design System: "The Edit" - Soft-Cyber / Y2K Luxe Aesthetic */
 
 /* --- 1. CORE VARIABLES --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -7,8 +7,8 @@
     --bg-app: #050505;
     --bg-card: #0F0F0F;
 
-    /* "Safety Yellow" / Volt - High visibility, fashion-forward */
-    --accent-volt: #ccff00;
+    /* "Electric Lilac" - Soft-cyber, Y2K luxe */
+    --accent-lux: #d8b4fe;
     --accent-chrome: #e5e5e5;
 
     --border-glass: rgba(255, 255, 255, 0.08);
@@ -20,6 +20,12 @@
 
     --font-sans: 'Inter', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+
+    /* V9 Squircle Geometry */
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+    --radius-pill: 99px;
 }
 
 /* --- 2. GLOBAL RESET --- */
@@ -47,7 +53,7 @@ h1, h2, h3 {
 .stChatInput > div > div > textarea {
     background-color: var(--bg-card) !important;
     border: 1px solid #262626 !important;
-    border-radius: 99px !important;
+    border-radius: var(--radius-pill) !important;
     color: white !important;
     font-family: var(--font-sans) !important;
     font-weight: 500;
@@ -59,9 +65,9 @@ h1, h2, h3 {
 .stTextInput > div > div > input:focus,
 .stTextArea > div > div > textarea:focus,
 .stChatInput > div > div > textarea:focus {
-    border-color: var(--accent-volt) !important;
+    border-color: var(--accent-lux) !important;
     background-color: var(--bg-card) !important;
-    box-shadow: none !important;
+    box-shadow: 0 0 0 2px rgba(216, 180, 254, 0.15) !important;
 }
 
 .stTextInput > div > div > input::placeholder,
@@ -69,41 +75,41 @@ h1, h2, h3 {
     color: var(--text-muted) !important;
 }
 
-/* --- 4. BUTTONS: "GARMENT TAGS" --- */
+/* --- 4. BUTTONS: "SOFT TAGS" --- */
 .stButton > button {
     background-color: transparent !important;
     border: 1px solid var(--border-medium) !important;
     color: white !important;
-    border-radius: 4px !important;
-    font-family: var(--font-mono) !important;
-    font-size: 10px !important;
+    border-radius: var(--radius-sm) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 11px !important;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     padding: 12px 0 !important;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
 }
 
 .stButton > button:hover {
-    background-color: white !important;
-    color: black !important;
-    border-color: white !important;
-    transform: translateY(-2px);
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: var(--accent-lux) !important;
+    transform: translateY(-1px);
 }
 
-/* Primary Action: VOLT */
+/* Primary Action: LILAC */
 .stButton > button[kind="primary"],
 .stButton > button[data-testid="baseButton-primary"],
 button[kind="primary"] {
-    background-color: var(--accent-volt) !important;
+    background-color: var(--accent-lux) !important;
     color: black !important;
-    border: 1px solid var(--accent-volt) !important;
-    font-weight: 700 !important;
+    border: 1px solid var(--accent-lux) !important;
+    font-weight: 600 !important;
 }
 
 .stButton > button[kind="primary"]:hover,
 .stButton > button[data-testid="baseButton-primary"]:hover {
-    box-shadow: 0 0 20px rgba(204, 255, 0, 0.4);
-    transform: scale(1.02);
+    box-shadow: 0 0 24px rgba(216, 180, 254, 0.4);
+    transform: translateY(-1px);
 }
 
 .stButton > button[kind="primary"] p,
@@ -124,7 +130,7 @@ button[kind="primary"] {
 }
 
 [data-testid="stChatMessage"] [data-testid="stImage"] {
-    background: var(--accent-volt);
+    background: var(--accent-lux);
     padding: 2px;
     border-radius: 50%;
     filter: grayscale(100%) contrast(120%);
@@ -144,7 +150,7 @@ button[kind="primary"] {
 [data-testid="stMetric"] {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     padding: 1rem;
 }
 
@@ -173,8 +179,9 @@ button[kind="primary"] {
     background: transparent;
     border: none !important;
     color: var(--text-muted);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: 11px;
+    font-weight: 500;
     text-transform: uppercase;
     padding: 8px 0;
 }
@@ -184,17 +191,17 @@ button[kind="primary"] {
 }
 
 .stTabs [data-baseweb="tab"][aria-selected="true"] {
-    color: var(--accent-volt);
-    font-weight: bold;
+    color: var(--accent-lux);
+    font-weight: 600;
     background: transparent;
 }
 
 /* --- 9. CODE BLOCKS --- */
 code {
     background: var(--bg-card) !important;
-    color: var(--accent-volt) !important;
+    color: var(--accent-lux) !important;
     padding: 2px 6px !important;
-    border-radius: 4px !important;
+    border-radius: var(--radius-sm) !important;
     font-size: 12px !important;
     font-family: var(--font-mono) !important;
     border: 1px solid var(--border-subtle);
@@ -203,7 +210,7 @@ code {
 pre {
     background: var(--bg-card) !important;
     border: 1px solid var(--border-subtle) !important;
-    border-radius: 4px !important;
+    border-radius: var(--radius-sm) !important;
 }
 
 /* --- 10. DIVIDERS & MISC --- */
@@ -217,19 +224,20 @@ footer {visibility: hidden;}
 
 /* --- 11. EXPANDERS --- */
 .streamlit-expanderHeader {
-    font-family: var(--font-mono) !important;
+    font-family: var(--font-sans) !important;
     font-size: 11px !important;
+    font-weight: 500 !important;
     color: var(--text-muted) !important;
     background: var(--bg-card) !important;
     border: 1px solid var(--border-subtle) !important;
-    border-radius: 4px !important;
+    border-radius: var(--radius-sm) !important;
     text-transform: uppercase;
 }
 
 details {
     background: transparent !important;
     border: 1px solid var(--border-subtle) !important;
-    border-radius: 4px !important;
+    border-radius: var(--radius-sm) !important;
 }
 
 details:hover {
@@ -238,7 +246,7 @@ details:hover {
 
 /* --- 12. ALERTS --- */
 .stAlert {
-    border-radius: 4px !important;
+    border-radius: var(--radius-md) !important;
     border: 1px solid var(--border-subtle) !important;
     background: var(--bg-card) !important;
 }
@@ -248,9 +256,9 @@ details:hover {
 .stNumberInput > div > div > input {
     background: var(--bg-card) !important;
     border: 1px solid var(--border-subtle) !important;
-    border-radius: 4px !important;
+    border-radius: var(--radius-sm) !important;
     color: var(--text-primary) !important;
-    font-family: var(--font-mono) !important;
+    font-family: var(--font-sans) !important;
 }
 
 .stSelectbox > div > div:hover,
@@ -261,28 +269,27 @@ details:hover {
 /* --- 14. CAPTIONS --- */
 .stCaption, [data-testid="stCaptionContainer"] p {
     color: var(--text-muted) !important;
-    font-size: 0.7rem !important;
-    font-family: var(--font-mono) !important;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.75rem !important;
+    font-family: var(--font-sans) !important;
+    letter-spacing: 0.02em;
 }
 
 /* --- 15. LINK BUTTONS --- */
 .stLinkButton > a {
-    border-radius: 4px !important;
+    border-radius: var(--radius-sm) !important;
     font-weight: 500 !important;
     border: 1px solid var(--border-medium) !important;
     background: transparent !important;
     color: white !important;
-    font-size: 10px !important;
-    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+    font-family: var(--font-sans) !important;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
 }
 
 .stLinkButton > a:hover {
-    background-color: white !important;
-    color: black !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: var(--accent-lux) !important;
 }
 
 /* --- 16. SCROLLBAR --- */
@@ -302,4 +309,11 @@ details:hover {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--border-medium);
+}
+
+/* --- 17. DIALOGS/MODALS --- */
+[data-testid="stModal"] > div {
+    border-radius: var(--radius-lg) !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-subtle) !important;
 }
