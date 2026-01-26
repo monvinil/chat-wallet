@@ -232,40 +232,17 @@ def deposit_modal():
         EVM ADDRESS <span style="color: #444;">(Base, Arbitrum, Polygon)</span>
     </div>
     """, unsafe_allow_html=True)
-
-    # EVM address box
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        st.markdown(f"""
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; font-family: JetBrains Mono; font-size: 11px; color: #888; word-break: break-all;">
-            {evm_address}
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        if st.button("COPY", key="copy_evm", use_container_width=True):
-            st.markdown(f'<script>navigator.clipboard.writeText("{evm_address}");</script>', unsafe_allow_html=True)
-            st.toast("COPIED")
+    st.code(evm_address, language=None)
 
     # === SOLANA ADDRESS SECTION (if available) ===
     if solana_address:
-        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
         st.markdown("""
         <div style="font-family: JetBrains Mono; font-size: 10px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
             SOLANA ADDRESS
         </div>
         """, unsafe_allow_html=True)
-
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            st.markdown(f"""
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; font-family: JetBrains Mono; font-size: 11px; color: #888; word-break: break-all;">
-                {solana_address}
-            </div>
-            """, unsafe_allow_html=True)
-        with col2:
-            if st.button("COPY", key="copy_sol", use_container_width=True):
-                st.markdown(f'<script>navigator.clipboard.writeText("{solana_address}");</script>', unsafe_allow_html=True)
-                st.toast("COPIED")
+        st.code(solana_address, language=None)
 
     # === QR CODE SECTION ===
     st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)

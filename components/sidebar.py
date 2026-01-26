@@ -240,35 +240,14 @@ def sidebar():
                 st.markdown("""
                 <div style="font-family: JetBrains Mono; font-size: 9px; color: #555; letter-spacing: 0.1em; margin-bottom: 4px;">EVM</div>
                 """, unsafe_allow_html=True)
-                evm_col1, evm_col2 = st.columns([4, 1])
-                with evm_col1:
-                    st.markdown(f"""
-                    <div style="font-family: JetBrains Mono; font-size: 10px; color: #888; word-break: break-all; padding: 8px 0;">
-                        {st.session_state.wallet_address}
-                    </div>
-                    """, unsafe_allow_html=True)
-                with evm_col2:
-                    if st.button("COPY", key="copy_evm_sidebar", use_container_width=True):
-                        st.markdown(f'<script>navigator.clipboard.writeText("{st.session_state.wallet_address}");</script>', unsafe_allow_html=True)
-                        st.toast("COPIED")
+                st.code(st.session_state.wallet_address, language=None)
 
                 # Solana Address (if available)
                 if solana_addr:
-                    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
                     st.markdown("""
-                    <div style="font-family: JetBrains Mono; font-size: 9px; color: #555; letter-spacing: 0.1em; margin-bottom: 4px;">SOLANA</div>
+                    <div style="font-family: JetBrains Mono; font-size: 9px; color: #555; letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">SOLANA</div>
                     """, unsafe_allow_html=True)
-                    sol_col1, sol_col2 = st.columns([4, 1])
-                    with sol_col1:
-                        st.markdown(f"""
-                        <div style="font-family: JetBrains Mono; font-size: 10px; color: #888; word-break: break-all; padding: 8px 0;">
-                            {solana_addr}
-                        </div>
-                        """, unsafe_allow_html=True)
-                    with sol_col2:
-                        if st.button("COPY", key="copy_sol_sidebar", use_container_width=True):
-                            st.markdown(f'<script>navigator.clipboard.writeText("{solana_addr}");</script>', unsafe_allow_html=True)
-                            st.toast("COPIED")
+                    st.code(solana_addr, language=None)
 
             st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
