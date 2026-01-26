@@ -143,11 +143,22 @@ def settings_page():
             help="Paste your API key here - it will be encrypted"
         )
 
-        # Helpful links and guidance
+        # Helpful links and guidance - provider-specific URLs
+        provider_urls = {
+            "google": "https://aistudio.google.com/apikey",
+            "anthropic": "https://console.anthropic.com",
+            "openai": "https://platform.openai.com"
+        }
+        provider_names = {
+            "google": "Google AI Studio",
+            "anthropic": "Anthropic Console",
+            "openai": "OpenAI Platform"
+        }
+
         if not has_existing_key:
             st.markdown(f"""
 **Don't have an API key yet?**
-1. Go to [{provider.capitalize()} {'Console' if provider == 'anthropic' else 'Platform'}]({'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'})
+1. Go to [{provider_names[provider]}]({provider_urls[provider]})
 2. Sign up (it's free to start)
 3. Create an API key
 4. Copy and paste it above
@@ -155,7 +166,7 @@ def settings_page():
 *New users typically get free credits to try it out!*
 """)
         else:
-            st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Need a new key? <a href='{'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'}' target='_blank' style='color: #888;'>{'console.anthropic.com' if provider == 'anthropic' else 'platform.openai.com'}</a></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Need a new key? <a href='{provider_urls[provider]}' target='_blank' style='color: #888;'>{provider_urls[provider].replace('https://', '')}</a></div>", unsafe_allow_html=True)
 
         if not has_existing_key and not api_key:
             st.info("Your key is encrypted and never shared. You only pay for the messages you send.")

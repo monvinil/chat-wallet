@@ -10,7 +10,12 @@ from session_manager import SessionManager
 
 
 def _get_solana_address_from_session() -> str:
-    """Get Solana address from session state if available"""
+    """Get Solana address from wallet data or session state"""
+    # First try wallet data (most reliable)
+    wallet_data = WalletManager.get_wallet_from_session()
+    if wallet_data and wallet_data.get("solana"):
+        return wallet_data["solana"].get("address", "")
+    # Fallback to session state
     return st.session_state.get("solana_address", "")
 
 
@@ -63,14 +68,14 @@ def render_balance_display(total_usdc: float, balances: dict = None):
 
     # Show breakdown if balances provided and has non-zero values
     if balances:
-        # Network display names
+        # Network display names - distinguish testnet vs mainnet
         network_names = {
             "base-mainnet": "Base",
-            "base-sepolia": "Base",
-            "arbitrum-sepolia": "Arbitrum",
-            "polygon-amoy": "Polygon",
+            "base-sepolia": "Base ᵗ",
+            "arbitrum-sepolia": "Arbitrum ᵗ",
+            "polygon-amoy": "Polygon ᵗ",
             "solana-mainnet": "Solana",
-            "solana-devnet": "Solana",
+            "solana-devnet": "Solana ᵗ",
         }
 
         # Filter to networks with non-zero USDC
@@ -147,14 +152,15 @@ def render_transaction_history():
 
             client = get_supabase_client(use_service_key=True)
             if not client:
-                st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444;'>Unable to load</div>", unsafe_allow_html=True)
+                st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444; text-align: center; padding: 20px 0;'>Unable to load</div>", unsafe_allow_html=True)
                 return
 
             transactions = get_user_transactions(client, user_id, limit=5)
 
             if not transactions:
                 st.markdown("""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444;
+                            text-align: center; padding: 20px 0;">
                     No transactions yet
                 </div>
                 """, unsafe_allow_html=True)
@@ -192,7 +198,7 @@ def render_transaction_history():
                         """, unsafe_allow_html=True)
 
         except Exception:
-            st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444;'>Unable to load</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444; text-align: center; padding: 20px 0;'>Unable to load</div>", unsafe_allow_html=True)
 
 
 def sidebar():
@@ -230,17 +236,39 @@ def sidebar():
             solana_addr = _get_solana_address_from_session()
 
             with st.expander("Addresses", expanded=False):
-                st.markdown(f"""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888; margin-bottom: 8px;">
-                    {ChainUtils.format_address(st.session_state.wallet_address, 8)}
-                </div>
+                # EVM Address
+                st.markdown("""
+                <div style="font-family: JetBrains Mono; font-size: 9px; color: #555; letter-spacing: 0.1em; margin-bottom: 4px;">EVM</div>
                 """, unsafe_allow_html=True)
-                if solana_addr:
+                evm_col1, evm_col2 = st.columns([4, 1])
+                with evm_col1:
                     st.markdown(f"""
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666; margin-top: 8px;">
-                        {ChainUtils.format_address(solana_addr, 8)}
+                    <div style="font-family: JetBrains Mono; font-size: 10px; color: #888; word-break: break-all; padding: 8px 0;">
+                        {st.session_state.wallet_address}
                     </div>
                     """, unsafe_allow_html=True)
+                with evm_col2:
+                    if st.button("COPY", key="copy_evm_sidebar", use_container_width=True):
+                        st.markdown(f'<script>navigator.clipboard.writeText("{st.session_state.wallet_address}");</script>', unsafe_allow_html=True)
+                        st.toast("COPIED")
+
+                # Solana Address (if available)
+                if solana_addr:
+                    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+                    st.markdown("""
+                    <div style="font-family: JetBrains Mono; font-size: 9px; color: #555; letter-spacing: 0.1em; margin-bottom: 4px;">SOLANA</div>
+                    """, unsafe_allow_html=True)
+                    sol_col1, sol_col2 = st.columns([4, 1])
+                    with sol_col1:
+                        st.markdown(f"""
+                        <div style="font-family: JetBrains Mono; font-size: 10px; color: #888; word-break: break-all; padding: 8px 0;">
+                            {solana_addr}
+                        </div>
+                        """, unsafe_allow_html=True)
+                    with sol_col2:
+                        if st.button("COPY", key="copy_sol_sidebar", use_container_width=True):
+                            st.markdown(f'<script>navigator.clipboard.writeText("{solana_addr}");</script>', unsafe_allow_html=True)
+                            st.toast("COPIED")
 
             st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
