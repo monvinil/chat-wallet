@@ -1,6 +1,6 @@
 """
 Chat02 Onboarding Flow
-V10 "Brutalist Fintech" - The Manifest
+V11 "The Monolith" - Depth & Materiality
 Streamlined for instant chat access with free tier
 """
 
@@ -55,12 +55,14 @@ def show_welcome_message(llm_config: dict):
         remaining = llm_config.get("remaining_messages", 50)
         st.markdown(f"""
         <div style="
-            border: 1px solid #1a1a1a;
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
         ">
             <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                        letter-spacing: 0.15em; margin-bottom: 8px;">SYSTEM_READY</div>
+                        letter-spacing: 0.1em; margin-bottom: 8px;">SYSTEM_READY</div>
             <div style="font-family: 'Inter', sans-serif; font-size: 14px; color: white;">
                 {remaining} free messages available
             </div>
@@ -69,12 +71,14 @@ def show_welcome_message(llm_config: dict):
     else:
         st.markdown("""
         <div style="
-            border: 1px solid #3b82f6;
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
         ">
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #3b82f6;
-                        letter-spacing: 0.15em; margin-bottom: 8px;">SYSTEM_ONLINE</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #2563eb;
+                        letter-spacing: 0.1em; margin-bottom: 8px;">SYSTEM_ONLINE</div>
             <div style="font-family: 'Inter', sans-serif; font-size: 14px; color: white;">
                 Connected and ready
             </div>
@@ -83,21 +87,21 @@ def show_welcome_message(llm_config: dict):
 
 
 def show_step_1_welcome():
-    """Step 1: V10 Brutalist wallet confirmation"""
+    """Step 1: V11 Glass wallet confirmation"""
     st.markdown("""
     <div style="margin-bottom: 2rem;">
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 8px;">INITIALIZATION_01</div>
+                    letter-spacing: 0.1em; margin-bottom: 8px;">INITIALIZATION_01</div>
         <div style="font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 300;
-                    color: white; letter-spacing: 0.1em;">WALLET SECURED</div>
+                    color: white; letter-spacing: -0.02em;">WALLET SECURED</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Progress indicator - V10 brutalist style
+    # Progress indicator - V11 rounded style
     st.markdown("""
     <div style="display: flex; gap: 8px; margin-bottom: 2rem;">
-        <div style="flex: 1; height: 2px; background: #3b82f6;"></div>
-        <div style="flex: 1; height: 2px; background: #262626;"></div>
+        <div style="flex: 1; height: 3px; background: #2563eb; border-radius: 2px;"></div>
+        <div style="flex: 1; height: 3px; background: #262626; border-radius: 2px;"></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -106,15 +110,14 @@ def show_step_1_welcome():
     if address:
         st.markdown(f"""
         <div style="
-            border: 1px solid #1a1a1a;
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 2rem;
-            position: relative;
         ">
-            <div style="position: absolute; top: 0; left: 0; width: 8px; height: 8px; border-top: 1px solid #404040; border-left: 1px solid #404040;"></div>
-            <div style="position: absolute; top: 0; right: 0; width: 8px; height: 8px; border-top: 1px solid #404040; border-right: 1px solid #404040;"></div>
             <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                        letter-spacing: 0.15em; margin-bottom: 8px;">WALLET_ADDRESS</div>
+                        letter-spacing: 0.1em; margin-bottom: 8px;">WALLET_ADDRESS</div>
             <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a3a3a3;
                         word-break: break-all;">{address}</div>
         </div>
@@ -134,23 +137,23 @@ def show_step_1_welcome():
 
 
 def show_step_2_connect_ai(user_id: str):
-    """Step 2: V10 Brutalist AI connection"""
+    """Step 2: V11 Glass AI connection"""
     from api_key_setup import show_api_key_setup_modal, check_api_key_status
 
     st.markdown("""
     <div style="margin-bottom: 2rem;">
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 8px;">INITIALIZATION_02</div>
+                    letter-spacing: 0.1em; margin-bottom: 8px;">INITIALIZATION_02</div>
         <div style="font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 300;
-                    color: white; letter-spacing: 0.1em;">CONNECT INTELLIGENCE</div>
+                    color: white; letter-spacing: -0.02em;">CONNECT INTELLIGENCE</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Progress indicator - V10 brutalist style
+    # Progress indicator - V11 rounded style
     st.markdown("""
     <div style="display: flex; gap: 8px; margin-bottom: 2rem;">
-        <div style="flex: 1; height: 2px; background: #3b82f6;"></div>
-        <div style="flex: 1; height: 2px; background: #3b82f6;"></div>
+        <div style="flex: 1; height: 3px; background: #2563eb; border-radius: 2px;"></div>
+        <div style="flex: 1; height: 3px; background: #2563eb; border-radius: 2px;"></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -167,12 +170,14 @@ def show_step_2_connect_ai(user_id: str):
 
         st.markdown(f"""
         <div style="
-            border: 1px solid #3b82f6;
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 2rem;
         ">
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #3b82f6;
-                        letter-spacing: 0.15em; margin-bottom: 8px;">ENGINE_CONNECTED</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #2563eb;
+                        letter-spacing: 0.1em; margin-bottom: 8px;">ENGINE_CONNECTED</div>
             <div style="font-family: 'Inter', sans-serif; font-size: 16px; color: white;">{model_name}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -203,31 +208,27 @@ def show_step_2_connect_ai(user_id: str):
     # Not connected - show setup instructions
     st.markdown("""
     <div style="
-        border: 1px solid #1a1a1a;
+        background: rgba(10, 10, 10, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
         padding: 24px;
         margin-bottom: 2rem;
-        position: relative;
     ">
-        <div style="position: absolute; top: 0; left: 0; width: 8px; height: 8px; border-top: 1px solid #404040; border-left: 1px solid #404040;"></div>
-        <div style="position: absolute; top: 0; right: 0; width: 8px; height: 8px; border-top: 1px solid #404040; border-right: 1px solid #404040;"></div>
-        <div style="position: absolute; bottom: 0; left: 0; width: 8px; height: 8px; border-bottom: 1px solid #404040; border-left: 1px solid #404040;"></div>
-        <div style="position: absolute; bottom: 0; right: 0; width: 8px; height: 8px; border-bottom: 1px solid #404040; border-right: 1px solid #404040;"></div>
-
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 16px;">SETUP_INSTRUCTIONS</div>
+                    letter-spacing: 0.1em; margin-bottom: 16px;">SETUP_INSTRUCTIONS</div>
 
         <div style="font-family: 'Inter', sans-serif; font-size: 13px; color: #a3a3a3; line-height: 1.8;">
             <div style="margin-bottom: 12px;">
-                <span style="color: #3b82f6; font-family: 'JetBrains Mono', monospace;">01</span>
+                <span style="color: #2563eb; font-family: 'JetBrains Mono', monospace;">01</span>
                 &nbsp;&nbsp;Navigate to <a href="https://aistudio.google.com/apikey" target="_blank"
-                   style="color: #3b82f6; text-decoration: none;">aistudio.google.com/apikey</a>
+                   style="color: #2563eb; text-decoration: none;">aistudio.google.com/apikey</a>
             </div>
             <div style="margin-bottom: 12px;">
-                <span style="color: #3b82f6; font-family: 'JetBrains Mono', monospace;">02</span>
+                <span style="color: #2563eb; font-family: 'JetBrains Mono', monospace;">02</span>
                 &nbsp;&nbsp;Select <strong style="color: white;">Get API Key</strong> then <strong style="color: white;">Create in new project</strong>
             </div>
             <div>
-                <span style="color: #3b82f6; font-family: 'JetBrains Mono', monospace;">03</span>
+                <span style="color: #2563eb; font-family: 'JetBrains Mono', monospace;">03</span>
                 &nbsp;&nbsp;Return and input key below
             </div>
         </div>

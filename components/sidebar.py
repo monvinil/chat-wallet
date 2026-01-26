@@ -89,7 +89,7 @@ def render_status_indicator(is_active: bool):
             gap: 8px;
             margin-bottom: 1.25rem;
         ">
-            <div style="width: 6px; height: 6px; background: #3b82f6; border-radius: 50%;"></div>
+            <div style="width: 6px; height: 6px; background: #2563eb; border-radius: 50%;"></div>
             <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
                          letter-spacing: 0.15em; color: #525252;">SYSTEM_ACTIVE</span>
         </div>
@@ -166,12 +166,12 @@ def render_transaction_history():
 
                 # V10 brutalist badges
                 if tx_type == "deposit":
-                    badge = '<span style="background: #3b82f6; color: white; font-size: 9px; padding: 3px 8px; font-family: JetBrains Mono, monospace; letter-spacing: 0.1em;">IN</span>'
+                    badge = '<span style="background: #2563eb; color: white; font-size: 9px; padding: 3px 8px; border-radius: 4px; font-family: JetBrains Mono, monospace; letter-spacing: 0.08em;">IN</span>'
                 else:
-                    badge = '<span style="background: #262626; color: #a3a3a3; font-size: 9px; padding: 3px 8px; font-family: JetBrains Mono, monospace; letter-spacing: 0.1em;">OUT</span>'
+                    badge = '<span style="background: #262626; color: #a3a3a3; font-size: 9px; padding: 3px 8px; border-radius: 4px; font-family: JetBrains Mono, monospace; letter-spacing: 0.08em;">OUT</span>'
 
                 # Status indicator
-                status_color = "#3b82f6" if status == "confirmed" else "#fbbf24" if status == "pending" else "#ef4444"
+                status_color = "#2563eb" if status == "confirmed" else "#fbbf24" if status == "pending" else "#ef4444"
 
                 st.markdown(f"""
                 <div style="display: flex; justify-content: space-between; align-items: center;
@@ -192,7 +192,7 @@ def render_transaction_history():
                     if explorer_url:
                         st.markdown(f"""
                         <a href="{explorer_url}" target="_blank" style="font-family: 'JetBrains Mono', monospace;
-                           font-size: 9px; color: #3b82f6; text-decoration: none; letter-spacing: 0.1em;">
+                           font-size: 9px; color: #2563eb; text-decoration: none; letter-spacing: 0.08em;">
                             VIEW_TX &rarr;
                         </a>
                         """, unsafe_allow_html=True)

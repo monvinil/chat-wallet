@@ -1,7 +1,7 @@
 """
 Chat Interface Component
-V10 Design: "Brutalist Fintech" (Revolut x Gentle Monster)
-Chrome gradients, cobalt accent, 0px brutalist corners.
+V11 Design: "The Monolith" - Depth & Materiality
+Frosted glass, cobalt accent, rounded corners with depth.
 """
 
 import html
@@ -15,27 +15,24 @@ def _escape_content(content: str) -> str:
     return html.escape(content)
 
 
-# --- HELPER: RAW CARD (V10 Brutalist) ---
+# --- HELPER: GLASS CARD (V11 Depth) ---
 def render_raw_card(label, value, icon=None):
     """
-    Renders a card with V10 brutalist styling.
-    Features corner accent marks and monospace labels.
+    Renders a card with V11 frosted glass styling.
+    Features rounded corners and subtle depth.
     """
     icon_html = f'<span style="margin-right: 8px; opacity: 0.5;">{icon}</span>' if icon else ''
     st.markdown(f"""
     <div style="
-        background: #0a0a0a;
-        border: 1px solid #1a1a1a;
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
         padding: 20px;
-        position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     ">
-        <!-- Corner accent marks -->
-        <div style="position: absolute; top: 0; left: 0; width: 8px; height: 8px; border-top: 1px solid #404040; border-left: 1px solid #404040;"></div>
-        <div style="position: absolute; top: 0; right: 0; width: 8px; height: 8px; border-top: 1px solid #404040; border-right: 1px solid #404040;"></div>
-        <div style="position: absolute; bottom: 0; left: 0; width: 8px; height: 8px; border-bottom: 1px solid #404040; border-left: 1px solid #404040;"></div>
-        <div style="position: absolute; bottom: 0; right: 0; width: 8px; height: 8px; border-bottom: 1px solid #404040; border-right: 1px solid #404040;"></div>
-
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; margin-bottom: 8px; letter-spacing: 0.15em; text-transform: uppercase;">{label}</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; margin-bottom: 8px; letter-spacing: 0.08em; text-transform: uppercase;">{label}</div>
         <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white;">{icon_html}{value}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -63,17 +60,18 @@ def render_header():
         """, unsafe_allow_html=True)
     with c2:
         st.markdown("""
-        <div style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; margin-top: 10px; letter-spacing: 0.1em;">
-            <div style="margin-bottom: 6px;">V10.0</div>
+        <div style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; margin-top: 10px; letter-spacing: 0.08em;">
+            <div style="margin-bottom: 6px;">V11.0</div>
             <div style="
                 display: inline-block;
-                background: rgba(59, 130, 246, 0.1);
-                color: #3b82f6;
+                background: rgba(37, 99, 235, 0.1);
+                color: #2563eb;
                 padding: 4px 12px;
+                border-radius: 4px;
                 font-size: 9px;
                 font-weight: 500;
                 text-transform: uppercase;
-                letter-spacing: 0.1em;
+                letter-spacing: 0.08em;
             ">ONLINE</div>
         </div>
         """, unsafe_allow_html=True)
@@ -94,10 +92,10 @@ def _on_quick_action(prompt: str):
     st.session_state._quick_action_triggered = True
 
 
-# --- ACTIONS: V10 ACTION STRIP ---
+# --- ACTIONS: V11 ACTION STRIP ---
 def render_action_strip():
     """
-    V10 action strip with ALL CAPS brutalist buttons.
+    V11 action strip with rounded glass buttons.
     Uses on_click callbacks to avoid double-render from explicit st.rerun().
     """
     col1, col2, col3, col4 = st.columns(4)
@@ -123,10 +121,10 @@ def render_action_strip():
 render_action_deck = render_action_strip
 
 
-# --- MODULES: V10 ARCHITECTURAL CATEGORIES ---
+# --- MODULES: V11 GLASS CATEGORIES ---
 def render_modules():
     """
-    Render capability library with V10 architectural styling.
+    Render capability library with V11 glass styling.
     """
     st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
 
@@ -194,7 +192,7 @@ def render_modules_preview():
 # --- MAIN INTERFACE ---
 def chat_interface(create_agent_func):
     """
-    Main chat interface with V10 brutalist styling.
+    Main chat interface with V11 glass depth styling.
     """
     # 1. HEADER
     render_header()
@@ -203,20 +201,18 @@ def chat_interface(create_agent_func):
     if not st.session_state.wallet_address:
         st.markdown("""
         <div style="
-            border: 1px solid #1a1a1a;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
             padding: 50px 0;
             margin: 20px 0;
             text-align: center;
-            position: relative;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
         ">
-            <!-- Corner accents -->
-            <div style="position: absolute; top: 0; left: 0; width: 12px; height: 12px; border-top: 1px solid #404040; border-left: 1px solid #404040;"></div>
-            <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; border-top: 1px solid #404040; border-right: 1px solid #404040;"></div>
-            <div style="position: absolute; bottom: 0; left: 0; width: 12px; height: 12px; border-bottom: 1px solid #404040; border-left: 1px solid #404040;"></div>
-            <div style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-bottom: 1px solid #404040; border-right: 1px solid #404040;"></div>
-
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.15em; margin-bottom: 12px;">SYSTEM_STATUS</div>
-            <div style="font-family: 'Inter', sans-serif; font-weight: 300; color: white; font-size: 20px; letter-spacing: 0.1em;">AUTHENTICATION REQUIRED</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.1em; margin-bottom: 12px;">SYSTEM_STATUS</div>
+            <div style="font-family: 'Inter', sans-serif; font-weight: 300; color: white; font-size: 20px; letter-spacing: -0.02em;">AUTHENTICATION REQUIRED</div>
         </div>
         """, unsafe_allow_html=True)
         render_modules_preview()
@@ -227,12 +223,17 @@ def chat_interface(create_agent_func):
     if st.session_state.get("wallet_locked", False) and st.session_state.get("wallet_encrypted"):
         st.markdown("""
         <div style="
-            border: 1px solid #1a1a1a;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
             padding: 40px 0;
             margin: 20px 0;
             text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         ">
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.15em; margin-bottom: 8px;">CONSOLE_LOCKED</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.1em; margin-bottom: 8px;">CONSOLE_LOCKED</div>
             <div style="font-family: 'Inter', sans-serif; font-weight: 300; color: #a3a3a3; font-size: 14px;">Enter access key in sidebar</div>
         </div>
         """, unsafe_allow_html=True)
@@ -286,18 +287,28 @@ def chat_interface(create_agent_func):
     if not st.session_state.messages:
         wallet_short = ChainUtils.format_address(st.session_state.wallet_address) if st.session_state.wallet_address else "..."
         st.markdown(f"""
-        <div style="display: flex; gap: 40px; border-bottom: 1px solid #1a1a1a; padding-bottom: 24px; margin-bottom: 24px;">
+        <div style="
+            display: flex;
+            gap: 40px;
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        ">
             <div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.15em; margin-bottom: 4px;">WALLET_ID</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.1em; margin-bottom: 4px;">WALLET_ID</div>
                 <div style="color: white; font-size: 13px; font-family: 'JetBrains Mono', monospace;">{wallet_short}</div>
             </div>
             <div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.15em; margin-bottom: 4px;">NETWORK</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.1em; margin-bottom: 4px;">NETWORK</div>
                 <div style="color: white; font-size: 13px; font-family: 'JetBrains Mono', monospace;">BASE_MAINNET</div>
             </div>
             <div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.15em; margin-bottom: 4px;">STATUS</div>
-                <div style="color: #3b82f6; font-size: 13px; font-family: 'JetBrains Mono', monospace;">ACTIVE</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.1em; margin-bottom: 4px;">STATUS</div>
+                <div style="color: #2563eb; font-size: 13px; font-family: 'JetBrains Mono', monospace;">ACTIVE</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -313,11 +324,11 @@ def chat_interface(create_agent_func):
                 # AI = Clean chrome typography
                 st.markdown(f"<div style='color: #e5e5e5; font-family: Inter, sans-serif; font-weight: 400; font-size: 15px; line-height: 1.7;'>{safe_content}</div>", unsafe_allow_html=True)
             else:
-                # User = Cobalt accent, right-aligned indicator
+                # User = Cobalt accent with V11 depth
                 st.markdown(f"""
                 <div>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.1em; margin-bottom: 4px;">INPUT</div>
-                    <div style="color: #3b82f6; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500;">{safe_content}</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.08em; margin-bottom: 4px;">INPUT</div>
+                    <div style="color: #2563eb; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500;">{safe_content}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -337,8 +348,8 @@ def chat_interface(create_agent_func):
                 safe_prompt = _escape_content(prompt)
                 st.markdown(f"""
                 <div>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.1em; margin-bottom: 4px;">INPUT</div>
-                    <div style="color: #3b82f6; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500;">{safe_prompt}</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252; letter-spacing: 0.08em; margin-bottom: 4px;">INPUT</div>
+                    <div style="color: #2563eb; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500;">{safe_prompt}</div>
                 </div>
                 """, unsafe_allow_html=True)
 

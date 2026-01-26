@@ -1,6 +1,6 @@
 """
 Modal components for Chat Wallet
-V10 "Brutalist Fintech" - Revolut x Gentle Monster
+V11 "The Monolith" - Depth & Materiality
 """
 
 import html
@@ -32,7 +32,7 @@ def generate_qr(data: str):
 
 
 def show_success_animation():
-    """Show V10 success animation with cobalt accent"""
+    """Show V11 success animation with cobalt accent"""
     st.markdown("""
     <style>
     @keyframes success-checkmark {
@@ -53,6 +53,8 @@ def show_success_animation():
         right: 0;
         bottom: 0;
         background: rgba(3, 3, 3, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -72,13 +74,14 @@ def show_success_animation():
     .success-icon {
         width: 80px;
         height: 80px;
-        border-radius: 0px;
-        background: #3b82f6;
+        border-radius: 16px;
+        background: #2563eb;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto 20px;
         animation: success-checkmark 0.5s ease-out;
+        box-shadow: 0 0 40px rgba(37, 99, 235, 0.3);
     }
 
     .success-icon svg {
@@ -93,16 +96,16 @@ def show_success_animation():
         position: absolute;
         width: 100px;
         height: 100px;
-        border: 2px solid rgba(59, 130, 246, 0.3);
-        border-radius: 0px;
+        border: 2px solid rgba(37, 99, 235, 0.3);
+        border-radius: 20px;
         animation: success-ring 0.6s ease-out;
     }
 
     .success-label {
         font-family: 'JetBrains Mono', monospace;
         font-size: 10px;
-        color: #3b82f6;
-        letter-spacing: 0.15em;
+        color: #2563eb;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
         margin-top: 20px;
         font-weight: 500;
@@ -166,19 +169,19 @@ def seed_phrase_modal():
 
         st.markdown("---")
 
-        # V10 numbered grid display with brutalist styling
+        # V11 numbered grid display with glass styling
         cols = st.columns(3)
         for i, word in enumerate(words):
             with cols[i % 3]:
                 st.markdown(f"""
                 <div style="
-                    border: 1px solid #1a1a1a;
-                    border-radius: 0px;
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    border-radius: 8px;
                     padding: 10px;
                     margin-bottom: 8px;
-                    background: #0a0a0a;
+                    background: rgba(10, 10, 10, 0.8);
                 ">
-                    <div style="font-size: 9px; color: #525252; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">{i+1}</div>
+                    <div style="font-size: 9px; color: #525252; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em;">{i+1}</div>
                     <div style="font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 13px; color: white;">{_escape(word)}</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -286,23 +289,23 @@ def deposit_modal():
     else:
         address = st.session_state.wallet_address
 
-    # V10 Address Display with brutalist styling (XSS-safe)
+    # V11 Address Display with glass styling (XSS-safe)
     safe_address = _escape(address)
     st.markdown(f"""
     <div style="
         margin-top: 20px;
         padding: 20px;
-        background: #0a0a0a;
-        border: 1px solid #1a1a1a;
+        background: rgba(10, 10, 10, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.06);
         text-align: center;
         margin-bottom: 20px;
-        border-radius: 0px;
+        border-radius: 12px;
     ">
-        <div style="font-size: 9px; font-weight: 500; font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; color: #525252; letter-spacing: 0.15em;">SCAN_TO_DEPOSIT</div>
+        <div style="font-size: 9px; font-weight: 500; font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; color: #525252; letter-spacing: 0.1em;">SCAN_TO_DEPOSIT</div>
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; word-break: break-all; margin-bottom: 12px; color: #a3a3a3;">
             {safe_address}
         </div>
-        <div style="height: 1px; width: 100%; background: #1a1a1a;"></div>
+        <div style="height: 1px; width: 100%; background: rgba(255, 255, 255, 0.04);"></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -312,14 +315,14 @@ def deposit_modal():
     with col2:
         st.image(qr_img, width=180)
 
-    # Chain type badge with V10 brutalist styling
+    # Chain type badge with V11 rounded styling
     chain_type = network["type"].upper()
     network_label = "TESTNET" if network['testnet'] else "MAINNET"
 
     st.markdown(f"""
     <div style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
-        <span style="background: #1a1a1a; color: #525252; font-size: 9px; padding: 4px 10px; border-radius: 0px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">{chain_type}</span>
-        <span style="background: {'#262626' if network['testnet'] else '#3b82f6'}; color: {'#525252' if network['testnet'] else 'white'}; font-size: 9px; padding: 4px 10px; border-radius: 0px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; font-weight: 500;">{network_label}</span>
+        <span style="background: #1a1a1a; color: #525252; font-size: 9px; padding: 4px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em;">{chain_type}</span>
+        <span style="background: {'#262626' if network['testnet'] else '#2563eb'}; color: {'#525252' if network['testnet'] else 'white'}; font-size: 9px; padding: 4px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; font-weight: 500;">{network_label}</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -392,35 +395,35 @@ def _render_send_confirmation():
                 letter-spacing: 0.15em; margin-bottom: 1rem;">CONFIRM_TRANSACTION</div>
     """, unsafe_allow_html=True)
 
-    # V10 Confirmation Card with cobalt border and brutalist styling (XSS-safe)
+    # V11 Confirmation Card with cobalt border and glass styling (XSS-safe)
     recipient = details.get('recipient', '')
     recipient_short = f"{recipient[:6]}...{recipient[-4:]}" if len(recipient) > 10 else recipient
     safe_recipient = _escape(recipient_short)
 
     st.markdown(f"""
     <div style="
-        background: #0a0a0a;
-        border: 1px solid #3b82f6;
-        border-radius: 0px;
+        background: rgba(37, 99, 235, 0.05);
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        border-radius: 12px;
         padding: 20px;
         font-family: 'Inter', sans-serif;
         margin-bottom: 20px;
     ">
-        <div style="color: #3b82f6; font-size: 9px; margin-bottom: 12px; font-weight: 500; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">PENDING_SIGNATURE</div>
+        <div style="color: #2563eb; font-size: 9px; margin-bottom: 12px; font-weight: 500; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em;">PENDING_SIGNATURE</div>
 
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); padding-bottom: 10px;">
             <span style="color: #525252; font-size: 11px; font-family: 'JetBrains Mono', monospace;">AMOUNT</span>
             <span style="color: white; font-size: 13px; font-weight: 500;">${details.get('amount', 0):.2f} USDC</span>
         </div>
 
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); padding-bottom: 10px;">
             <span style="color: #525252; font-size: 11px; font-family: 'JetBrains Mono', monospace;">SERVICE_FEE</span>
             <span style="color: white; font-size: 13px;">${details.get('app_fee', 0):.3f}</span>
         </div>
 
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); padding-bottom: 10px;">
             <span style="color: #525252; font-size: 11px; font-family: 'JetBrains Mono', monospace;">TOTAL</span>
-            <span style="color: #3b82f6; font-size: 13px; font-weight: 600;">${details.get('total', 0):.2f}</span>
+            <span style="color: #2563eb; font-size: 13px; font-weight: 600;">${details.get('total', 0):.2f}</span>
         </div>
 
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
@@ -506,11 +509,11 @@ def _render_send_confirmation():
                         # XSS-safe tx_hash display
                         safe_tx_hash = _escape(result['tx_hash'][:20])
                         st.markdown(f"""
-<div style="background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 0px; padding: 15px; font-family: 'Inter', sans-serif;">
-    <div style="color: #3b82f6; font-size: 9px; margin-bottom: 10px; font-weight: 500; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">TRANSACTION_COMPLETE</div>
-    <div style="color: #525252; font-size: 9px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">TX_HASH</div>
+<div style="background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 15px; font-family: 'Inter', sans-serif;">
+    <div style="color: #2563eb; font-size: 9px; margin-bottom: 10px; font-weight: 500; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em;">TRANSACTION_COMPLETE</div>
+    <div style="color: #525252; font-size: 9px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em;">TX_HASH</div>
     <div style="color: #a3a3a3; font-size: 11px; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace;">{safe_tx_hash}...</div>
-    <div style="color: #525252; font-size: 9px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">AMOUNT</div>
+    <div style="color: #525252; font-size: 9px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em;">AMOUNT</div>
     <div style="color: white; font-size: 11px;">${result['amount']:.2f}</div>
 </div>
 """, unsafe_allow_html=True)
@@ -569,22 +572,22 @@ def send_modal():
             total = amount + gas_cost + app_fee
 
             st.markdown(f"""
-<div style="background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 0px; padding: 12px; margin: 10px 0; font-family: 'Inter', sans-serif; font-size: 12px;">
+<div style="background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 12px; margin: 10px 0; font-family: 'Inter', sans-serif; font-size: 12px;">
     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
         <span style="color: #525252; font-family: 'JetBrains Mono', monospace; font-size: 10px;">AMOUNT</span>
         <span style="color: white;">${amount:.2f}</span>
     </div>
     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
         <span style="color: #525252; font-family: 'JetBrains Mono', monospace; font-size: 10px;">NETWORK_FEE</span>
-        <span style="color: #525252;">${gas_cost:.3f} <span style="color: #3b82f6;">COVERED</span></span>
+        <span style="color: #525252;">${gas_cost:.3f} <span style="color: #2563eb;">COVERED</span></span>
     </div>
     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
         <span style="color: #525252; font-family: 'JetBrains Mono', monospace; font-size: 10px;">SERVICE_FEE</span>
         <span style="color: white;">${app_fee:.3f}</span>
     </div>
-    <div style="display: flex; justify-content: space-between; border-top: 1px solid #1a1a1a; padding-top: 6px;">
+    <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255, 255, 255, 0.04); padding-top: 6px;">
         <span style="color: #a3a3a3; font-family: 'JetBrains Mono', monospace; font-size: 10px;">TOTAL</span>
-        <span style="color: #3b82f6; font-weight: 600;">${total:.2f}</span>
+        <span style="color: #2563eb; font-weight: 600;">${total:.2f}</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
