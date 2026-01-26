@@ -64,7 +64,7 @@ def create_scheduled_transfer(
         "to_address": to_address,
         "amount": amount,
         "currency": "USDC",
-        "chain": "base-sepolia"  # Default chain
+        "chain": "base-mainnet"  # Default chain
     }
 
     # Create the scheduled task

@@ -38,7 +38,7 @@ USDC_ABI = [
 class TransactionRelayer:
     """Relayer service for gasless transactions"""
 
-    def __init__(self, network_key: str = "base-sepolia"):
+    def __init__(self, network_key: str = "base-mainnet"):
         self.network_key = network_key
         self.network = NETWORKS[network_key]
         self.w3 = Web3(Web3.HTTPProvider(self.network["rpc_url"]))

@@ -270,61 +270,45 @@ def deposit_modal():
     st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
     with st.expander("Network details", expanded=False):
-        # Mainnets first, then testnets
-        chain_options = {
+        # All supported networks
+        network_options = {
+            "Ethereum": "eth-mainnet",
             "Base": "base-mainnet",
-            "Arbitrum": "arbitrum-sepolia",  # No mainnet yet
-            "Polygon": "polygon-amoy",  # No mainnet yet
+            "Arbitrum": "arbitrum-mainnet",
         }
 
         if solana_address:
-            chain_options["Solana"] = "solana-mainnet"
+            network_options["Solana"] = "solana-mainnet"
 
-        # Add testnets in sub-section
-        st.markdown("<div style='font-size: 10px; color: #444; margin: 8px 0;'>Testnets</div>", unsafe_allow_html=True)
-
-        testnet_options = {
-            "Base Sepolia": "base-sepolia",
-            "Arbitrum Sepolia": "arbitrum-sepolia",
-            "Polygon Amoy": "polygon-amoy",
-        }
-
-        if solana_address:
-            testnet_options["Solana Devnet"] = "solana-devnet"
+        # Testnets
+        network_options["Ethereum Sepolia (Testnet)"] = "eth-sepolia"
+        network_options["Arc (Testnet)"] = "arc-testnet"
 
         selected_chain = st.selectbox(
             "Network",
-            list(testnet_options.keys()),
+            list(network_options.keys()),
             label_visibility="collapsed",
             key="deposit_network_select"
         )
 
-        network_key = testnet_options[selected_chain]
+        network_key = network_options[selected_chain]
         network = NETWORKS[network_key]
 
         # Explorer link
         if network["type"] == "solana":
-            cluster_param = "?cluster=devnet" if network["testnet"] else ""
-            explorer_url = f"{network['explorer']}/address/{solana_address}{cluster_param}"
+            explorer_url = f"{network['explorer']}/address/{solana_address}"
         else:
             explorer_url = ChainUtils.get_explorer_url(network_key, evm_address)
 
         st.link_button("VIEW ON EXPLORER", explorer_url, use_container_width=True)
 
         # Faucet instructions for testnets
-        if "sepolia" in network_key or "amoy" in network_key:
+        if network["testnet"]:
             st.markdown("""
 <div style="font-size: 11px; color: #555; margin-top: 12px;">
     <strong style="color: #666;">Get testnet funds:</strong><br>
-    • <a href="https://portal.cdp.coinbase.com/products/faucet" target="_blank" style="color: #888;">Coinbase Faucet</a><br>
+    • <a href="https://faucet.circle.com/" target="_blank" style="color: #888;">Circle USDC Faucet</a><br>
     • <a href="https://sepoliafaucet.com/" target="_blank" style="color: #888;">Alchemy Faucet</a>
-</div>
-            """, unsafe_allow_html=True)
-        elif "solana-devnet" in network_key:
-            st.markdown("""
-<div style="font-size: 11px; color: #555; margin-top: 12px;">
-    <strong style="color: #666;">Get testnet SOL:</strong><br>
-    • <a href="https://faucet.solana.com/" target="_blank" style="color: #888;">Solana Faucet</a>
 </div>
             """, unsafe_allow_html=True)
 
@@ -466,7 +450,11 @@ def send_modal():
 
     # Network selector
     network_options = {
-        "Base Sepolia (Testnet)": "base-sepolia",
+        "Ethereum": "eth-mainnet",
+        "Base": "base-mainnet",
+        "Arbitrum": "arbitrum-mainnet",
+        "Ethereum Sepolia (Testnet)": "eth-sepolia",
+        "Arc (Testnet)": "arc-testnet",
     }
     selected_network = st.selectbox("Network", list(network_options.keys()), label_visibility="collapsed")
     network_key = network_options[selected_network]

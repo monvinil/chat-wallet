@@ -179,13 +179,13 @@ def get_wallet_balance() -> str:
     return json.dumps(result, indent=2)
 
 
-def get_deposit_address(chain: str = "base-sepolia") -> str:
-    """Get deposit address for a specific chain. Args: chain - network key like 'base-sepolia' or 'arbitrum-sepolia'"""
+def get_deposit_address(chain: str = "base-mainnet") -> str:
+    """Get deposit address for a specific chain. Args: chain - network key like 'base-mainnet' or 'arbitrum-mainnet'"""
     if "wallet_address" not in st.session_state:
         return json.dumps({"error": "No wallet connected"})
 
     address = st.session_state.wallet_address
-    network = NETWORKS.get(chain, NETWORKS["base-sepolia"])
+    network = NETWORKS.get(chain, NETWORKS["base-mainnet"])
 
     return json.dumps({
         "chain": network["name"],
@@ -199,7 +199,7 @@ def get_deposit_address(chain: str = "base-sepolia") -> str:
 # Old mock tools removed - now using real Bitrefill API tools from bitrefill_tools.py
 
 
-def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-sepolia") -> str:
+def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-mainnet") -> str:
     """
     Preview a transaction before execution. Shows exact amounts, fees, and timing.
     Args: to_address, amount_usd, chain (network key)
@@ -207,7 +207,7 @@ def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-s
     if "wallet_address" not in st.session_state:
         return json.dumps({"error": "No wallet connected"})
 
-    network = NETWORKS.get(chain, NETWORKS["base-sepolia"])
+    network = NETWORKS.get(chain, NETWORKS["base-mainnet"])
     fee = calculate_fee(amount_usd)
     total = amount_usd + fee
 

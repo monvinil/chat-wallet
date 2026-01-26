@@ -70,12 +70,12 @@ def render_balance_display(total_usdc: float, balances: dict = None):
     if balances:
         # Network display names - distinguish testnet vs mainnet
         network_names = {
+            "eth-mainnet": "Ethereum",
             "base-mainnet": "Base",
-            "base-sepolia": "Base ᵗ",
-            "arbitrum-sepolia": "Arbitrum ᵗ",
-            "polygon-amoy": "Polygon ᵗ",
+            "arbitrum-mainnet": "Arbitrum",
             "solana-mainnet": "Solana",
-            "solana-devnet": "Solana ᵗ",
+            "eth-sepolia": "Ethereum ᵗ",
+            "arc-testnet": "Arc ᵗ",
         }
 
         # Filter to networks with non-zero USDC

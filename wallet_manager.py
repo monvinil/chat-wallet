@@ -124,7 +124,7 @@ class WalletManager:
                 # Legacy fields for backwards compatibility
                 "private_key": evm_private_key,
                 "address": evm_address,
-                "network": "base-sepolia",
+                "network": "base-mainnet",
                 "type": "multi-chain"
             }
 
@@ -137,7 +137,7 @@ class WalletManager:
                 "solana_address": solana_keys["address"] if solana_keys else None,
                 "mnemonic": mnemonic_phrase,
                 "wallet_data": json.dumps(wallet_data),
-                "network": "base-sepolia",
+                "network": "base-mainnet",
                 "type": "multi-chain"
             }
         except Exception as e:
@@ -187,7 +187,7 @@ class WalletManager:
                     # Legacy fields for backwards compatibility
                     "private_key": evm_private_key,
                     "address": evm_address,
-                    "network": "base-sepolia",
+                    "network": "base-mainnet",
                     "type": "multi-chain"
                 }
 
@@ -199,7 +199,7 @@ class WalletManager:
                     "address": evm_address,
                     "solana_address": solana_keys["address"] if solana_keys else None,
                     "wallet_data": json.dumps(wallet_data),
-                    "network": "base-sepolia",
+                    "network": "base-mainnet",
                     "type": "multi-chain"
                 }
             else:
@@ -221,7 +221,7 @@ class WalletManager:
                     # Legacy fields
                     "private_key": private_key,
                     "address": address,
-                    "network": "base-sepolia",
+                    "network": "base-mainnet",
                     "type": "evm"
                 }
 
@@ -229,7 +229,7 @@ class WalletManager:
                     "address": address,
                     "solana_address": None,  # Can't derive Solana from EVM private key
                     "wallet_data": json.dumps(wallet_data),
-                    "network": "base-sepolia",
+                    "network": "base-mainnet",
                     "type": "evm"
                 }
         except Exception as e:
