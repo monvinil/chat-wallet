@@ -6,15 +6,14 @@ After quota exhausted, users are prompted to add their own API key.
 """
 
 import os
-import time
 import streamlit as st
 from typing import Tuple, Optional
 from datetime import datetime
 
 # Free tier configuration
 FREE_TIER_MESSAGES = 50  # Messages per user
-FREE_TIER_PROVIDER = "google"
-FREE_TIER_MODEL = "gemini-2.0-flash"
+FREE_TIER_PROVIDER = "anthropic"
+FREE_TIER_MODEL = "claude-sonnet-4-20250514"
 
 
 class FreeTier:
@@ -22,8 +21,8 @@ class FreeTier:
 
     @staticmethod
     def get_app_api_key() -> Optional[str]:
-        """Get the app's API key for free tier users (Google Gemini)"""
-        return os.getenv("GOOGLE_API_KEY")
+        """Get the app's API key for free tier users"""
+        return os.getenv("ANTHROPIC_API_KEY")
 
     @staticmethod
     def is_available() -> bool:
@@ -53,48 +52,17 @@ class FreeTier:
 
     @staticmethod
     def increment_usage(user_id: str) -> bool:
-        """
-        Increment message count for user atomically (call after successful message)
-
-        Note: For true atomicity, set up the increment_free_tier_usage RPC function:
-        CREATE OR REPLACE FUNCTION increment_free_tier_usage(p_user_id UUID)
-        RETURNS VOID AS $$
-        BEGIN
-            INSERT INTO user_settings (user_id, free_tier_messages_used, updated_at)
-            VALUES (p_user_id, 1, NOW())
-            ON CONFLICT (user_id)
-            DO UPDATE SET
-                free_tier_messages_used = COALESCE(user_settings.free_tier_messages_used, 0) + 1,
-                updated_at = NOW();
-        END;
-        $$ LANGUAGE plpgsql SECURITY DEFINER;
-        """
+        """Increment message count for user (call after successful message)"""
         from supabase_client import get_supabase_client
-        import time
-
-        # Rate limit: prevent duplicate increments within 1 second (debounce)
-        rate_key = f"_free_tier_increment_{user_id}"
-        last_increment = st.session_state.get(rate_key, 0)
-        now = time.time()
-        if now - last_increment < 1.0:
-            return True  # Already incremented recently, skip duplicate
-        st.session_state[rate_key] = now
 
         try:
             client = get_supabase_client(use_service_key=True)
             if not client:
                 return False
 
-            # Try atomic increment via RPC first (requires Supabase function)
-            try:
-                client.rpc("increment_free_tier_usage", {"p_user_id": user_id}).execute()
-                return True
-            except Exception:
-                pass  # RPC not available, fall back to upsert
-
-            # Fallback: upsert with current value
-            # Note: Not fully atomic but rate limiting above prevents most race conditions
             current = FreeTier.get_usage(user_id)
+
+            # Upsert the new count
             client.table("user_settings").upsert({
                 "user_id": user_id,
                 "free_tier_messages_used": current + 1,

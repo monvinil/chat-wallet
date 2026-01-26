@@ -22,8 +22,7 @@ class PasswordEncryption:
     """Password-based encryption for wallet data"""
 
     # Constants for password-based encryption
-    # OWASP 2024 recommendation: 600,000+ iterations for PBKDF2-HMAC-SHA256
-    PASSWORD_HASH_ITERATIONS = 600000
+    PASSWORD_HASH_ITERATIONS = 100000
     SALT_LENGTH = 32  # bytes
 
     @staticmethod

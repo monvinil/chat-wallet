@@ -10,7 +10,6 @@ from web3 import Web3
 from eth_account import Account
 from config import NETWORKS, calculate_fee
 from meta_tx import MetaTransaction
-from utils.logger import logger
 import streamlit as st
 
 
@@ -39,10 +38,6 @@ USDC_ABI = [
 class TransactionRelayer:
     """Relayer service for gasless transactions"""
 
-    # Amount validation limits
-    MIN_AMOUNT_USD = 0.01  # Minimum transaction amount
-    MAX_AMOUNT_USD = 10000.0  # Maximum single transaction amount
-
     def __init__(self, network_key: str = "base-sepolia"):
         self.network_key = network_key
         self.network = NETWORKS[network_key]
@@ -58,71 +53,6 @@ class TransactionRelayer:
             self.relayer_account = Account.from_key(relayer_key)
 
         self.relayer_address = self.relayer_account.address
-
-    def _get_used_nonces_key(self, user_address: str) -> str:
-        """Get session key for tracking used nonces"""
-        return f"_used_nonces_{user_address.lower()}"
-
-    def _is_nonce_used(self, user_address: str, nonce: int) -> bool:
-        """Check if a nonce has been used (replay protection)
-
-        Uses both session cache and database for persistence across servers/restarts.
-        """
-        # Quick check session cache first
-        key = self._get_used_nonces_key(user_address)
-        session_nonces = st.session_state.get(key, set())
-        if nonce in session_nonces:
-            return True
-
-        # Check database for persistence across servers
-        try:
-            from supabase_client import get_supabase_client
-            client = get_supabase_client(use_service_key=True)
-            if client:
-                result = client.table("used_nonces").select("nonce").eq(
-                    "wallet_address", user_address.lower()
-                ).eq("nonce", nonce).execute()
-                if result.data:
-                    # Add to session cache for faster future lookups
-                    if key not in st.session_state:
-                        st.session_state[key] = set()
-                    st.session_state[key].add(nonce)
-                    return True
-        except Exception as e:
-            logger.warning(f"Failed to check nonce in database: {e}")
-            # Fall back to session-only check (already done above)
-
-        return False
-
-    def _mark_nonce_used(self, user_address: str, nonce: int) -> None:
-        """Mark a nonce as used to prevent replay
-
-        Persists to both session cache and database for durability.
-        """
-        # Mark in session cache for quick lookups
-        key = self._get_used_nonces_key(user_address)
-        if key not in st.session_state:
-            st.session_state[key] = set()
-        st.session_state[key].add(nonce)
-
-        # Limit cache size to prevent memory bloat (keep last 1000 nonces)
-        if len(st.session_state[key]) > 1000:
-            sorted_nonces = sorted(st.session_state[key])
-            st.session_state[key] = set(sorted_nonces[-500:])
-
-        # Persist to database for cross-server/restart durability
-        try:
-            from supabase_client import get_supabase_client
-            from datetime import datetime
-            client = get_supabase_client(use_service_key=True)
-            if client:
-                client.table("used_nonces").upsert({
-                    "wallet_address": user_address.lower(),
-                    "nonce": nonce,
-                    "used_at": datetime.utcnow().isoformat()
-                }, on_conflict="wallet_address,nonce").execute()
-        except Exception as e:
-            logger.warning(f"Failed to persist nonce to database: {e}")
 
     def get_internal_balance(self, user_address: str, currency: str = "USDC") -> Decimal:
         """
@@ -140,8 +70,7 @@ class TransactionRelayer:
                     Web3.to_checksum_address(user_address)
                 ).call()
                 return Decimal(balance_raw) / Decimal(1e6)
-            except Exception as e:
-                logger.warning(f"Failed to fetch USDC balance for {user_address[:10]}...: {e}")
+            except:
                 return Decimal(0)
         return Decimal(0)
 
@@ -164,8 +93,7 @@ class TransactionRelayer:
             if self.network["testnet"]:
                 gas_cost_usd = 0.02  # Simulate $0.02 gas cost
 
-        except Exception as e:
-            logger.warning(f"Gas estimation failed, using default: {e}")
+        except:
             gas_cost_usd = 0.02  # Default estimate
 
         # Calculate app fee
@@ -180,7 +108,7 @@ class TransactionRelayer:
         user_address: str,
         user_id: Optional[str] = None
     ) -> Tuple[bool, Optional[str]]:
-        """Validate meta-transaction including spending limits and replay protection"""
+        """Validate meta-transaction including spending limits"""
 
         # Verify signature with correct chain ID
         chain_id = self.network["chain_id"]
@@ -195,24 +123,8 @@ class TransactionRelayer:
         if message["from"].lower() != user_address.lower():
             return False, "From address mismatch"
 
-        # Replay protection: check if nonce has been used
-        nonce = message.get("nonce", 0)
-        if self._is_nonce_used(user_address, nonce):
-            return False, "Transaction already processed (duplicate nonce)"
-
-        # Amount validation
-        amount_usd = float(message["amount"]) / 1e6  # Convert from wei
-
-        if amount_usd < self.MIN_AMOUNT_USD:
-            return False, f"Amount too small. Minimum is ${self.MIN_AMOUNT_USD:.2f}"
-
-        if amount_usd > self.MAX_AMOUNT_USD:
-            return False, f"Amount too large. Maximum is ${self.MAX_AMOUNT_USD:.2f}"
-
-        if amount_usd <= 0:
-            return False, "Invalid amount: must be positive"
-
         # Check internal balance
+        amount_usd = float(message["amount"]) / 1e6  # Convert from wei
         gas_cost, app_fee = self.estimate_gas_cost(amount_usd)
         total_needed = Decimal(amount_usd) + Decimal(gas_cost) + Decimal(app_fee)
 
@@ -231,7 +143,7 @@ class TransactionRelayer:
                 if not can_proceed:
                     return False, limit_msg
             except ImportError:
-                logger.debug("Spending limits module not available, skipping check")
+                pass  # Spending limits module not available
 
         return True, None
 
@@ -239,16 +151,15 @@ class TransactionRelayer:
         self,
         message: Dict[str, Any],
         signature: str,
-        user_address: str,
-        user_id: Optional[str] = None
+        user_address: str
     ) -> Dict[str, Any]:
         """
         Execute a gasless USDC transfer
         Returns transaction result with hash and status
         """
 
-        # Validate transaction (pass user_id for spending limit enforcement)
-        valid, error = self.validate_transaction(message, signature, user_address, user_id)
+        # Validate transaction
+        valid, error = self.validate_transaction(message, signature, user_address)
         if not valid:
             return {
                 "success": False,
@@ -287,10 +198,6 @@ class TransactionRelayer:
 
             # Send transaction
             tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-
-            # Mark nonce as used (replay protection)
-            nonce = message.get("nonce", 0)
-            self._mark_nonce_used(user_address, nonce)
 
             # Wait for receipt (optional, can be async)
             # receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
@@ -337,6 +244,5 @@ class TransactionRelayer:
                 "usdc": usdc_balance,
                 "address": self.relayer_address
             }
-        except Exception as e:
-            logger.warning(f"Failed to get relayer balance: {e}")
+        except:
             return {"eth": 0, "usdc": 0, "address": self.relayer_address}

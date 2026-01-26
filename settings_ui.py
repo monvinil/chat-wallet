@@ -1,6 +1,5 @@
 """
 Settings UI - User settings, LLM configuration, and account connections
-V10 "Brutalist Fintech" - Revolut x Gentle Monster
 """
 
 import streamlit as st
@@ -9,11 +8,8 @@ from typing import Optional
 
 
 def settings_page():
-    """Render V10 settings page"""
-    st.markdown("""
-    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                letter-spacing: 0.15em; margin-bottom: 1.5rem;">CONFIGURATION</div>
-    """, unsafe_allow_html=True)
+    """Render settings page"""
+    st.title("Settings")
 
     # Check if user is logged in
     if not st.session_state.get("wallet_address"):
@@ -43,8 +39,8 @@ def settings_page():
     # Get the tab to show based on quick action
     settings_tab = st.session_state.get("settings_tab", None)
 
-    # Tabs for different settings sections - V10 styling
-    tab_names = ["AI_ENGINE", "DISPLAY", "ACCOUNTS", "LIMITS", "SECURITY"]
+    # Tabs for different settings sections
+    tab_names = ["AI Provider", "Display", "Connected Accounts", "Limits", "Security"]
     tab1, tab_display, tab2, tab3, tab4 = st.tabs(tab_names)
 
     # Auto-select tab if coming from quick action
@@ -55,25 +51,21 @@ def settings_page():
     # TAB 1: AI Model Configuration
     # ============================================================================
     with tab1:
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 0.5rem;">AI_ENGINE_CONFIG</div>
-        """, unsafe_allow_html=True)
-        st.caption("SELECT_AI_PROVIDER")
+        st.subheader("Connect Your AI")
+        st.caption("Choose which AI powers your assistant")
 
-        # Current model display with V10 messaging
+        # Current model display with friendly messaging
         llm_config = SettingsManager.get_llm_config(user_id)
 
         if llm_config["using_default"]:
-            st.warning("NO_ENGINE_CONNECTED. Add API key below.")
+            st.warning("No AI connected yet. Add your API key below to start.")
         else:
-            st.success(f"CONNECTED: {llm_config['provider'].upper()} - {llm_config['model']}")
+            st.success(f"Connected: {llm_config['provider'].title()} - {llm_config['model']}")
 
         st.divider()
 
-        # LLM Provider selection with V10 descriptions
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px;">SELECT_PROVIDER</div>""", unsafe_allow_html=True)
+        # LLM Provider selection with friendly descriptions
+        st.markdown("**Which AI do you want to use?**")
         provider_options = ["google", "anthropic", "openai"]
         provider_labels = {
             "google": "Google Gemini - Free tier available (Recommended)",
@@ -92,8 +84,7 @@ def settings_page():
         )
 
         # Model selection based on provider
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">SELECT_MODEL</div>""", unsafe_allow_html=True)
+        st.markdown("**Which version?**")
         if provider == "google":
             model_options = {
                 "gemini-2.0-flash": "Gemini 2.0 Flash - Fast & free (Recommended)",
@@ -125,15 +116,14 @@ def settings_page():
         st.divider()
 
         # API Key input - always shown, required for production
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">API_KEY</div>""", unsafe_allow_html=True)
-        st.caption("REQUIRED_FOR_AI_ENGINE")
+        st.markdown("**Your API Key**")
+        st.caption("Required to use the AI assistant")
 
         # Show if key is already configured
         has_existing_key = bool(existing_settings and existing_settings.get("llm_api_key_encrypted"))
         if has_existing_key:
-            st.success("KEY_STORED_SECURELY")
-            st.caption("PASTE_NEW_KEY_TO_UPDATE")
+            st.success("Key saved securely")
+            st.caption("Paste a new key below to change it")
 
         api_key = st.text_input(
             "API Key",
@@ -180,23 +170,20 @@ def settings_page():
     # TAB: Display Settings
     # ============================================================================
     with tab_display:
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 0.5rem;">DISPLAY_CONFIG</div>
-        """, unsafe_allow_html=True)
-        st.caption("INTERFACE_PREFERENCES")
+        st.subheader("Display")
+        st.caption("Customize how Chat02 looks")
 
         # Theme selection (light/dark)
         current_theme = existing_settings.get("theme", "dark") if existing_settings else "dark"
         theme = st.radio(
             "Theme",
             ["dark", "light"],
-            format_func=lambda x: "DARK" if x == "dark" else "LIGHT",
+            format_func=lambda x: "Dark" if x == "dark" else "Light",
             index=0 if current_theme == "dark" else 1,
             horizontal=True
         )
 
-        st.caption("DARK_MODE_RECOMMENDED")
+        st.caption("Dark mode is easier on the eyes, especially at night.")
 
         st.divider()
 
@@ -218,10 +205,7 @@ def settings_page():
     # TAB 2: Connected Accounts
     # ============================================================================
     with tab2:
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 0.5rem;">CONNECTED_ACCOUNTS</div>
-        """, unsafe_allow_html=True)
+        st.subheader("Connected Accounts")
 
         # List connected accounts
         connected = SettingsManager.list_connected_accounts(user_id)
@@ -230,21 +214,20 @@ def settings_page():
             for conn in connected:
                 col1, col2 = st.columns([3, 1])
                 with col1:
-                    status = "ACTIVE" if conn['is_active'] else "INACTIVE"
+                    status = "Connected" if conn['is_active'] else "Disconnected"
                     account = conn.get('provider_user_id', '')
-                    st.markdown(f"**{conn['provider'].upper()}** {f'({account})' if account else ''}")
+                    st.markdown(f"**{conn['provider'].title()}** {f'({account})' if account else ''}")
                     st.caption(status)
                 with col2:
                     if conn['is_active']:
-                        if st.button("DISCONNECT", key=f"disconnect_{conn['provider']}", use_container_width=True):
+                        if st.button("Disconnect", key=f"disconnect_{conn['provider']}", use_container_width=True):
                             if SettingsManager.disconnect_account(user_id, conn['provider']):
                                 st.rerun()
             st.divider()
 
         # Email connection
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px;">EMAIL_CONNECTION</div>""", unsafe_allow_html=True)
-        st.caption("CONNECT_EMAIL_FOR_AI_AUTOMATION")
+        st.markdown("**Email**")
+        st.caption("Connect email for AI automation and verification codes")
 
         from email_manager import show_email_connection_ui
         show_email_connection_ui(user_id)
@@ -263,37 +246,33 @@ def settings_page():
     # TAB 3: Spending & Approvals
     # ============================================================================
     with tab3:
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 0.5rem;">SPENDING_LIMITS</div>
-        """, unsafe_allow_html=True)
+        st.subheader("Spending Limits")
 
         col1, col2 = st.columns(2)
 
         with col1:
             daily_limit = st.number_input(
-                "DAILY_LIMIT (USDC)",
+                "Daily Limit (USDC)",
                 min_value=1.0,
                 max_value=10000.0,
                 value=float(existing_settings.get("daily_spend_limit", 100.0)) if existing_settings else 100.0,
                 step=10.0
             )
-            st.caption("MAX_AI_SPEND_PER_DAY")
+            st.caption("Max AI can spend per day")
 
         with col2:
             approval_threshold = st.number_input(
-                "APPROVAL_THRESHOLD (USDC)",
+                "Approval Threshold (USDC)",
                 min_value=0.0,
                 max_value=1000.0,
                 value=float(existing_settings.get("require_approval_above", 50.0)) if existing_settings else 50.0,
                 step=5.0
             )
-            st.caption("REQUIRE_APPROVAL_ABOVE")
+            st.caption("Require approval above this amount")
 
         st.divider()
 
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px;">PERMISSIONS</div>""", unsafe_allow_html=True)
+        st.markdown("**Permissions**")
 
         allow_recurring = st.checkbox(
             "Allow recurring payments",
@@ -326,16 +305,12 @@ def settings_page():
     # TAB 4: Security
     # ============================================================================
     with tab4:
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 0.5rem;">SECURITY_CONFIG</div>
-        """, unsafe_allow_html=True)
+        st.subheader("Security")
 
         # Export wallet section
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px;">EXPORT_WALLET</div>""", unsafe_allow_html=True)
+        st.markdown("**Export Wallet**")
 
-        if st.button("SHOW_PRIVATE_KEY", type="secondary", key="show_pk"):
+        if st.button("Show Private Key", type="secondary", key="show_pk"):
             st.session_state.show_private_key = True
 
         if st.session_state.get("show_private_key"):
@@ -343,42 +318,38 @@ def settings_page():
             wallet_data = WalletManager.get_wallet_from_session()
 
             if wallet_data and wallet_data.get("private_key"):
-                st.warning("NEVER_SHARE_PRIVATE_KEY")
+                st.warning("Never share your private key with anyone")
 
                 if wallet_data.get("mnemonic"):
-                    st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                                letter-spacing: 0.1em; margin-bottom: 4px;">SEED_PHRASE</div>""", unsafe_allow_html=True)
+                    st.markdown("**Seed Phrase**")
                     st.code(wallet_data["mnemonic"], language=None)
 
-                st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                            letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 8px;">PRIVATE_KEY</div>""", unsafe_allow_html=True)
+                st.markdown("**Private Key**")
                 st.code(wallet_data["private_key"], language=None)
 
-                if st.button("HIDE", key="hide_pk"):
+                if st.button("Hide", key="hide_pk"):
                     st.session_state.show_private_key = False
                     st.rerun()
             else:
-                st.error("CANNOT_RETRIEVE_KEY")
-                if st.button("HIDE", key="hide_pk_err"):
+                st.error("Cannot retrieve private key")
+                if st.button("Hide", key="hide_pk_err"):
                     st.session_state.show_private_key = False
                     st.rerun()
 
         st.divider()
 
         # Data info
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px;">DATA_STORAGE</div>""", unsafe_allow_html=True)
+        st.markdown("**Data Storage**")
         st.caption("""
-        WALLET_KEYS: ENCRYPTED_IN_SESSION
-        API_KEYS: AES-256_ENCRYPTED
-        OAUTH_TOKENS: AES-256_ENCRYPTED
+        Wallet keys: Encrypted in session
+        API keys: AES-256 encrypted
+        OAuth tokens: AES-256 encrypted
         """)
 
         st.divider()
 
         # Danger zone - these actions are available
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #ef4444;
-                    letter-spacing: 0.1em; margin-bottom: 4px;">DANGER_ZONE</div>""", unsafe_allow_html=True)
+        st.markdown("**Danger Zone**")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Clear Settings", type="secondary", use_container_width=True):

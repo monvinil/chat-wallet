@@ -147,12 +147,8 @@ def check_spending_limit(user_id: str, amount: float, description: str = "transa
 
     Returns:
         Tuple of (can_proceed, message)
-        - can_proceed: False means BLOCKED (hard limit exceeded OR requires approval)
-        - message: Error message explaining why blocked, or None if allowed
-
-    Note: For transactions above approval_threshold, this returns (False, approval_msg)
-          to force the caller to handle the approval flow explicitly.
-          This prevents bypassing approval by ignoring the message.
+        - can_proceed: False means hard block, True means continue (may need approval)
+        - message: Error message or approval request message
     """
     allowed, error, requires_approval = SpendingLimits.check_transaction(
         user_id, amount, description
@@ -162,10 +158,7 @@ def check_spending_limit(user_id: str, amount: float, description: str = "transa
         return (False, error)
 
     if requires_approval:
-        # Return False with approval message - caller must handle approval explicitly
-        # This prevents bypassing approval by ignoring the message
         approval_msg = SpendingLimits.format_approval_request(amount, description)
-        return (False, approval_msg)
+        return (True, approval_msg)
 
-    # Only return True when transaction is fully allowed without approval
     return (True, None)

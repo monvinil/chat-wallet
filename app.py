@@ -1,6 +1,6 @@
 """
-Chat02 - Financial Operating System
-V10 "Brutalist Fintech" - AI-powered wallet
+Chat02 - Your money, your words
+AI-powered wallet that turns conversation into action
 """
 
 import os
@@ -208,18 +208,8 @@ def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-s
         return json.dumps({"error": "No wallet connected"})
 
     network = NETWORKS.get(chain, NETWORKS["base-sepolia"])
-
-    # Calculate gas cost and app fee using relayer estimation
-    try:
-        from transaction_relayer import TransactionRelayer
-        relayer = TransactionRelayer(chain)
-        gas_cost, app_fee = relayer.estimate_gas_cost(amount_usd)
-    except Exception:
-        # Fallback to simple fee calculation if relayer unavailable
-        gas_cost = 0.02  # Default gas estimate
-        app_fee = calculate_fee(amount_usd)
-
-    total = amount_usd + gas_cost + app_fee
+    fee = calculate_fee(amount_usd)
+    total = amount_usd + fee
 
     preview = {
         "action": "Send USDC",
@@ -227,8 +217,7 @@ def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-s
         "to": ChainUtils.format_address(to_address),
         "to_full_address": to_address,
         "network": network["name"],
-        "gas_fee": f"${gas_cost:.3f} (covered)",
-        "service_fee": f"${app_fee:.3f}",
+        "fee": f"${fee:.3f}",
         "total_cost": f"${total:.2f}",
         "estimated_time": "~3-5 seconds",
         "from": ChainUtils.format_address(st.session_state.wallet_address),
@@ -361,209 +350,57 @@ def init_state():
 
 
 def wallet_setup_ui():
-    """Show V10 wallet setup screen - Access Portal"""
-    # V10 Brutalist header
-    st.markdown("""
-    <div style="text-align: center; margin-bottom: 3rem; margin-top: 2rem;">
-        <div style="font-family: 'Inter', sans-serif; font-size: 48px; letter-spacing: 0.2em; margin-bottom: 12px;">
-            <span style="font-weight: 300;">CHAT</span><span style="font-weight: 800;">02</span>
-        </div>
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #525252;
-                    letter-spacing: 0.2em;">FINANCIAL_OPERATING_SYSTEM</div>
-    </div>
-    """, unsafe_allow_html=True)
+    """Show wallet setup screen with email/password account"""
+    st.title("Chat Wallet")
+    st.caption("Self-custodial wallet with AI-powered transactions")
 
-    # Info card - V10 brutalist style
-    st.markdown("""
-    <div style="
-        border: 1px solid #1a1a1a;
-        padding: 16px 20px;
-        margin-bottom: 2rem;
-        position: relative;
-    ">
-        <div style="position: absolute; top: 0; left: 0; width: 6px; height: 6px; border-top: 1px solid #3b82f6; border-left: 1px solid #3b82f6;"></div>
-        <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #a3a3a3;">
-            Self-custodial. Encrypted locally. Only you control access.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.")
 
-    tab1, tab2, tab3 = st.tabs(["ACCESS", "CREATE", "RECOVER"])
+    tab1, tab2, tab3 = st.tabs(["Create Account", "Sign In", "Import Wallet"])
 
-    # ========== TAB 1: LOG IN (ACCESS) ==========
+    # ========== TAB 1: SIGN UP ==========
     with tab1:
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 1rem;">EXISTING_USER</div>
-        """, unsafe_allow_html=True)
-
-        # Use form to prevent sidebar closing and enable password autofill
-        with st.form(key="login_form_v10", clear_on_submit=False):
-            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                        letter-spacing: 0.1em; margin-bottom: 4px;">IDENTITY</div>""", unsafe_allow_html=True)
-            login_email = st.text_input(
-                "Email",
-                key="login_email_v10",
-                placeholder="user@domain.com",
-                autocomplete="username",
-                label_visibility="collapsed"
-            )
-
-            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                        letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">KEY</div>""", unsafe_allow_html=True)
-            login_password = st.text_input(
-                "Password",
-                type="password",
-                key="login_pwd_v10",
-                placeholder="ACCESS KEY_",
-                autocomplete="current-password",
-                label_visibility="collapsed"
-            )
-
-            submit_login = st.form_submit_button("ENTER SYSTEM", type="primary", use_container_width=True)
-
-        if submit_login:
-            if not login_email or not login_password:
-                st.error("REQUIRED: IDENTITY AND KEY")
-            else:
-                with st.spinner("AUTHENTICATING_"):
-                    # Check rate limiting before any DB queries
-                    from rate_limiter import RateLimiter
-
-                    allowed, lockout_msg = RateLimiter.check_login_allowed(login_email)
-                    if not allowed:
-                        st.error(lockout_msg)
-                    else:
-                        # OPTIMIZED: Fetch all user data in 2 queries instead of 5
-                        login_data = get_user_login_data(login_email)
-
-                        if not login_data:
-                            st.error("NO_IDENTITY_FOUND")
-                        else:
-                            user = login_data["user"]
-                            stored_hash = login_data["password_hash"]
-                            wallets = login_data["wallets"]
-                            encrypted_wallet = login_data["encrypted_wallet"]
-
-                            # Verify password
-                            if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
-                                RateLimiter.record_login_attempt(login_email, success=False)
-                                remaining = RateLimiter.get_remaining_attempts(login_email)
-                                if remaining > 0:
-                                    st.error(f"INVALID_KEY. {remaining} attempt(s) remaining.")
-                                else:
-                                    st.error("INVALID_KEY. System locked.")
-                            elif wallets and len(wallets) > 0:
-                                # Record successful login
-                                RateLimiter.record_login_attempt(login_email, success=True)
-
-                                wallet_address = wallets[0]["wallet_address"]
-
-                                st.session_state.wallet_address = wallet_address
-                                st.session_state.user_email = login_email
-                                st.session_state.user_id = user["id"]
-                                st.session_state.show_auth_modal = False
-
-                                # Create persistent session (cookie)
-                                SessionManager.login(user["id"], login_email, wallet_address)
-
-                                # If no password hash stored (legacy), update it now
-                                if not stored_hash:
-                                    new_hash = WalletManager.hash_password(login_password)
-                                    update_user_password_hash(user["id"], new_hash)
-
-                                # Restore encrypted wallet from batched data
-                                if encrypted_wallet:
-                                    st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
-                                    st.session_state.wallet_salt = encrypted_wallet["salt"]
-
-                                    # Decrypt with password
-                                    if WalletManager.unlock_wallet_with_password(login_password):
-                                        st.session_state.wallet_locked = False
-                                        st.success("ACCESS GRANTED")
-                                    else:
-                                        st.session_state.wallet_locked = True
-                                        st.success("AUTHENTICATED")
-                                        st.warning("WALLET_LOCKED: Enter key to decrypt")
-                                else:
-                                    # No cloud backup - need manual import (legacy account)
-                                    st.session_state.wallet_locked = True
-                                    st.success("AUTHENTICATED")
-                                    st.info("IMPORT_REQUIRED: Use recovery phrase")
-
-                                # Check if onboarding was completed
-                                from settings_manager import SettingsManager
-                                user_settings = SettingsManager.get_llm_config(user["id"])
-                                has_api_key = bool(user_settings.get("api_key"))
-
-                                if not has_api_key:
-                                    # Resume onboarding at API setup step
-                                    st.session_state.onboarding_step = 2
-                                    st.session_state.onboarding_complete = False
-                                    st.info("CONNECT AI ENGINE TO CONTINUE")
-
-                                st.rerun()
-                            else:
-                                st.error("NO_WALLET_FOUND")
-
-    # ========== TAB 2: SIGN UP (CREATE) ==========
-    with tab2:
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 1rem;">NEW_USER</div>
-        """, unsafe_allow_html=True)
+        st.markdown("#### Create Account")
+        st.caption("Create a new wallet that syncs across all your devices.")
 
         # Use form to prevent sidebar closing and enable password autofill
         with st.form(key="signup_form", clear_on_submit=False):
-            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                        letter-spacing: 0.1em; margin-bottom: 4px;">NEW_IDENTITY</div>""", unsafe_allow_html=True)
             email = st.text_input(
                 "Email",
                 key="signup_email",
-                placeholder="user@domain.com",
-                autocomplete="username",
-                label_visibility="collapsed"
+                placeholder="your@email.com",
+                autocomplete="username"
             )
-
-            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                        letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">CREATE_KEY</div>""", unsafe_allow_html=True)
             password = st.text_input(
                 "Password (min 8 characters)",
                 type="password",
                 key="signup_pwd",
-                placeholder="MIN 8 CHARACTERS_",
-                autocomplete="new-password",
-                label_visibility="collapsed"
+                autocomplete="new-password"
             )
-
-            st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                        letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">CONFIRM_KEY</div>""", unsafe_allow_html=True)
             password_confirm = st.text_input(
                 "Confirm Password",
                 type="password",
                 key="signup_pwd_confirm",
-                placeholder="VERIFY KEY_",
-                autocomplete="new-password",
-                label_visibility="collapsed"
+                autocomplete="new-password"
             )
 
-            submit_signup = st.form_submit_button("GENERATE ID", type="primary", use_container_width=True)
+            submit_signup = st.form_submit_button("Create Account", type="primary", use_container_width=True)
 
         if submit_signup:
             if not email or not password:
-                st.error("REQUIRED: IDENTITY AND KEY")
+                st.error("Please enter both email and password")
             elif password != password_confirm:
-                st.error("KEY_MISMATCH")
+                st.error("Passwords do not match")
             elif len(password) < 8:
-                st.error("KEY_TOO_SHORT: MIN 8 CHARACTERS")
+                st.error("Password must be at least 8 characters")
             elif "@" not in email:
-                st.error("INVALID_IDENTITY_FORMAT")
+                st.error("Please enter a valid email address")
             else:
-                with st.spinner("GENERATING_WALLET_"):
+                with st.spinner("Creating your account..."):
                     # Check if user exists
                     existing_user = get_user_by_email(email)
                     if existing_user:
-                        st.error("IDENTITY_EXISTS: Use ACCESS tab")
+                        st.error("Account already exists. Please log in.")
                     else:
                         # Create wallet
                         wallet_info = WalletManager.create_new_wallet()
@@ -622,7 +459,7 @@ def wallet_setup_ui():
                                 # Create persistent session (cookie)
                                 SessionManager.login(user["id"], email, wallet_info["address"])
 
-                                st.success("WALLET_GENERATED")
+                                st.success("Account created")
 
                                 # Store mnemonic for seed phrase modal and trigger it
                                 if wallet_info.get("mnemonic"):
@@ -637,49 +474,135 @@ def wallet_setup_ui():
                                     st.session_state.onboarding_complete = False
                                     st.rerun()
                             else:
-                                st.error("GENERATION_FAILED: RETRY")
+                                st.error("Could not create account. Please try again.")
 
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #404040;
-                    letter-spacing: 0.1em; margin-top: 1rem;">SYNC_ENABLED</div>
-        """, unsafe_allow_html=True)
+        st.caption("Your wallet syncs across all your devices automatically.")
 
-    # ========== TAB 3: IMPORT WALLET (RECOVER) ==========
+    # ========== TAB 2: LOG IN ==========
+    with tab2:
+        st.markdown("#### Sign In")
+        st.caption("Access your existing wallet.")
+
+        # Use form to prevent sidebar closing and enable password autofill
+        with st.form(key="login_form", clear_on_submit=False):
+            login_email = st.text_input(
+                "Email",
+                key="login_email",
+                placeholder="your@email.com",
+                autocomplete="username"
+            )
+            login_password = st.text_input(
+                "Password",
+                type="password",
+                key="login_pwd",
+                autocomplete="current-password"
+            )
+
+            submit_login = st.form_submit_button("Log In", type="primary", use_container_width=True)
+
+        if submit_login:
+            if not login_email or not login_password:
+                st.error("Please enter email and password")
+            else:
+                with st.spinner("Signing in..."):
+                    # Check rate limiting before any DB queries
+                    from rate_limiter import RateLimiter
+
+                    allowed, lockout_msg = RateLimiter.check_login_allowed(login_email)
+                    if not allowed:
+                        st.error(lockout_msg)
+                    else:
+                        # OPTIMIZED: Fetch all user data in 2 queries instead of 5
+                        login_data = get_user_login_data(login_email)
+
+                        if not login_data:
+                            st.error("No account found with this email")
+                        else:
+                            user = login_data["user"]
+                            stored_hash = login_data["password_hash"]
+                            wallets = login_data["wallets"]
+                            encrypted_wallet = login_data["encrypted_wallet"]
+
+                            # Verify password
+                            if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
+                                RateLimiter.record_login_attempt(login_email, success=False)
+                                remaining = RateLimiter.get_remaining_attempts(login_email)
+                                if remaining > 0:
+                                    st.error(f"Incorrect password. {remaining} attempt(s) remaining.")
+                                else:
+                                    st.error("Incorrect password. Account temporarily locked.")
+                            elif wallets and len(wallets) > 0:
+                                # Record successful login
+                                RateLimiter.record_login_attempt(login_email, success=True)
+
+                                wallet_address = wallets[0]["wallet_address"]
+
+                                st.session_state.wallet_address = wallet_address
+                                st.session_state.user_email = login_email
+                                st.session_state.user_id = user["id"]
+                                st.session_state.show_auth_modal = False
+
+                                # Create persistent session (cookie)
+                                SessionManager.login(user["id"], login_email, wallet_address)
+
+                                # If no password hash stored (legacy), update it now
+                                if not stored_hash:
+                                    new_hash = WalletManager.hash_password(login_password)
+                                    update_user_password_hash(user["id"], new_hash)
+
+                                # Restore encrypted wallet from batched data
+                                if encrypted_wallet:
+                                    st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
+                                    st.session_state.wallet_salt = encrypted_wallet["salt"]
+
+                                    # Decrypt with password
+                                    if WalletManager.unlock_wallet_with_password(login_password):
+                                        st.session_state.wallet_locked = False
+                                        st.success("Signed in. Wallet restored.")
+                                    else:
+                                        st.session_state.wallet_locked = True
+                                        st.success("Signed in")
+                                        st.warning("Could not decrypt wallet. Enter your password to unlock.")
+                                else:
+                                    # No cloud backup - need manual import (legacy account)
+                                    st.session_state.wallet_locked = True
+                                    st.success("Signed in")
+                                    st.info("Import your wallet using your recovery phrase to access your funds.")
+
+                                # Check if onboarding was completed
+                                from settings_manager import SettingsManager
+                                user_settings = SettingsManager.get_llm_config(user["id"])
+                                has_api_key = bool(user_settings.get("api_key"))
+
+                                if not has_api_key:
+                                    # Resume onboarding at API setup step
+                                    st.session_state.onboarding_step = 2
+                                    st.session_state.onboarding_complete = False
+                                    st.info("Connect an AI provider to start chatting.")
+
+                                st.rerun()
+                            else:
+                                st.error("No wallet found for this account")
+
+    # ========== TAB 3: IMPORT WALLET ==========
     with tab3:
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.15em; margin-bottom: 1rem;">RESTORE_EXISTING</div>
-        """, unsafe_allow_html=True)
+        st.markdown("#### Import Wallet")
+        st.caption("Import an existing wallet using your recovery phrase or private key.")
 
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px;">IDENTITY (OPTIONAL)</div>""", unsafe_allow_html=True)
-        import_email = st.text_input("Email (optional)", key="import_email", placeholder="user@domain.com",
-                                     label_visibility="collapsed")
-
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">RECOVERY_PHRASE</div>""", unsafe_allow_html=True)
+        import_email = st.text_input("Email (optional)", key="import_email", placeholder="your@email.com")
         recovery_input = st.text_area(
             "Recovery phrase or private key",
             key="import_recovery",
-            placeholder="12 WORD PHRASE OR 0x PRIVATE KEY_",
-            height=100,
-            label_visibility="collapsed"
+            placeholder="12-word phrase or 0x...",
+            help="Enter your 12-word seed phrase or private key",
+            height=100
         )
+        import_password = st.text_input("Password", type="password", key="import_pwd", help="This password will encrypt your wallet locally")
 
-        st.markdown("""<div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #525252;
-                    letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 12px;">ENCRYPTION_KEY</div>""", unsafe_allow_html=True)
-        import_password = st.text_input("Password", type="password", key="import_pwd",
-                                        placeholder="LOCAL ENCRYPTION KEY_",
-                                        label_visibility="collapsed")
+        st.caption("Your wallet is encrypted locally before storage.")
 
-        st.markdown("""
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #404040;
-                    letter-spacing: 0.1em; margin-top: 1rem; margin-bottom: 1rem;">ENCRYPTED_LOCALLY</div>
-        """, unsafe_allow_html=True)
-
-        if st.button("RESTORE WALLET", type="primary", use_container_width=True,
-                     disabled=not (recovery_input and import_password)):
-            with st.spinner("RESTORING_"):
+        if st.button("Import Wallet", type="primary", disabled=not (recovery_input and import_password)):
+            with st.spinner("Importing wallet..."):
                 wallet_info = WalletManager.import_wallet(recovery_input.strip())
 
                 if wallet_info:
@@ -704,37 +627,330 @@ def wallet_setup_ui():
                             st.session_state.user_email = import_email
                             st.session_state.user_id = user["id"]
 
-                    st.success("WALLET_RESTORED")
+                    st.success("Wallet imported")
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("INVALID_RECOVERY_DATA")
-
-
-def _load_theme_css():
-    """Load V10 'Brutalist Fintech' theme CSS from static file"""
-    css_path = os.path.join(os.path.dirname(__file__), "static", "theme.css")
-    try:
-        with open(css_path, "r") as f:
-            css = f.read()
-        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
-    except FileNotFoundError:
-        # Fallback: log warning but don't crash
-        from utils.logger import logger
-        logger.warning(f"Theme CSS not found at {css_path}")
+                    st.error("Invalid recovery phrase or private key")
 
 
 def main():
     """Main app entry point"""
     st.set_page_config(
-        page_title="Chat02",
+        page_title="Chat Wallet",
         page_icon="◈",
         layout="wide",
-        initial_sidebar_state="collapsed"
+        initial_sidebar_state="expanded"
     )
 
-    # V10 Design System: "Brutalist Fintech" - Load from static file
-    _load_theme_css()
+    # V8 Design System: "The Drop" - High-End Streetwear Aesthetic
+    st.markdown("""
+    <style>
+    /* --- 1. CORE VARIABLES --- */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+        --bg-app: #050505;
+        --bg-card: #0F0F0F;
+
+        /* "Safety Yellow" / Volt - High visibility, fashion-forward */
+        --accent-volt: #ccff00;
+        --accent-chrome: #e5e5e5;
+
+        --border-glass: rgba(255, 255, 255, 0.08);
+        --border-subtle: #1a1a1a;
+        --border-medium: #333;
+
+        --text-primary: #ffffff;
+        --text-muted: #525252;
+
+        --font-sans: 'Inter', sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    /* --- 2. GLOBAL RESET --- */
+    .stApp {
+        background-color: var(--bg-app);
+        background-image: radial-gradient(circle at 50% 0%, rgba(20, 20, 20, 1) 0%, var(--bg-app) 60%);
+    }
+
+    html, body, [class*="css"] {
+        font-family: var(--font-sans);
+        color: var(--text-primary);
+    }
+
+    h1, h2, h3 {
+        font-family: var(--font-sans);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        text-transform: uppercase;
+        color: white !important;
+    }
+
+    /* --- 3. INPUTS: "THE PILL" --- */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea,
+    .stChatInput > div > div > textarea {
+        background-color: var(--bg-card) !important;
+        border: 1px solid #262626 !important;
+        border-radius: 99px !important;
+        color: white !important;
+        font-family: var(--font-sans) !important;
+        font-weight: 500;
+        padding: 14px 24px !important;
+        font-size: 14px !important;
+        transition: all 0.2s ease;
+    }
+
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus,
+    .stChatInput > div > div > textarea:focus {
+        border-color: var(--accent-volt) !important;
+        background-color: var(--bg-card) !important;
+        box-shadow: none !important;
+    }
+
+    .stTextInput > div > div > input::placeholder,
+    .stChatInput > div > div > textarea::placeholder {
+        color: var(--text-muted) !important;
+    }
+
+    /* --- 4. BUTTONS: "GARMENT TAGS" --- */
+    .stButton > button {
+        background-color: transparent !important;
+        border: 1px solid var(--border-medium) !important;
+        color: white !important;
+        border-radius: 4px !important;
+        font-family: var(--font-mono) !important;
+        font-size: 10px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 12px 0 !important;
+        transition: all 0.2s;
+    }
+
+    .stButton > button:hover {
+        background-color: white !important;
+        color: black !important;
+        border-color: white !important;
+        transform: translateY(-2px);
+    }
+
+    /* Primary Action: VOLT */
+    .stButton > button[kind="primary"],
+    .stButton > button[data-testid="baseButton-primary"],
+    button[kind="primary"] {
+        background-color: var(--accent-volt) !important;
+        color: black !important;
+        border: 1px solid var(--accent-volt) !important;
+        font-weight: 700 !important;
+    }
+
+    .stButton > button[kind="primary"]:hover,
+    .stButton > button[data-testid="baseButton-primary"]:hover {
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.4);
+        transform: scale(1.02);
+    }
+
+    .stButton > button[kind="primary"] p,
+    .stButton > button[kind="primary"] span {
+        color: black !important;
+    }
+
+    .stButton > button:disabled {
+        opacity: 0.3 !important;
+        transform: none !important;
+    }
+
+    /* --- 5. CHAT FEED: "EDITORIAL" --- */
+    [data-testid="stChatMessage"] {
+        background: transparent !important;
+        padding: 2rem 0 !important;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    [data-testid="stChatMessage"] [data-testid="stImage"] {
+        background: var(--accent-volt);
+        padding: 2px;
+        border-radius: 50%;
+        filter: grayscale(100%) contrast(120%);
+    }
+
+    /* --- 6. SIDEBAR: "MATTE SLEEVE" --- */
+    [data-testid="stSidebar"] {
+        background-color: #000000 !important;
+        border-right: 1px solid var(--border-subtle);
+    }
+
+    [data-testid="stSidebar"] > div:first-child {
+        background: transparent !important;
+    }
+
+    /* --- 7. METRIC CARDS --- */
+    [data-testid="stMetric"] {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 4px;
+        padding: 1rem;
+    }
+
+    [data-testid="stMetricValue"] {
+        font-family: var(--font-sans) !important;
+        font-weight: 600;
+        color: var(--text-primary) !important;
+    }
+
+    [data-testid="stMetricLabel"] {
+        font-family: var(--font-mono) !important;
+        font-size: 9px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted) !important;
+    }
+
+    /* --- 8. TABS: "MINIMAL TEXT" --- */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 20px;
+        background: transparent;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        background: transparent;
+        border: none !important;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        padding: 8px 0;
+    }
+
+    .stTabs [data-baseweb="tab"]:hover {
+        color: var(--text-primary);
+    }
+
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        color: var(--accent-volt);
+        font-weight: bold;
+        background: transparent;
+    }
+
+    /* --- 9. CODE BLOCKS --- */
+    code {
+        background: var(--bg-card) !important;
+        color: var(--accent-volt) !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 12px !important;
+        font-family: var(--font-mono) !important;
+        border: 1px solid var(--border-subtle);
+    }
+
+    pre {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 4px !important;
+    }
+
+    /* --- 10. DIVIDERS & MISC --- */
+    hr {
+        border-color: var(--border-subtle) !important;
+        margin: 1.5rem 0 !important;
+    }
+
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+
+    /* --- 11. EXPANDERS --- */
+    .streamlit-expanderHeader {
+        font-family: var(--font-mono) !important;
+        font-size: 11px !important;
+        color: var(--text-muted) !important;
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 4px !important;
+        text-transform: uppercase;
+    }
+
+    details {
+        background: transparent !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 4px !important;
+    }
+
+    details:hover {
+        border-color: var(--border-medium) !important;
+    }
+
+    /* --- 12. ALERTS --- */
+    .stAlert {
+        border-radius: 4px !important;
+        border: 1px solid var(--border-subtle) !important;
+        background: var(--bg-card) !important;
+    }
+
+    /* --- 13. SELECT/NUMBER INPUTS --- */
+    .stSelectbox > div > div,
+    .stNumberInput > div > div > input {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 4px !important;
+        color: var(--text-primary) !important;
+        font-family: var(--font-mono) !important;
+    }
+
+    .stSelectbox > div > div:hover,
+    .stNumberInput > div > div > input:hover {
+        border-color: var(--border-medium) !important;
+    }
+
+    /* --- 14. CAPTIONS --- */
+    .stCaption, [data-testid="stCaptionContainer"] p {
+        color: var(--text-muted) !important;
+        font-size: 0.7rem !important;
+        font-family: var(--font-mono) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* --- 15. LINK BUTTONS --- */
+    .stLinkButton > a {
+        border-radius: 4px !important;
+        font-weight: 500 !important;
+        border: 1px solid var(--border-medium) !important;
+        background: transparent !important;
+        color: white !important;
+        font-size: 10px !important;
+        font-family: var(--font-mono) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .stLinkButton > a:hover {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    /* --- 16. SCROLLBAR --- */
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-subtle);
+        border-radius: 2px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--border-medium);
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     init_state()
 
