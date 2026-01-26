@@ -30,7 +30,7 @@ def render_header():
         <div style="margin-top: 30px;">
             <h1 style="font-size: 28px; margin: 0; font-weight: 300; letter-spacing: -0.04em;">CHAT02</h1>
             <p style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 300; color: #666; margin: 8px 0 0 0; letter-spacing: -0.01em;">
-                Fuel your AI chats with real money. Go from 0 to something with USDC.
+                Fuel your AI chat ideas with real money. Go from 0 to action with USDC.
             </p>
         </div>
         """, unsafe_allow_html=True)
