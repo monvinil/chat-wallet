@@ -152,7 +152,7 @@ def render_transaction_history():
 
             client = get_supabase_client(use_service_key=True)
             if not client:
-                st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444; text-align: center; padding: 20px 0;'>Unable to load</div>", unsafe_allow_html=True)
+                st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444; text-align: center; padding: 20px 0; width: 100%;'>Unable to load</div>", unsafe_allow_html=True)
                 return
 
             transactions = get_user_transactions(client, user_id, limit=5)
@@ -160,7 +160,7 @@ def render_transaction_history():
             if not transactions:
                 st.markdown("""
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444;
-                            text-align: center; padding: 20px 0;">
+                            text-align: center; padding: 20px 0; width: 100%;">
                     No transactions yet
                 </div>
                 """, unsafe_allow_html=True)
@@ -198,7 +198,7 @@ def render_transaction_history():
                         """, unsafe_allow_html=True)
 
         except Exception:
-            st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444; text-align: center; padding: 20px 0;'>Unable to load</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444; text-align: center; padding: 20px 0; width: 100%;'>Unable to load</div>", unsafe_allow_html=True)
 
 
 def sidebar():
