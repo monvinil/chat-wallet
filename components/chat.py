@@ -43,136 +43,119 @@ def render_header():
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
 
-# --- THE PULSE DECK ---
+# --- THE PULSE DECK (V12 Brand Edition) ---
 def render_pulse_deck():
     """
-    Hybrid action + reward strip. V12 Liquid Silver aesthetic.
-    Priority: Urgent Task → Scheduled → Perks
+    Brand-aware action + reward strip. Premium wallet card aesthetic.
+    Features: Brand gradients, icons, color-matched progress bars.
     """
 
-    # === GLASS WHITE / SILVER PALETTE ===
-    HOLO_WHITE = "#ffffff"
-    SILVER_GLOW = "rgba(255,255,255,0.5)"
-    GLASS_BG = "rgba(255,255,255,0.05)"
-    MUTED = "#666"
+    # === BRAND DEFINITIONS ===
+    BRANDS = {
+        "spotify": {"color": "#1DB954", "icon": "♫"},
+        "metal": {"color": "#e5e5e5", "icon": "✦"},
+        "pro": {"color": "#a855f7", "icon": "◆"},
+        "netflix": {"color": "#E50914", "icon": "▶"},
+        "yield": {"color": "#3b82f6", "icon": "📈"},
+        "system": {"color": "#3b82f6", "icon": "⚡"},
+        "alert": {"color": "#ef4444", "icon": "⚠"},
+    }
 
     # === DATA SOURCES (mock - replace with real queries) ===
     # TODO: Pull from pending_approvals table
-    active_tasks = []  # e.g., [{"type": "urgent", "label": "APPROVAL", "value": "Send $500", "action": "Sign"}]
-
-    # TODO: Pull from scheduled_payments table
-    scheduled = []  # e.g., [{"label": "TOMORROW", "value": "Netflix $15.99", "action": "View"}]
+    active_tasks = []  # e.g., [{"type": "urgent", "label": "APPROVAL", "value": "Send $500", "action": "Sign", "brand": "alert"}]
 
     # TODO: Pull from user spending + perks config
     perks = [
-        {"brand": "Spotify", "progress": 75, "target": 100, "reward": "1 Mo Free"},
-        {"brand": "Pro", "progress": 2, "target": 5, "reward": "Unlock"},
+        {"brand": "spotify", "progress": 75, "target": 100, "reward": "1 Mo Free"},
+        {"brand": "metal", "progress": 2, "target": 5, "reward": "Unlock"},
     ]
 
     # === SLOT BUILDER ===
     slots = []
 
-    # Slot 1: Priority (Urgent > Scheduled > Stat fallback)
+    # Slot 1: Priority Action or Yield Stat
     if active_tasks:
         t = active_tasks[0]
+        brand_key = t.get("brand", "system")
+        brand = BRANDS.get(brand_key, BRANDS["system"])
         slots.append({
             "mode": "task",
-            "urgent": t["type"] == "urgent",
             "title": t["label"],
             "main": t["value"],
-            "cta": t["action"]
-        })
-    elif scheduled:
-        s = scheduled[0]
-        slots.append({
-            "mode": "scheduled",
-            "title": s["label"],
-            "main": s["value"],
-            "cta": s["action"]
+            "sub": t["action"],
+            "color": brand["color"],
+            "icon": brand["icon"],
         })
     else:
-        # Fallback: spending stat
+        # Fallback: Yield stat
+        brand = BRANDS["yield"]
         slots.append({
             "mode": "stat",
             "title": "THIS MONTH",
             "main": "$0.00",
-            "sub": "spent"
+            "sub": "spent",
+            "color": brand["color"],
+            "icon": brand["icon"],
         })
 
     # Slots 2-3: Perks
     for p in perks[:2]:
+        brand_key = p["brand"].lower()
+        brand = BRANDS.get(brand_key, {"color": "#888", "icon": "●"})
         pct = int((p["progress"] / p["target"]) * 100)
         slots.append({
             "mode": "perk",
             "title": p["brand"].upper(),
             "main": f"{p['progress']}/{p['target']}",
-            "reward": p["reward"],
+            "sub": p["reward"],
             "pct": pct,
-            "complete": pct >= 100
+            "color": brand["color"],
+            "icon": brand["icon"],
         })
 
     # === RENDER ===
     cols = st.columns(len(slots))
-
     for i, slot in enumerate(slots):
         with cols[i]:
-            _render_pulse_card(slot, HOLO_WHITE, SILVER_GLOW, GLASS_BG, MUTED)
+            _render_brand_card(slot)
 
 
-def _render_pulse_card(slot: dict, accent: str, glow: str, glass_bg: str, muted: str):
-    """Render individual pulse card based on mode."""
+def _render_brand_card(slot: dict):
+    """Render brand-aware pulse card with gradient and icon."""
 
     mode = slot["mode"]
-    is_urgent = slot.get("urgent", False)
-    is_complete = slot.get("complete", False)
+    color = slot["color"]
+    icon = slot["icon"]
+    pct = slot.get("pct", 0)
 
-    # Dynamic styling - Glass White for active states
-    if mode == "task" and is_urgent:
-        border = "1px solid rgba(255,255,255,0.2)"
-        bg = glass_bg
-        title_color = accent
-    elif is_complete:
-        border = "1px solid rgba(255,255,255,0.3)"
-        bg = "rgba(255,255,255,0.08)"
-        title_color = accent
-    else:
-        border = "1px solid rgba(255,255,255,0.06)"
-        bg = "rgba(255,255,255,0.02)"
-        title_color = muted
+    # Gradient background from brand color
+    gradient = f"linear-gradient(135deg, {color}26 0%, {color}08 100%)"
+    border = f"1px solid {color}40"
 
-    # Build components
+    # Icon HTML
+    icon_html = f'<span style="font-size:12px;color:{color};">{icon}</span>'
+
+    # Build bottom section based on mode
     if mode == "perk":
-        badge_bg = "rgba(255,255,255,0.9)" if is_complete else "rgba(255,255,255,0.1)"
-        badge_color = "#000" if is_complete else "#888"
-        badge_text = "CLAIM" if is_complete else slot['reward']
-        reward_badge = f'<span style="font-family:Inter;font-size:9px;background:{badge_bg};color:{badge_color};padding:2px 6px;border-radius:4px;font-weight:500;">{badge_text}</span>'
-
-        pct = slot['pct']
-        glow_style = f"box-shadow:0 0 10px {glow},0 0 20px rgba(255,255,255,0.2);" if pct > 50 else ""
-        bottom_section = f'<div style="width:100%;height:2px;background:rgba(255,255,255,0.08);margin-top:10px;border-radius:2px;overflow:hidden;"><div style="width:{pct}%;height:100%;background:rgba(255,255,255,0.6);border-radius:2px;{glow_style}"></div></div>'
-
+        # Progress bar with glow
+        glow = f"box-shadow:0 0 6px {color};" if pct > 30 else ""
+        bottom = f'<div style="margin-top:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:8px;color:#888;font-family:Inter;">{slot["sub"]}</span><span style="font-size:8px;color:{color};font-family:Inter;">{pct}%</span></div><div style="width:100%;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;"><div style="width:{pct}%;height:100%;background:{color};border-radius:2px;{glow}"></div></div></div>'
     elif mode == "task":
-        reward_badge = ""
-        bottom_section = f'<div style="font-family:JetBrains Mono;font-size:10px;color:{accent};text-align:right;margin-top:6px;opacity:0.8;">{slot["cta"]} →</div>'
+        # Action button style
+        bottom = f'<div style="font-family:JetBrains Mono;font-size:9px;color:{color};text-align:right;margin-top:auto;border:1px solid {color}40;border-radius:4px;padding:2px 6px;display:inline-block;align-self:flex-end;">{slot["sub"]}</div>'
+    else:
+        # Stat subtitle
+        bottom = f'<div style="font-family:JetBrains Mono;font-size:10px;color:#666;margin-top:6px;">{slot["sub"]}</div>'
 
-    elif mode == "scheduled":
-        reward_badge = ""
-        bottom_section = f'<div style="font-family:JetBrains Mono;font-size:10px;color:{muted};text-align:right;margin-top:6px;">{slot["cta"]} →</div>'
-
-    else:  # stat
-        reward_badge = ""
-        sub = slot.get('sub', '')
-        bottom_section = f'<div style="font-family:JetBrains Mono;font-size:10px;color:{muted};margin-top:6px;">{sub}</div>'
-
-    # Single-line HTML for reliable parsing
-    card_html = f'<div style="border:{border};background:{bg};border-radius:12px;padding:14px;height:88px;display:flex;flex-direction:column;justify-content:space-between;"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><span style="font-family:JetBrains Mono;font-size:9px;color:{title_color};letter-spacing:0.05em;">{slot["title"]}</span>{reward_badge}</div><div style="font-family:Inter;font-size:15px;font-weight:500;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{slot["main"]}</div>{bottom_section}</div>'
+    # Single-line HTML for reliable Streamlit parsing
+    card_html = f'<div style="border:{border};background:{gradient};border-radius:12px;padding:14px;height:90px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:{color};letter-spacing:0.05em;font-weight:600;">{slot["title"]}</span>{icon_html}</div><div style="font-family:Inter;font-size:13px;font-weight:500;color:white;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{slot["main"]}</div>{bottom}</div>'
 
     st.markdown(card_html, unsafe_allow_html=True)
 
 
-# Legacy alias for compatibility
+# Legacy alias
 def render_action_deck():
-    """Deprecated: Use render_pulse_deck instead."""
     render_pulse_deck()
 
 
