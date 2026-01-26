@@ -234,7 +234,7 @@ def chat_interface(create_agent_func):
         if remaining <= 10:
             st.warning(f"{remaining} free messages left. Add your API key in Settings.")
         else:
-            st.caption(f"{remaining} free messages remaining")
+            st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>{remaining} free messages remaining</div>", unsafe_allow_html=True)
 
     # 5. ACTION STRIP
     render_action_deck()

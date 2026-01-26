@@ -87,7 +87,7 @@ def render_transaction_history():
 
             client = get_supabase_client(use_service_key=True)
             if not client:
-                st.caption("Unable to load")
+                st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444;'>Unable to load</div>", unsafe_allow_html=True)
                 return
 
             transactions = get_user_transactions(client, user_id, limit=5)
@@ -132,7 +132,7 @@ def render_transaction_history():
                         """, unsafe_allow_html=True)
 
         except Exception:
-            st.caption("Unable to load")
+            st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #444;'>Unable to load</div>", unsafe_allow_html=True)
 
 
 def sidebar():
@@ -150,7 +150,7 @@ def sidebar():
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("Sign In", use_container_width=True, type="primary"):
+            if st.button("SIGN IN", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
                 st.rerun()
 
@@ -187,11 +187,11 @@ def sidebar():
             st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
             # Primary actions
-            if st.button("Deposit", use_container_width=True, type="primary"):
+            if st.button("DEPOSIT", use_container_width=True, type="primary"):
                 st.session_state.show_deposit_modal = True
                 st.rerun()
 
-            if st.button("Send", use_container_width=True):
+            if st.button("SEND", use_container_width=True):
                 st.session_state.show_send_modal = True
                 st.rerun()
 
@@ -203,11 +203,11 @@ def sidebar():
             st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
 
             # Secondary actions
-            if st.button("System", use_container_width=True):
+            if st.button("SYSTEM", use_container_width=True):
                 st.session_state.show_settings = True
                 st.rerun()
 
-            if st.button("Lock", use_container_width=True):
+            if st.button("LOCK", use_container_width=True):
                 WalletManager.lock_wallet()
                 st.rerun()
 
@@ -228,7 +228,7 @@ def sidebar():
                 unlock_password = st.text_input("Password", type="password", key="unlock_pwd",
                                                  label_visibility="collapsed", placeholder="Enter password")
 
-                if st.button("Unlock", use_container_width=True, type="primary"):
+                if st.button("UNLOCK", use_container_width=True, type="primary"):
                     if unlock_password:
                         if WalletManager.unlock_wallet_with_password(unlock_password):
                             st.rerun()
@@ -237,11 +237,11 @@ def sidebar():
 
                 st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
-                if st.button("System", use_container_width=True):
+                if st.button("SYSTEM", use_container_width=True):
                     st.session_state.show_settings = True
                     st.rerun()
 
-                if st.button("Sign Out", use_container_width=True):
+                if st.button("SIGN OUT", use_container_width=True):
                     SessionManager.logout()
                     st.rerun()
 
@@ -262,7 +262,7 @@ def sidebar():
 
                 st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
-                if st.button("Import Wallet", use_container_width=True, type="primary"):
+                if st.button("IMPORT", use_container_width=True, type="primary"):
                     st.session_state.show_auth_modal = True
                     st.rerun()
 

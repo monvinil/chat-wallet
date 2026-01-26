@@ -278,7 +278,7 @@ def show_api_key_banner():
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        if st.button("Connect AI provider", key="open_api_setup", type="primary", use_container_width=True):
+        if st.button("CONNECT", key="open_api_setup", type="primary", use_container_width=True):
             show_api_key_setup_modal()
 
 

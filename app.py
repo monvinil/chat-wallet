@@ -352,7 +352,7 @@ def init_state():
 def wallet_setup_ui():
     """Show wallet setup screen with email/password account"""
     st.title("Chat Wallet")
-    st.caption("Self-custodial wallet with AI-powered transactions")
+    st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555; margin-top: -10px;'>Self-custodial wallet with AI-powered transactions</div>", unsafe_allow_html=True)
 
     st.info("Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.")
 
@@ -361,7 +361,7 @@ def wallet_setup_ui():
     # ========== TAB 1: SIGN UP ==========
     with tab1:
         st.markdown("#### Create Account")
-        st.caption("Create a new wallet that syncs across all your devices.")
+        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Create a new wallet that syncs across all your devices.</div>", unsafe_allow_html=True)
 
         # Use form to prevent sidebar closing and enable password autofill
         with st.form(key="signup_form", clear_on_submit=False):
@@ -476,12 +476,12 @@ def wallet_setup_ui():
                             else:
                                 st.error("Could not create account. Please try again.")
 
-        st.caption("Your wallet syncs across all your devices automatically.")
+        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555; margin-top: 16px;'>Your wallet syncs across all your devices automatically.</div>", unsafe_allow_html=True)
 
     # ========== TAB 2: LOG IN ==========
     with tab2:
         st.markdown("#### Sign In")
-        st.caption("Access your existing wallet.")
+        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Access your existing wallet.</div>", unsafe_allow_html=True)
 
         # Use form to prevent sidebar closing and enable password autofill
         with st.form(key="login_form", clear_on_submit=False):
@@ -587,7 +587,7 @@ def wallet_setup_ui():
     # ========== TAB 3: IMPORT WALLET ==========
     with tab3:
         st.markdown("#### Import Wallet")
-        st.caption("Import an existing wallet using your recovery phrase or private key.")
+        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Import an existing wallet using your recovery phrase or private key.</div>", unsafe_allow_html=True)
 
         import_email = st.text_input("Email (optional)", key="import_email", placeholder="your@email.com")
         recovery_input = st.text_area(
@@ -599,7 +599,7 @@ def wallet_setup_ui():
         )
         import_password = st.text_input("Password", type="password", key="import_pwd", help="This password will encrypt your wallet locally")
 
-        st.caption("Your wallet is encrypted locally before storage.")
+        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555; margin-top: 8px;'>Your wallet is encrypted locally before storage.</div>", unsafe_allow_html=True)
 
         if st.button("Import Wallet", type="primary", disabled=not (recovery_input and import_password)):
             with st.spinner("Importing wallet..."):
@@ -952,6 +952,56 @@ def main():
     /* 17. REMOVE DEFAULT PADDING */
     .block-container {
         padding-top: 2rem;
+    }
+
+    /* 18. CHECKBOX & RADIO - VOID */
+    .stCheckbox label span,
+    .stRadio label span {
+        color: #888 !important;
+        font-size: 13px !important;
+        font-family: var(--font-sans) !important;
+    }
+
+    .stCheckbox [data-testid="stCheckbox"],
+    .stRadio [data-testid="stRadio"] {
+        background: transparent !important;
+    }
+
+    /* 19. TOAST - MINIMAL */
+    [data-testid="stToast"] {
+        background: rgba(255,255,255,0.05) !important;
+        border: 1px solid var(--border-hairline) !important;
+        border-radius: 0 !important;
+        color: #888 !important;
+        font-family: var(--font-mono) !important;
+        font-size: 11px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* 20. SPINNER - SUBTLE */
+    .stSpinner > div {
+        border-color: rgba(255,255,255,0.1) rgba(255,255,255,0.1) rgba(255,255,255,0.1) white !important;
+    }
+
+    /* 21. NUMBER INPUT LABEL HIDE */
+    .stNumberInput > label {
+        font-family: var(--font-mono) !important;
+        font-size: 10px !important;
+        color: #555 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* 22. ALERT ICON MINIMAL */
+    .stAlert [data-testid="stIcon"] {
+        display: none;
+    }
+
+    .stAlert [data-testid="stMarkdownContainer"] p {
+        color: #888 !important;
+        font-family: var(--font-sans) !important;
+        font-size: 13px !important;
     }
     </style>
     """, unsafe_allow_html=True)

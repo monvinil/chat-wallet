@@ -242,9 +242,9 @@ Your wallet will be saved and accessible from any device.
                                 if st.session_state.get("guest_mnemonic"):
                                     st.warning("**Save your recovery phrase**")
                                     st.code(st.session_state.guest_mnemonic, language=None)
-                                    st.caption("Write this down. It's the only way to recover your wallet if you forget your password.")
+                                    st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Write this down. It's the only way to recover your wallet if you forget your password.</div>", unsafe_allow_html=True)
 
-                                st.caption("Close this dialog to continue.")
+                                st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Close this dialog to continue.</div>", unsafe_allow_html=True)
                                 st.session_state.show_save_account_modal = False
                             else:
                                 st.error("Could not find wallet data. Please try again.")

@@ -124,7 +124,7 @@ class FreeTier:
             # Show subtle indicator
             pct = remaining / total
             if pct > 0.5:
-                st.caption(f"{remaining} free messages remaining")
+                st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>{remaining} free messages remaining</div>", unsafe_allow_html=True)
             elif pct > 0.2:
                 st.warning(f"{remaining} free messages remaining")
             else:

@@ -133,7 +133,7 @@ def settings_page():
         has_existing_key = bool(existing_settings and existing_settings.get("llm_api_key_encrypted"))
         if has_existing_key:
             st.success("Key saved securely")
-            st.caption("Paste a new key below to change it")
+            st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Paste a new key below to change it</div>", unsafe_allow_html=True)
 
         api_key = st.text_input(
             "API Key",
@@ -155,13 +155,13 @@ def settings_page():
 *New users typically get free credits to try it out!*
 """)
         else:
-            st.caption(f"Need a new key? Get it at [{'console.anthropic.com' if provider == 'anthropic' else 'platform.openai.com'}]({'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'})")
+            st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Need a new key? <a href='{'https://console.anthropic.com' if provider == 'anthropic' else 'https://platform.openai.com'}' target='_blank' style='color: #888;'>{'console.anthropic.com' if provider == 'anthropic' else 'platform.openai.com'}</a></div>", unsafe_allow_html=True)
 
         if not has_existing_key and not api_key:
-            st.info("💡 Your key is encrypted and never shared. You only pay for the messages you send (usually pennies).", icon="🔒")
+            st.info("Your key is encrypted and never shared. You only pay for the messages you send.")
 
         # Save button
-        if st.button("Save", type="primary", key="save_ai"):
+        if st.button("SAVE", type="primary", key="save_ai"):
             success = SettingsManager.save_user_settings(
                 user_id=user_id,
                 llm_provider=provider,
@@ -202,7 +202,7 @@ def settings_page():
         st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
         # Save display settings
-        if st.button("Save", type="primary", key="save_display"):
+        if st.button("SAVE", type="primary", key="save_display"):
             success = SettingsManager.save_user_settings(
                 user_id=user_id,
                 theme=theme
@@ -235,10 +235,10 @@ def settings_page():
                     status = "Connected" if conn['is_active'] else "Disconnected"
                     account = conn.get('provider_user_id', '')
                     st.markdown(f"**{conn['provider'].title()}** {f'({account})' if account else ''}")
-                    st.caption(status)
+                    st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>{status}</div>", unsafe_allow_html=True)
                 with col2:
                     if conn['is_active']:
-                        if st.button("Disconnect", key=f"disconnect_{conn['provider']}", use_container_width=True):
+                        if st.button("DISCONNECT", key=f"disconnect_{conn['provider']}", use_container_width=True):
                             if SettingsManager.disconnect_account(user_id, conn['provider']):
                                 st.rerun()
             st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
@@ -308,7 +308,7 @@ def settings_page():
 
         st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
 
-        if st.button("Save", type="primary", key="save_limits"):
+        if st.button("SAVE", type="primary", key="save_limits"):
             success = SettingsManager.save_user_settings(
                 user_id=user_id,
                 daily_spend_limit=daily_limit,
@@ -336,7 +336,7 @@ def settings_page():
         # Export wallet section
         st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 12px;'>Export Wallet</div>", unsafe_allow_html=True)
 
-        if st.button("Show Private Key", type="secondary", key="show_pk"):
+        if st.button("EXPORT KEY", type="secondary", key="show_pk"):
             st.session_state.show_private_key = True
 
         if st.session_state.get("show_private_key"):
@@ -353,12 +353,12 @@ def settings_page():
                 st.markdown("<div style='font-size: 12px; color: #888; margin-bottom: 8px;'>Private Key</div>", unsafe_allow_html=True)
                 st.code(wallet_data["private_key"], language=None)
 
-                if st.button("Hide", key="hide_pk"):
+                if st.button("HIDE", key="hide_pk"):
                     st.session_state.show_private_key = False
                     st.rerun()
             else:
                 st.error("Cannot retrieve private key")
-                if st.button("Hide", key="hide_pk_err"):
+                if st.button("HIDE", key="hide_pk_err"):
                     st.session_state.show_private_key = False
                     st.rerun()
 
@@ -380,7 +380,7 @@ def settings_page():
         st.markdown("<div style='font-size: 13px; color: #666; margin-bottom: 12px;'>Danger Zone</div>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Clear Settings", type="secondary", use_container_width=True):
+            if st.button("CLEAR", type="secondary", use_container_width=True):
                 # Actually clear the settings
                 user_id = st.session_state.get("user_id")
                 if user_id:
@@ -393,7 +393,7 @@ def settings_page():
                 else:
                     st.warning("No active session")
         with col2:
-            if st.button("Disconnect Accounts", type="secondary", use_container_width=True):
+            if st.button("DISCONNECT ALL", type="secondary", use_container_width=True):
                 # Disconnect OAuth accounts
                 user_id = st.session_state.get("user_id")
                 if user_id:

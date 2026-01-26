@@ -152,7 +152,7 @@ def seed_phrase_modal():
 
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            if st.button("I have saved this", type="primary", use_container_width=True):
+            if st.button("SAVED", type="primary", use_container_width=True):
                 st.session_state._seed_verify_step = "verify"
                 st.rerun()
 
@@ -185,7 +185,7 @@ def seed_phrase_modal():
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            if st.button("Back", use_container_width=True):
+            if st.button("BACK", use_container_width=True):
                 st.session_state._seed_verify_step = "show"
                 for i in range(3):
                     if f"seed_verify_{i}" in st.session_state:
@@ -193,7 +193,7 @@ def seed_phrase_modal():
                 st.rerun()
 
         with col2:
-            if st.button("Confirm", type="primary", use_container_width=True, disabled=not all_filled):
+            if st.button("CONFIRM", type="primary", use_container_width=True, disabled=not all_filled):
                 if all_correct:
                     # Clean up state
                     st.session_state._seed_verify_indices = None
@@ -276,9 +276,9 @@ def deposit_modal():
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("Copy", use_container_width=True):
+        if st.button("COPY", use_container_width=True):
             st.markdown(f'<script>navigator.clipboard.writeText("{address}");</script>', unsafe_allow_html=True)
-            st.toast("Copied")
+            st.toast("COPIED")
 
     with col2:
         if network["type"] == "solana":
@@ -286,7 +286,7 @@ def deposit_modal():
             explorer_url = f"{network['explorer']}/address/{address}{cluster_param}"
         else:
             explorer_url = ChainUtils.get_explorer_url(selected_chain, address)
-        st.link_button("Explorer", explorer_url, use_container_width=True)
+        st.link_button("EXPLORER", explorer_url, use_container_width=True)
 
     # Faucet instructions
     if "sepolia" in selected_chain or "amoy" in selected_chain:
@@ -362,12 +362,12 @@ def _render_send_confirmation():
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("Cancel", use_container_width=True):
+        if st.button("CANCEL", use_container_width=True):
             st.session_state._send_confirm_step = False
             st.rerun()
 
     with col2:
-        if st.button("Execute", type="primary", use_container_width=True, disabled=not confirmed):
+        if st.button("EXECUTE", type="primary", use_container_width=True, disabled=not confirmed):
             with st.spinner("Processing..."):
                 try:
                     # Get stored transaction details
@@ -424,7 +424,7 @@ def _render_send_confirmation():
     <div style="font-family: 'Inter'; font-size: 24px; font-weight: 300; color: white;">${result['amount']:.2f}</div>
 </div>
 """, unsafe_allow_html=True)
-                        st.link_button("View on explorer", result["explorer_url"], use_container_width=True)
+                        st.link_button("VIEW ON EXPLORER", result["explorer_url"], use_container_width=True)
 
                         # Clean up and close modal
                         st.session_state._send_confirm_step = False
@@ -551,12 +551,12 @@ def send_modal():
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        if st.button("Cancel", use_container_width=True):
+        if st.button("CANCEL", use_container_width=True):
             st.session_state.show_send_modal = False
             st.rerun()
 
     with col2:
-        if st.button("Review", type="primary", use_container_width=True, disabled=not can_send):
+        if st.button("REVIEW", type="primary", use_container_width=True, disabled=not can_send):
             # Store transaction details for confirmation step
             st.session_state._send_confirm_step = True
             st.session_state._send_details = {

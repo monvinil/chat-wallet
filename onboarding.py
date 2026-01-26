@@ -90,7 +90,7 @@ def show_step_1_welcome():
 
         st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
 
-        if st.button("Continue", type="primary", use_container_width=True):
+        if st.button("CONTINUE", type="primary", use_container_width=True):
             st.session_state.onboarding_step = 2
 
 
@@ -129,11 +129,11 @@ def show_step_2_connect_ai(user_id: str):
 
             col_a, col_b = st.columns([1, 1])
             with col_a:
-                if st.button("Change", use_container_width=True):
+                if st.button("CHANGE", use_container_width=True):
                     st.session_state._api_setup_celebration_shown = False
                     show_api_key_setup_modal()
             with col_b:
-                if st.button("Start", type="primary", use_container_width=True):
+                if st.button("START", type="primary", use_container_width=True):
                     st.session_state.onboarding_complete = True
 
             return True
@@ -150,7 +150,7 @@ def show_step_2_connect_ai(user_id: str):
 
         st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
-        if st.button("Connect Provider", type="primary", use_container_width=True, key="connect_ai_main"):
+        if st.button("CONNECT", type="primary", use_container_width=True, key="connect_ai_main"):
             show_api_key_setup_modal()
 
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
