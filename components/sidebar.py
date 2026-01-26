@@ -35,6 +35,20 @@ def _on_logout():
     SessionManager.logout()
 
 
+def _on_unlock_wallet():
+    """Handle wallet unlock - read password from session state before rerun"""
+    unlock_pwd = st.session_state.get("unlock_pwd", "")
+    if unlock_pwd:
+        if WalletManager.unlock_wallet_with_password(unlock_pwd):
+            st.session_state.wallet_locked = False
+            # Clear the password field
+            st.session_state.unlock_pwd = ""
+        else:
+            st.session_state._unlock_error = True
+    else:
+        st.session_state._unlock_error = True
+
+
 def _get_solana_address_from_session() -> str:
     """Get Solana address from session state if available"""
     return st.session_state.get("solana_address", "")
@@ -290,15 +304,16 @@ def sidebar():
                 </div>
                 """, unsafe_allow_html=True)
 
-                unlock_password = st.text_input("Password", type="password", key="unlock_pwd",
-                                                 label_visibility="collapsed", placeholder="ENTER KEY_")
+                st.text_input("Password", type="password", key="unlock_pwd",
+                              label_visibility="collapsed", placeholder="ENTER KEY_")
 
-                if st.button("UNLOCK", use_container_width=True, type="primary"):
-                    if unlock_password:
-                        if WalletManager.unlock_wallet_with_password(unlock_password):
-                            st.rerun()
-                        else:
-                            st.error("INVALID_KEY")
+                # Show error if previous unlock attempt failed
+                if st.session_state.get("_unlock_error"):
+                    st.error("INVALID_KEY")
+                    st.session_state._unlock_error = False
+
+                st.button("UNLOCK", use_container_width=True, type="primary",
+                          on_click=_on_unlock_wallet)
 
                 st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
