@@ -59,7 +59,7 @@ NETWORKS = {
         "chain_id": 11155111,
         "type": "evm",
         "testnet": True,
-        "rpc_url": "https://rpc.sepolia.org",
+        "rpc_url": "https://ethereum-sepolia-rpc.publicnode.com",
         "explorer": "https://sepolia.etherscan.io",
         "usdc_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
     },
