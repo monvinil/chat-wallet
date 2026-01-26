@@ -12,8 +12,8 @@ from datetime import datetime
 
 # Free tier configuration
 FREE_TIER_MESSAGES = 50  # Messages per user
-FREE_TIER_PROVIDER = "anthropic"
-FREE_TIER_MODEL = "claude-sonnet-4-20250514"
+FREE_TIER_PROVIDER = "google"
+FREE_TIER_MODEL = "gemini-2.0-flash"
 
 
 class FreeTier:
@@ -21,8 +21,8 @@ class FreeTier:
 
     @staticmethod
     def get_app_api_key() -> Optional[str]:
-        """Get the app's API key for free tier users"""
-        return os.getenv("ANTHROPIC_API_KEY")
+        """Get the app's API key for free tier users (Google Gemini)"""
+        return os.getenv("GOOGLE_API_KEY")
 
     @staticmethod
     def is_available() -> bool:
