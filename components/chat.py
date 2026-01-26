@@ -42,33 +42,177 @@ def render_header():
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
 
-# --- ACTIONS: FLOATING DOCK ---
+# --- THE PULSE DECK ---
+def render_pulse_deck():
+    """
+    Hybrid action + reward strip. V12 Liquid Silver aesthetic.
+    Priority: Urgent Task → Scheduled → Perks
+    """
+
+    # === GLASS WHITE / SILVER PALETTE ===
+    HOLO_WHITE = "#ffffff"
+    SILVER_GLOW = "rgba(255,255,255,0.5)"
+    GLASS_BG = "rgba(255,255,255,0.05)"
+    MUTED = "#666"
+
+    # === DATA SOURCES (mock - replace with real queries) ===
+    # TODO: Pull from pending_approvals table
+    active_tasks = []  # e.g., [{"type": "urgent", "label": "APPROVAL", "value": "Send $500", "action": "Sign"}]
+
+    # TODO: Pull from scheduled_payments table
+    scheduled = []  # e.g., [{"label": "TOMORROW", "value": "Netflix $15.99", "action": "View"}]
+
+    # TODO: Pull from user spending + perks config
+    perks = [
+        {"brand": "Spotify", "progress": 75, "target": 100, "reward": "1 Mo Free"},
+        {"brand": "Pro", "progress": 2, "target": 5, "reward": "Unlock"},
+    ]
+
+    # === SLOT BUILDER ===
+    slots = []
+
+    # Slot 1: Priority (Urgent > Scheduled > Stat fallback)
+    if active_tasks:
+        t = active_tasks[0]
+        slots.append({
+            "mode": "task",
+            "urgent": t["type"] == "urgent",
+            "title": t["label"],
+            "main": t["value"],
+            "cta": t["action"]
+        })
+    elif scheduled:
+        s = scheduled[0]
+        slots.append({
+            "mode": "scheduled",
+            "title": s["label"],
+            "main": s["value"],
+            "cta": s["action"]
+        })
+    else:
+        # Fallback: spending stat
+        slots.append({
+            "mode": "stat",
+            "title": "THIS MONTH",
+            "main": "$0.00",
+            "sub": "spent"
+        })
+
+    # Slots 2-3: Perks
+    for p in perks[:2]:
+        pct = int((p["progress"] / p["target"]) * 100)
+        slots.append({
+            "mode": "perk",
+            "title": p["brand"].upper(),
+            "main": f"{p['progress']}/{p['target']}",
+            "reward": p["reward"],
+            "pct": pct,
+            "complete": pct >= 100
+        })
+
+    # === RENDER ===
+    cols = st.columns(len(slots))
+
+    for i, slot in enumerate(slots):
+        with cols[i]:
+            _render_pulse_card(slot, HOLO_WHITE, SILVER_GLOW, GLASS_BG, MUTED)
+
+
+def _render_pulse_card(slot: dict, accent: str, glow: str, glass_bg: str, muted: str):
+    """Render individual pulse card based on mode."""
+
+    mode = slot["mode"]
+    is_urgent = slot.get("urgent", False)
+    is_complete = slot.get("complete", False)
+
+    # Dynamic styling - Glass White for active states
+    if mode == "task" and is_urgent:
+        border = f"1px solid rgba(255,255,255,0.2)"
+        bg = glass_bg
+        title_color = accent
+    elif is_complete:
+        border = f"1px solid rgba(255,255,255,0.3)"
+        bg = "rgba(255,255,255,0.08)"
+        title_color = accent
+    else:
+        border = "1px solid rgba(255,255,255,0.06)"
+        bg = "rgba(255,255,255,0.02)"
+        title_color = muted
+
+    # Build card HTML
+    if mode == "perk":
+        # Perk card with progress bar
+        reward_badge = f'''
+            <span style="font-family: Inter; font-size: 9px; background: {'rgba(255,255,255,0.9)' if is_complete else 'rgba(255,255,255,0.1)'};
+                         color: {'#000' if is_complete else '#888'}; padding: 2px 6px; border-radius: 4px; font-weight: 500;">
+                {'CLAIM' if is_complete else slot['reward']}
+            </span>
+        '''
+        # Silver glow progress bar
+        progress_bar = f'''
+            <div style="width: 100%; height: 2px; background: rgba(255,255,255,0.08); margin-top: 10px; border-radius: 2px; overflow: hidden;">
+                <div style="width: {slot['pct']}%; height: 100%; background: rgba(255,255,255,0.6); border-radius: 2px;
+                            {'box-shadow: 0 0 10px ' + glow + ', 0 0 20px rgba(255,255,255,0.2);' if slot['pct'] > 50 else ''}"></div>
+            </div>
+        '''
+        bottom_section = progress_bar
+
+    elif mode == "task":
+        reward_badge = ""
+        bottom_section = f'''
+            <div style="font-family: JetBrains Mono; font-size: 10px; color: {accent}; text-align: right; margin-top: 6px; opacity: 0.8;">
+                {slot['cta']} →
+            </div>
+        '''
+
+    elif mode == "scheduled":
+        reward_badge = ""
+        bottom_section = f'''
+            <div style="font-family: JetBrains Mono; font-size: 10px; color: {muted}; text-align: right; margin-top: 6px;">
+                {slot['cta']} →
+            </div>
+        '''
+
+    else:  # stat
+        reward_badge = ""
+        bottom_section = f'''
+            <div style="font-family: JetBrains Mono; font-size: 10px; color: {muted}; margin-top: 6px;">
+                {slot.get('sub', '')}
+            </div>
+        '''
+
+    st.markdown(f"""
+    <div style="
+        border: {border};
+        background: {bg};
+        border-radius: 12px;
+        padding: 14px;
+        height: 88px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    ">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <span style="font-family: JetBrains Mono; font-size: 9px; color: {title_color}; letter-spacing: 0.05em;">
+                {slot['title']}
+            </span>
+            {reward_badge}
+        </div>
+
+        <div style="font-family: Inter; font-size: 15px; font-weight: 500; color: white;
+                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            {slot['main']}
+        </div>
+
+        {bottom_section}
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# Legacy alias for compatibility
 def render_action_deck():
-    """Minimal floating action buttons."""
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        if st.button("DEPOSIT", key="quick_deposit", type="primary", use_container_width=True):
-            st.session_state.show_deposit_modal = True
-            st.rerun()
-
-    with col2:
-        if st.button("SEND", key="quick_send", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "I want to send money"})
-            st.session_state._quick_action_triggered = True
-            st.rerun()
-
-    with col3:
-        if st.button("CARDS", key="quick_giftcard", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Show me gift cards"})
-            st.session_state._quick_action_triggered = True
-            st.rerun()
-
-    with col4:
-        if st.button("PAY", key="quick_bill", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Help me pay a bill"})
-            st.session_state._quick_action_triggered = True
-            st.rerun()
+    """Deprecated: Use render_pulse_deck instead."""
+    render_pulse_deck()
 
 
 # --- MODULES: FULL CAPABILITY LIBRARY ---
@@ -231,8 +375,8 @@ def chat_interface(create_agent_func):
         if cache_key in st.session_state:
             del st.session_state[cache_key]
 
-    # 5. ACTION STRIP
-    render_action_deck()
+    # 5. PULSE DECK
+    render_pulse_deck()
 
     # 6. CHAT SECTION - Hairline divider
     st.markdown("<div style='height: 40px; border-bottom: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
