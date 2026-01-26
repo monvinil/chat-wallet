@@ -46,10 +46,10 @@ def render_status_card(is_active: bool):
         """, unsafe_allow_html=True)
 
 
-def render_balance_display(total_usdc: float):
-    """Render V12 balance display - pure floating text"""
+def render_balance_display(total_usdc: float, balances: dict = None):
+    """Render V12 balance display with optional breakdown"""
     st.markdown(f"""
-    <div style="margin-bottom: 2.5rem;">
+    <div style="margin-bottom: 1.5rem;">
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
                     letter-spacing: 0.1em; color: #555; margin-bottom: 8px;">
             EQUITY
@@ -61,11 +61,71 @@ def render_balance_display(total_usdc: float):
     </div>
     """, unsafe_allow_html=True)
 
+    # Show breakdown if balances provided and has non-zero values
+    if balances:
+        # Network display names
+        network_names = {
+            "base-mainnet": "Base",
+            "base-sepolia": "Base",
+            "arbitrum-sepolia": "Arbitrum",
+            "polygon-amoy": "Polygon",
+            "solana-mainnet": "Solana",
+            "solana-devnet": "Solana",
+        }
+
+        # Filter to networks with non-zero USDC
+        active_networks = []
+        for network_key, amounts in balances.items():
+            usdc = amounts.get("usdc", 0.0)
+            if usdc > 0:
+                name = network_names.get(network_key, network_key)
+                active_networks.append((name, usdc))
+
+        if active_networks:
+            breakdown_html = "<div style='margin-bottom: 1.5rem;'>"
+            for name, usdc in active_networks:
+                breakdown_html += f"""
+                <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                    <span style="font-family: JetBrains Mono; font-size: 10px; color: #444;">{name}</span>
+                    <span style="font-family: JetBrains Mono; font-size: 10px; color: #666;">${usdc:,.2f}</span>
+                </div>
+                """
+            breakdown_html += "</div>"
+            st.markdown(breakdown_html, unsafe_allow_html=True)
+
+
+def render_free_tier_indicator():
+    """Show free tier usage if applicable"""
+    from settings_manager import SettingsManager
+
+    user_id = st.session_state.get("user_id")
+    if not user_id:
+        return
+
+    llm_config = SettingsManager.get_llm_config(user_id)
+    if llm_config.get("using_free_tier"):
+        remaining = llm_config.get("remaining_messages", 0)
+        if remaining <= 10:
+            st.markdown(f"""
+            <div style="font-family: JetBrains Mono; font-size: 9px; color: #a55; text-align: center; margin-bottom: 8px;">
+                {remaining} free messages left
+            </div>
+            """, unsafe_allow_html=True)
+        elif remaining <= 25:
+            st.markdown(f"""
+            <div style="font-family: JetBrains Mono; font-size: 9px; color: #555; text-align: center; margin-bottom: 8px;">
+                {remaining} free messages
+            </div>
+            """, unsafe_allow_html=True)
+
 
 def render_sidebar_footer():
     """Render V12 footer - minimal"""
+    # Show free tier indicator if applicable
+    render_free_tier_indicator()
+
     st.markdown("""
-    <div style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
                     letter-spacing: 0.05em; color: #333; text-align: center;">
             Encrypted locally
@@ -162,11 +222,9 @@ def sidebar():
             render_status_card(is_active=True)
 
             # Balance display
-            if st.session_state.balances:
-                total_usdc = ChainUtils.calculate_total_usdc(st.session_state.balances)
-            else:
-                total_usdc = 0.0
-            render_balance_display(total_usdc)
+            balances = st.session_state.balances if st.session_state.balances else {}
+            total_usdc = ChainUtils.calculate_total_usdc(balances) if balances else 0.0
+            render_balance_display(total_usdc, balances)
 
             # Addresses
             solana_addr = _get_solana_address_from_session()
@@ -203,7 +261,7 @@ def sidebar():
             st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
 
             # Secondary actions
-            if st.button("SYSTEM", use_container_width=True):
+            if st.button("SETTINGS", use_container_width=True):
                 st.session_state.show_settings = True
                 st.rerun()
 
@@ -237,7 +295,7 @@ def sidebar():
 
                 st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
-                if st.button("SYSTEM", use_container_width=True):
+                if st.button("SETTINGS", use_container_width=True):
                     st.session_state.show_settings = True
                     st.rerun()
 

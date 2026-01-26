@@ -336,10 +336,44 @@ def settings_page():
         # Export wallet section
         st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 12px;'>Export Wallet</div>", unsafe_allow_html=True)
 
-        if st.button("EXPORT KEY", type="secondary", key="show_pk"):
-            st.session_state.show_private_key = True
+        # Step 1: Show button to start export process
+        if not st.session_state.get("_export_key_step"):
+            if st.button("EXPORT KEY", type="secondary", key="show_pk"):
+                st.session_state._export_key_step = "password"
+                st.rerun()
 
-        if st.session_state.get("show_private_key"):
+        # Step 2: Password verification
+        elif st.session_state.get("_export_key_step") == "password":
+            st.markdown("<div style='font-size: 11px; color: #666; margin-bottom: 12px;'>Enter your password to reveal keys</div>", unsafe_allow_html=True)
+
+            export_password = st.text_input(
+                "Password",
+                type="password",
+                key="export_pwd_input",
+                label_visibility="collapsed",
+                placeholder="Enter password"
+            )
+
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                if st.button("CANCEL", key="cancel_export", use_container_width=True):
+                    st.session_state._export_key_step = None
+                    st.rerun()
+            with col2:
+                if st.button("VERIFY", type="primary", key="verify_export", use_container_width=True):
+                    if export_password:
+                        from wallet_manager import WalletManager
+                        # Try to verify password by attempting unlock
+                        if WalletManager.verify_wallet_password(export_password):
+                            st.session_state._export_key_step = "show"
+                            st.rerun()
+                        else:
+                            st.error("Invalid password")
+                    else:
+                        st.warning("Please enter password")
+
+        # Step 3: Show the keys
+        elif st.session_state.get("_export_key_step") == "show":
             from wallet_manager import WalletManager
             wallet_data = WalletManager.get_wallet_from_session()
 
@@ -354,12 +388,12 @@ def settings_page():
                 st.code(wallet_data["private_key"], language=None)
 
                 if st.button("HIDE", key="hide_pk"):
-                    st.session_state.show_private_key = False
+                    st.session_state._export_key_step = None
                     st.rerun()
             else:
                 st.error("Cannot retrieve private key")
                 if st.button("HIDE", key="hide_pk_err"):
-                    st.session_state.show_private_key = False
+                    st.session_state._export_key_step = None
                     st.rerun()
 
         st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)

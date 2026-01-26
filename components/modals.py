@@ -209,116 +209,147 @@ def seed_phrase_modal():
 
 
 def deposit_modal():
-    """V12 deposit modal - centered void aesthetic"""
-    st.markdown("<h2 style='text-align: center; font-weight: 300; margin-bottom: 20px;'>Deposit</h2>", unsafe_allow_html=True)
+    """V12 deposit modal - shows both addresses upfront"""
+    st.markdown("<h2 style='text-align: center; font-weight: 300; margin-bottom: 8px;'>Deposit</h2>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; font-size: 12px; color: #555; margin-bottom: 24px;'>Send USDC to your wallet address</div>", unsafe_allow_html=True)
 
-    # Get wallet data to check for Solana address
+    # Get wallet addresses
+    evm_address = st.session_state.wallet_address
     wallet_data = WalletManager.get_wallet_from_session()
-    has_solana = wallet_data and wallet_data.get("solana")
-    solana_address = wallet_data.get("solana", {}).get("address") if has_solana else None
+    solana_address = wallet_data.get("solana", {}).get("address") if wallet_data and wallet_data.get("solana") else None
 
-    # Fallback: check session state directly (for guest wallets before decryption)
+    # Fallback for guest wallets
     if not solana_address and st.session_state.get("solana_address"):
         solana_address = st.session_state.solana_address
-        has_solana = True
 
-    # Chain selector - include Solana if wallet has it
-    chain_options = {
-        "Base Sepolia (Testnet)": "base-sepolia",
-        "Base Mainnet": "base-mainnet",
-        "Arbitrum Sepolia (Testnet)": "arbitrum-sepolia",
-        "Polygon Amoy (Testnet)": "polygon-amoy",
-    }
+    # Track which address is selected for QR
+    if "_deposit_view" not in st.session_state:
+        st.session_state._deposit_view = "evm"
 
-    # Add Solana options if wallet supports it
-    if has_solana:
-        chain_options["Solana Devnet (Testnet)"] = "solana-devnet"
-        chain_options["Solana Mainnet"] = "solana-mainnet"
+    # === EVM ADDRESS SECTION ===
+    st.markdown("""
+    <div style="font-family: JetBrains Mono; font-size: 10px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
+        EVM ADDRESS <span style="color: #444;">(Base, Arbitrum, Polygon)</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    selected_chain_name = st.selectbox("Network", list(chain_options.keys()), label_visibility="collapsed")
-    selected_chain = chain_options[selected_chain_name]
+    # EVM address box
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.markdown(f"""
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; font-family: JetBrains Mono; font-size: 11px; color: #888; word-break: break-all;">
+            {evm_address}
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        if st.button("COPY", key="copy_evm", use_container_width=True):
+            st.markdown(f'<script>navigator.clipboard.writeText("{evm_address}");</script>', unsafe_allow_html=True)
+            st.toast("COPIED")
 
-    network = NETWORKS[selected_chain]
+    # === SOLANA ADDRESS SECTION (if available) ===
+    if solana_address:
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-family: JetBrains Mono; font-size: 10px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
+            SOLANA ADDRESS
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Get the correct address based on chain type
-    if network["type"] == "solana":
-        address = solana_address
-        if not address:
-            st.error("Solana address unavailable")
-            return
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.markdown(f"""
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; font-family: JetBrains Mono; font-size: 11px; color: #888; word-break: break-all;">
+                {solana_address}
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            if st.button("COPY", key="copy_sol", use_container_width=True):
+                st.markdown(f'<script>navigator.clipboard.writeText("{solana_address}");</script>', unsafe_allow_html=True)
+                st.toast("COPIED")
+
+    # === QR CODE SECTION ===
+    st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
+
+    # QR toggle if both addresses exist
+    if solana_address:
+        qr_tabs = st.radio(
+            "Show QR for",
+            ["EVM", "Solana"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="qr_address_type"
+        )
+        qr_address = evm_address if qr_tabs == "EVM" else solana_address
     else:
-        address = st.session_state.wallet_address
+        qr_address = evm_address
 
     # QR Code - centered
-    qr_img = generate_qr(address)
+    qr_img = generate_qr(qr_address)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.image(qr_img, use_container_width=True)
 
-    # Address display - minimal
-    st.markdown(f"""
-    <div style="text-align: center; margin: 20px 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888; letter-spacing: 0.02em; word-break: break-all;">
-        {address}
-    </div>
-    """, unsafe_allow_html=True)
+    # === NETWORK SELECTOR (for explorer link) ===
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
-    # Network badge
-    network_label = "Testnet" if network['testnet'] else "Mainnet"
-    st.markdown(f"""
-    <div style="display: flex; justify-content: center; gap: 10px; margin: 20px 0;">
-        <span style="background: rgba(255,255,255,0.1); color: #888; font-size: 10px; padding: 4px 12px; border-radius: 10px; font-family: JetBrains Mono;">{network["type"].upper()}</span>
-        <span style="background: {'rgba(255,255,255,0.05)' if network['testnet'] else 'white'}; color: {'#666' if network['testnet'] else 'black'}; font-size: 10px; padding: 4px 12px; border-radius: 10px; font-family: JetBrains Mono;">{network_label}</span>
-    </div>
-    """, unsafe_allow_html=True)
+    with st.expander("Network details", expanded=False):
+        # Mainnets first, then testnets
+        chain_options = {
+            "Base": "base-mainnet",
+            "Arbitrum": "arbitrum-sepolia",  # No mainnet yet
+            "Polygon": "polygon-amoy",  # No mainnet yet
+        }
 
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        if solana_address:
+            chain_options["Solana"] = "solana-mainnet"
 
-    col1, col2 = st.columns([1, 1])
+        # Add testnets in sub-section
+        st.markdown("<div style='font-size: 10px; color: #444; margin: 8px 0;'>Testnets</div>", unsafe_allow_html=True)
 
-    with col1:
-        if st.button("COPY", use_container_width=True):
-            st.markdown(f'<script>navigator.clipboard.writeText("{address}");</script>', unsafe_allow_html=True)
-            st.toast("COPIED")
+        testnet_options = {
+            "Base Sepolia": "base-sepolia",
+            "Arbitrum Sepolia": "arbitrum-sepolia",
+            "Polygon Amoy": "polygon-amoy",
+        }
 
-    with col2:
+        if solana_address:
+            testnet_options["Solana Devnet"] = "solana-devnet"
+
+        selected_chain = st.selectbox(
+            "Network",
+            list(testnet_options.keys()),
+            label_visibility="collapsed",
+            key="deposit_network_select"
+        )
+
+        network_key = testnet_options[selected_chain]
+        network = NETWORKS[network_key]
+
+        # Explorer link
         if network["type"] == "solana":
             cluster_param = "?cluster=devnet" if network["testnet"] else ""
-            explorer_url = f"{network['explorer']}/address/{address}{cluster_param}"
+            explorer_url = f"{network['explorer']}/address/{solana_address}{cluster_param}"
         else:
-            explorer_url = ChainUtils.get_explorer_url(selected_chain, address)
-        st.link_button("EXPLORER", explorer_url, use_container_width=True)
+            explorer_url = ChainUtils.get_explorer_url(network_key, evm_address)
 
-    # Faucet instructions
-    if "sepolia" in selected_chain or "amoy" in selected_chain:
-        with st.expander("Get testnet funds"):
-            st.markdown("""
-- [Coinbase Faucet](https://portal.cdp.coinbase.com/products/faucet)
-- [Alchemy Faucet](https://sepoliafaucet.com/)
-""")
-    elif "solana-devnet" in selected_chain:
-        with st.expander("Get testnet SOL"):
-            st.markdown("""
-- [Solana Faucet](https://faucet.solana.com/)
-- CLI: `solana airdrop 2`
-""")
-    else:
-        st.markdown("""
-        <div style="color: #666; font-size: 12px; text-align: center; margin-top: 20px;">
-            Mainnet — real funds only
-        </div>
-        """, unsafe_allow_html=True)
+        st.link_button("VIEW ON EXPLORER", explorer_url, use_container_width=True)
 
-    # Show all addresses for multi-chain wallet
-    if has_solana:
-        with st.expander("All addresses"):
-            st.markdown(f"""
-            <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #555; margin-bottom: 4px;">EVM</div>
+        # Faucet instructions for testnets
+        if "sepolia" in network_key or "amoy" in network_key:
+            st.markdown("""
+<div style="font-size: 11px; color: #555; margin-top: 12px;">
+    <strong style="color: #666;">Get testnet funds:</strong><br>
+    • <a href="https://portal.cdp.coinbase.com/products/faucet" target="_blank" style="color: #888;">Coinbase Faucet</a><br>
+    • <a href="https://sepoliafaucet.com/" target="_blank" style="color: #888;">Alchemy Faucet</a>
+</div>
             """, unsafe_allow_html=True)
-            st.code(st.session_state.wallet_address)
-            st.markdown(f"""
-            <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #555; margin-bottom: 4px; margin-top: 12px;">Solana</div>
+        elif "solana-devnet" in network_key:
+            st.markdown("""
+<div style="font-size: 11px; color: #555; margin-top: 12px;">
+    <strong style="color: #666;">Get testnet SOL:</strong><br>
+    • <a href="https://faucet.solana.com/" target="_blank" style="color: #888;">Solana Faucet</a>
+</div>
             """, unsafe_allow_html=True)
-            st.code(solana_address)
 
 
 def _render_send_confirmation():

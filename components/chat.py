@@ -228,14 +228,6 @@ def chat_interface(create_agent_func):
         if cache_key in st.session_state:
             del st.session_state[cache_key]
 
-    # Show free tier status
-    if llm_config.get("using_free_tier"):
-        remaining = llm_config.get("remaining_messages", 0)
-        if remaining <= 10:
-            st.warning(f"{remaining} free messages left. Add your API key in Settings.")
-        else:
-            st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>{remaining} free messages remaining</div>", unsafe_allow_html=True)
-
     # 5. ACTION STRIP
     render_action_deck()
 

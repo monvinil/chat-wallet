@@ -324,6 +324,35 @@ class WalletManager:
             return False
 
     @staticmethod
+    def verify_wallet_password(password: str) -> bool:
+        """
+        Verify password is correct by attempting to decrypt wallet data.
+        Does not modify session state - just validates.
+        Returns: True if password is correct, False otherwise
+        """
+        if "wallet_encrypted" not in st.session_state or "wallet_salt" not in st.session_state:
+            return False
+
+        try:
+            from cryptography.fernet import Fernet
+            import base64
+
+            salt_hex = st.session_state.wallet_salt
+            encrypted_data = st.session_state.wallet_encrypted
+
+            # Re-derive key from password using stored salt
+            salt = bytes.fromhex(salt_hex)
+            key = PasswordEncryption.derive_key(password, salt)
+            fernet_key = base64.urlsafe_b64encode(key).decode()
+
+            # Try to decrypt wallet data to verify password is correct
+            f = Fernet(fernet_key.encode())
+            f.decrypt(encrypted_data.encode())  # Will throw if password is wrong
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
     def unlock_wallet_with_password(password: str) -> bool:
         """
         Unlock wallet using password to re-derive the encryption key.
