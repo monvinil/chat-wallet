@@ -335,11 +335,13 @@ class SessionManager:
                 st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
                 st.session_state.wallet_salt = encrypted_wallet["salt"]
 
-                # SECURITY: Always require password on page refresh
-                # Do NOT auto-unlock from saved cookie
-                st.session_state.wallet_locked = True
+                # Only lock if not already set - allows browsing without re-entering password
+                # Actual signing operations will check for wallet_key presence
+                if "wallet_locked" not in st.session_state:
+                    st.session_state.wallet_locked = False
             else:
-                st.session_state.wallet_locked = True
+                if "wallet_locked" not in st.session_state:
+                    st.session_state.wallet_locked = False
 
             return True
         except Exception as e:
