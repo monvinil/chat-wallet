@@ -457,6 +457,12 @@ def render_modules():
             ("Swap to ETH", "Swap USDC to ETH at best rates", False),
             ("Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
         ],
+        "Bot Trade": [
+            ("Hyperliquid", "Trade perpetuals on Hyperliquid DEX", False),
+            ("Polymarket", "Bet on prediction markets via Polymarket", False),
+            ("Pump.fun", "Launch or trade meme coins on Pump.fun", False),
+            ("Kalshi", "Trade event contracts on Kalshi", False),
+        ],
         "Tools": [
             ("Get Domain", "I want to register a domain", True),
             ("VPN", "I want a Mullvad VPN subscription", True),
@@ -518,6 +524,7 @@ def render_modules_preview():
     categories = {
         "Send & Pay": ["Send USDC", "Pay Bills", "Phone Top-up", "Schedule"],
         "Earn": ["Earn Yield", "Swap to ETH", "Stack Sats"],
+        "Bot Trade": ["Hyperliquid", "Polymarket", "Pump.fun", "Kalshi"],
         "Tools": ["Get Domain", "VPN", "eSIM", "Alerts"],
         "Shopping": ["Amazon", "Target", "Walmart", "Best Buy", "Sephora"],
         "Food": ["DoorDash", "Uber Eats", "Starbucks", "Chipotle", "Grubhub"],
