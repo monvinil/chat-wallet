@@ -887,11 +887,11 @@ def main():
 
     .stTabs [data-baseweb="tab"]:hover {
         color: #999;
-        background: rgba(255,255,255,0.03);
+        background: transparent;
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        background: rgba(255,255,255,0.1);
+        background: transparent;
         color: white;
     }
 
