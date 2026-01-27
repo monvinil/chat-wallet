@@ -25,7 +25,7 @@ def render_sidebar_header():
     <div style="margin-bottom: 2rem;">
         <div style="font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 300;
                     letter-spacing: -0.02em; color: white;">
-            Chat02. <span style="color: #666;">Your USDC wallet for AI.</span>
+            Chat02. <span style="color: #666;">A USDC wallet for AI.</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
