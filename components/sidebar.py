@@ -78,14 +78,14 @@ def _get_solana_address_from_session() -> str:
 
 def render_sidebar_header():
     """Render sidebar logo: — $ →"""
-    # 20% smaller: dash 22px, dollar 34px, arrow 22px
+    # Dash/arrow 20% smaller than dollar
     st.markdown(
         '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:1.5rem;padding:0.25rem 0;">'
-        '<span style="display:inline-block;width:22px;height:2px;background:white;"></span>'
+        '<span style="display:inline-block;width:18px;height:1.6px;background:white;"></span>'
         '<span style="font-family:Menlo,Monaco,Courier New,monospace;font-size:34px;font-weight:700;font-style:italic;color:white;line-height:1;">$</span>'
-        '<svg width="22" height="10" viewBox="0 0 22 10" style="display:inline-block;">'
-        '<line x1="0" y1="5" x2="17" y2="5" stroke="white" stroke-width="2" stroke-linecap="round"/>'
-        '<polyline points="14,1.5 19,5 14,8.5" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+        '<svg width="18" height="8" viewBox="0 0 18 8" style="display:inline-block;">'
+        '<line x1="0" y1="4" x2="14" y2="4" stroke="white" stroke-width="1.6" stroke-linecap="round"/>'
+        '<polyline points="11,1 15,4 11,7" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
         '</svg>'
         '</div>',
         unsafe_allow_html=True
