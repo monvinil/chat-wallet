@@ -216,8 +216,6 @@ def _render_pulse_card(slot: dict):
     </div>
     ''', unsafe_allow_html=True)
 
-    st.markdown(card_html, unsafe_allow_html=True)
-
 
 # Legacy alias
 def render_action_deck():
