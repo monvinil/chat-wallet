@@ -158,7 +158,31 @@ def render_pulse_deck():
     # === SLOT BUILDER ===
     slots = []
 
-    # Slot 1: Priority Action or Stat fallback (SPOTLIGHT - White)
+    # Slot 1: AI Data card
+    # TODO: Pull real data from llm_config / free tier usage
+    ai_brand = BRANDS["ai"]
+    ai_provider = "Claude"  # TODO: Get from user's LLM config
+    ai_tier = "Free"  # TODO: Get from subscription status
+    ai_remaining = "8/10"  # TODO: Get from FreeTier.get_remaining_messages()
+
+    slots.append({
+        "mode": "ai",
+        "title": "YOUR AI",
+        "main": ai_provider,
+        "sub": f"{ai_tier} · {ai_remaining} msgs",
+        "bg": ai_brand["bg"],
+        "border": ai_brand.get("border", "none"),
+        "shadow": ai_brand["shadow"],
+        "accent": ai_brand["accent"],
+        "text_color": ai_brand["text_color"],
+        "sub_color": ai_brand["sub_color"],
+        "icon_filter": ai_brand["icon_filter"],
+        "text_shadow": ai_brand["text_shadow"],
+        "spotlight": False,
+        "icon": ai_brand["icon"],
+    })
+
+    # Slot 2: Priority Action or Stats fallback (SPOTLIGHT - White)
     if active_tasks:
         t = active_tasks[0]
         slots.append({
@@ -183,30 +207,6 @@ def render_pulse_deck():
             "spotlight": True,
             "icon": BRANDS["system"]["icon"],
         })
-
-    # Slot 2: AI Data (Black card)
-    # TODO: Pull real data from llm_config / free tier usage
-    ai_brand = BRANDS["ai"]
-    ai_provider = "Claude"  # TODO: Get from user's LLM config
-    ai_tier = "Free"  # TODO: Get from subscription status
-    ai_remaining = "8/10"  # TODO: Get from FreeTier.get_remaining_messages()
-
-    slots.append({
-        "mode": "ai",
-        "title": "YOUR AI",
-        "main": ai_provider,
-        "sub": f"{ai_tier} · {ai_remaining} msgs",
-        "bg": ai_brand["bg"],
-        "border": ai_brand.get("border", "none"),
-        "shadow": ai_brand["shadow"],
-        "accent": ai_brand["accent"],
-        "text_color": ai_brand["text_color"],
-        "sub_color": ai_brand["sub_color"],
-        "icon_filter": ai_brand["icon_filter"],
-        "text_shadow": ai_brand["text_shadow"],
-        "spotlight": False,
-        "icon": ai_brand["icon"],
-    })
 
     # Slots 3-4: Perks (Vibrant Mesh with White Text)
     for p in perks[:2]:
