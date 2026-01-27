@@ -43,28 +43,26 @@ def render_header():
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
 
-# --- THE PULSE DECK (V14: Unified Icon Edition) ---
+# --- THE PULSE DECK (V15: High Contrast / Spotlight) ---
 def render_pulse_deck():
     """
-    Premium wallet card aesthetic with unified SVG icons.
-    All icons are now high-fidelity vectors for visual consistency.
+    V15: High contrast design with white spotlight card and matte dark perks.
+    - Spotlight (first card): Solid white, pops aggressively
+    - Perks (cards 2-3): Matte dark glass, subtle borders
     """
 
-    # === BRAND DEFINITIONS (all SVG icons for consistency) ===
+    # === BRAND DEFINITIONS (Iconify SVG icons) ===
     BRANDS = {
         "spotify": {
             "color": "#1DB954",
-            "gradient": "linear-gradient(135deg, rgba(29,185,84,0.15) 0%, rgba(29,185,84,0.02) 100%)",
             "icon": "https://api.iconify.design/simple-icons/spotify.svg"
         },
         "netflix": {
             "color": "#E50914",
-            "gradient": "linear-gradient(135deg, rgba(229,9,20,0.15) 0%, rgba(229,9,20,0.02) 100%)",
             "icon": "https://api.iconify.design/simple-icons/netflix.svg"
         },
         "system": {
-            "color": "#e5e5e5",
-            "gradient": "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.01) 100%)",
+            "color": "#000000",
             "icon": "https://api.iconify.design/mdi/chart-line.svg"
         },
     }
@@ -80,18 +78,16 @@ def render_pulse_deck():
     # === SLOT BUILDER ===
     slots = []
 
-    # Slot 1: Priority Action or Stat fallback
+    # Slot 1: Priority Action or Stat fallback (SPOTLIGHT - White)
     if active_tasks:
         t = active_tasks[0]
-        brand = BRANDS.get(t.get("brand", "system"), BRANDS["system"])
         slots.append({
             "mode": "task",
             "title": t["label"],
             "main": t["value"],
             "sub": t["action"],
-            "accent": brand["color"],
-            "bg": brand["gradient"],
-            "icon": brand["icon"],
+            "spotlight": True,
+            "icon": "https://api.iconify.design/mdi/alert-circle.svg",
         })
     else:
         # TODO: Replace with real data from transactions table
@@ -99,18 +95,16 @@ def render_pulse_deck():
         month_tx_count = 0
         scheduled_count = 0  # TODO: Pull from scheduled_payments table
 
-        brand = BRANDS["system"]
         slots.append({
             "mode": "stat",
             "title": "THIS MONTH",
             "main": f"${month_spending:.2f}",
             "stats": f"{month_tx_count} txs · {scheduled_count} scheduled",
-            "accent": brand["color"],
-            "bg": brand["gradient"],
-            "icon": brand["icon"],
+            "spotlight": True,
+            "icon": BRANDS["system"]["icon"],
         })
 
-    # Slots 2-3: Perks
+    # Slots 2-3: Perks (MATTE DARK)
     for p in perks[:2]:
         brand = BRANDS.get(p["brand"].lower(), BRANDS["system"])
         pct = int((p["progress"] / p["target"]) * 100) if p["target"] > 0 else 0
@@ -123,7 +117,7 @@ def render_pulse_deck():
             "pct": pct,
             "spent": spent,
             "accent": brand["color"],
-            "bg": brand["gradient"],
+            "spotlight": False,
             "icon": brand["icon"],
         })
 
@@ -131,41 +125,96 @@ def render_pulse_deck():
     cols = st.columns(len(slots))
     for i, slot in enumerate(slots):
         with cols[i]:
-            _render_brand_card(slot)
+            _render_pulse_card(slot)
 
 
-def _render_brand_card(slot: dict):
-    """Render V14 premium card with unified SVG icons and enhanced styling."""
+def _render_pulse_card(slot: dict):
+    """Render V15 card - spotlight (white) or matte (dark)."""
 
     mode = slot["mode"]
-    accent = slot["accent"]
-    bg = slot["bg"]
     icon = slot["icon"]
+    is_spotlight = slot.get("spotlight", False)
     pct = slot.get("pct", 0)
     spent = slot.get("spent", 0)
+    accent = slot.get("accent", "#000000")
 
-    # Icon: All SVG for consistency - invert black to white
-    # Iconify returns black SVGs, so we invert them to white
-    icon_filter = "brightness(0) invert(1) opacity(0.8)"
-    icon_html = f'<img src="{icon}" style="height:16px;width:auto;max-width:20px;object-fit:contain;filter:{icon_filter};">'
+    # === THEME: Spotlight vs Matte ===
+    if is_spotlight:
+        bg = "#FFFFFF"
+        text_color = "#000000"
+        sub_color = "#666666"
+        border = "none"
+        shadow = "0 4px 20px rgba(0,0,0,0.15)"
+        icon_filter = "brightness(0)"  # Black icon on white
+    else:
+        bg = "rgba(255,255,255,0.03)"
+        text_color = "#FFFFFF"
+        sub_color = "#888888"
+        border = "1px solid rgba(255,255,255,0.08)"
+        shadow = "none"
+        icon_filter = "brightness(0) invert(1) opacity(0.6)"  # White icon on dark
 
-    # Build main display - include spent for perks
+    # === ICON ===
+    icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};">'
+
+    # === MAIN VALUE ===
     if mode == "perk" and spent > 0:
-        main_html = f'<div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;"><span style="font-family:Inter;font-size:15px;font-weight:500;color:#e5e5e5;letter-spacing:-0.02em;">{slot["main"]}</span><span style="font-family:JetBrains Mono;font-size:10px;color:#666;">{int(spent)} USDC</span></div>'
+        main_html = f'''<div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
+            <span style="font-family:Inter;font-size:16px;font-weight:600;color:{text_color};letter-spacing:-0.02em;">{slot["main"]}</span>
+            <span style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};">{int(spent)} USDC</span>
+        </div>'''
     else:
-        main_html = f'<div style="font-family:Inter;font-size:15px;font-weight:500;color:#e5e5e5;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">{slot["main"]}</div>'
+        main_html = f'''<div style="font-family:Inter;font-size:16px;font-weight:600;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">
+            {slot["main"]}
+        </div>'''
 
-    # Build bottom section based on mode
+    # === BOTTOM SECTION ===
     if mode == "perk":
-        bottom = f'<div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:9px;color:#555;font-family:Inter;">{slot["sub"]}</span></div><div style="width:100%;height:1px;background:rgba(255,255,255,0.05);"><div style="width:{pct}%;height:100%;background:{accent};box-shadow:0 0 8px {accent};"></div></div></div>'
+        # Progress bar with glow
+        bottom = f'''<div>
+            <div style="font-family:Inter;font-size:10px;color:{sub_color};margin-bottom:6px;">{slot["sub"]}</div>
+            <div style="width:100%;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;">
+                <div style="width:{pct}%;height:100%;background:{accent};border-radius:2px;box-shadow:0 0 8px {accent};"></div>
+            </div>
+        </div>'''
     elif mode == "stat" and slot.get("stats"):
-        # Multi-line summary: compact stats at bottom
-        bottom = f'<div style="font-family:JetBrains Mono;font-size:9px;color:#555;margin-top:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{slot["stats"]}</div>'
+        # Multi-line summary stats
+        bottom = f'''<div style="font-family:JetBrains Mono;font-size:9px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {slot["stats"]}
+        </div>'''
+    elif is_spotlight:
+        # Arrow for spotlight action cards
+        bottom = f'''<div style="text-align:right;">
+            <span style="font-family:JetBrains Mono;font-size:14px;color:#000;">→</span>
+        </div>'''
     else:
-        bottom = f'<div style="font-family:JetBrains Mono;font-size:10px;color:{accent};text-align:right;margin-top:auto;opacity:0.8;">{slot["sub"]} →</div>'
+        bottom = f'''<div style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-align:right;">
+            {slot.get("sub", "")} →
+        </div>'''
 
-    # V14 Card: Enhanced borders, shadow, refined styling
-    card_html = f'<div style="background:{bg};border-top:1px solid rgba(255,255,255,0.1);border-bottom:1px solid rgba(0,0,0,0.5);border-radius:16px;padding:18px;height:96px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 10px 20px -5px rgba(0,0,0,0.3);"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:#666;letter-spacing:0.05em;font-weight:500;">{slot["title"]}</span>{icon_html}</div>{main_html}{bottom}</div>'
+    # === THE CARD ===
+    st.markdown(f'''
+    <div style="
+        background:{bg};
+        border:{border};
+        border-radius:14px;
+        padding:16px;
+        height:96px;
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        box-shadow:{shadow};
+    ">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-family:JetBrains Mono;font-size:9px;color:{sub_color};letter-spacing:0.05em;font-weight:600;">
+                {slot["title"]}
+            </span>
+            {icon_html}
+        </div>
+        {main_html}
+        {bottom}
+    </div>
+    ''', unsafe_allow_html=True)
 
     st.markdown(card_html, unsafe_allow_html=True)
 
