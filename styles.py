@@ -74,17 +74,21 @@ h1, h2, h3 {
 
 /* Chat input wrapper - remove inner rectangle */
 .stChatInput,
-.stChatInput > div,
-.stChatInput > div > div,
-.stChatInput [data-testid="stChatInputContainer"],
-.stChatInput [data-testid="stChatInputContainer"] > div {
+.stChatInput *,
+.stChatInput div,
+[data-testid="stChatInput"],
+[data-testid="stChatInput"] *,
+[data-testid="stChatInputContainer"],
+[data-testid="stChatInputContainer"] * {
     background: transparent !important;
-    border: none !important;
+    background-color: transparent !important;
 }
 
-/* Match chat input width to chat messages */
-.stChatInput {
-    max-width: 100% !important;
+/* Only the actual textarea gets the glass style */
+.stChatInput textarea,
+[data-testid="stChatInput"] textarea {
+    background-color: rgba(255,255,255,0.03) !important;
+    border: 1px solid var(--border-glass) !important;
 }
 
 /* 4. REFINED BUTTONS */
