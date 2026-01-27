@@ -90,36 +90,38 @@ def render_header():
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
 
-# --- THE PULSE DECK (V21: Cupertino Mesh / Apple Card Pastel) ---
+# --- THE PULSE DECK (V22: Cupertino White / True Apple Style) ---
 def render_pulse_deck():
     """
-    V21: Cupertino Mesh with pastel gradients.
-    - Spotlight (first card): Pure white titanium
-    - Perks (cards 2-3): Light pastel mesh gradients with dark typography
-    - No borders - color defines the edge
+    V22: Cupertino White - white text on vibrant mesh gradients.
+    - Spotlight (first card): Pure white titanium with dark text
+    - Perks (cards 2-3): Saturated mesh gradients with WHITE text + shadow lift
+    - Text shadows make white text readable on bright backgrounds
     """
 
-    # === BRAND DEFINITIONS: Pastel Mesh Theme ===
+    # === BRAND DEFINITIONS: Vibrant Mesh with White Text ===
     BRANDS = {
         "spotify": {
             "icon": "https://api.iconify.design/simple-icons/spotify.svg",
-            # Pastel: Light Blue -> Lavender (cool, fresh, digital)
-            "bg": "linear-gradient(135deg, #E0C3FC 0%, #8EC5FC 100%)",
-            "shadow": "0 8px 20px -6px rgba(142, 197, 252, 0.6)",
-            "accent": "#1c1c1e",  # Dark fill on light track
-            "text_color": "#1c1c1e",  # Apple Dark Grey
-            "sub_color": "rgba(28, 28, 30, 0.6)",
-            "icon_filter": "none",  # Native green logo
+            # Saturated Mesh: Lavender -> Electric Blue -> Mint
+            "bg": "linear-gradient(135deg, #c792ea 0%, #7dc5f5 50%, #6bf2d3 100%)",
+            "shadow": "0 8px 25px -6px rgba(125, 197, 245, 0.5)",
+            "accent": "#FFFFFF",
+            "text_color": "#FFFFFF",
+            "sub_color": "rgba(255,255,255,0.9)",
+            "icon_filter": "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+            "text_shadow": "0 2px 8px rgba(0,0,0,0.25)",
         },
         "netflix": {
             "icon": "https://api.iconify.design/simple-icons/netflix.svg",
-            # Pastel: Yellow -> Coral Red (warm, entertainment, energetic)
-            "bg": "linear-gradient(135deg, #FCCF31 10%, #F55555 100%)",
-            "shadow": "0 8px 20px -6px rgba(245, 85, 85, 0.6)",
-            "accent": "#1c1c1e",
-            "text_color": "#1c1c1e",
-            "sub_color": "rgba(28, 28, 30, 0.6)",
-            "icon_filter": "none",  # Native red logo
+            # Saturated Mesh: Hot Orange -> Deep Pink -> Peach
+            "bg": "linear-gradient(135deg, #ff9a44 0%, #fc6076 50%, #ff9a9e 100%)",
+            "shadow": "0 8px 25px -6px rgba(252, 96, 118, 0.5)",
+            "accent": "#FFFFFF",
+            "text_color": "#FFFFFF",
+            "sub_color": "rgba(255,255,255,0.9)",
+            "icon_filter": "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+            "text_shadow": "0 2px 8px rgba(0,0,0,0.25)",
         },
         "system": {
             "icon": "https://api.iconify.design/mdi/chart-line.svg",
@@ -129,6 +131,7 @@ def render_pulse_deck():
             "text_color": "#000000",
             "sub_color": "#8e8e93",
             "icon_filter": "brightness(0)",
+            "text_shadow": "none",
         },
     }
 
@@ -169,7 +172,7 @@ def render_pulse_deck():
             "icon": BRANDS["system"]["icon"],
         })
 
-    # Slots 2-3: Perks (Pastel Mesh)
+    # Slots 2-3: Perks (Vibrant Mesh with White Text)
     for p in perks[:2]:
         brand = BRANDS.get(p["brand"].lower(), BRANDS["system"])
         pct = int((p["progress"] / p["target"]) * 100) if p["target"] > 0 else 0
@@ -185,9 +188,10 @@ def render_pulse_deck():
             "bg": brand["bg"],
             "shadow": brand["shadow"],
             "accent": brand["accent"],
-            "text_color": brand.get("text_color", "#1c1c1e"),
-            "sub_color": brand.get("sub_color", "rgba(28, 28, 30, 0.6)"),
-            "icon_filter": brand.get("icon_filter", "none"),
+            "text_color": brand.get("text_color", "#FFFFFF"),
+            "sub_color": brand.get("sub_color", "rgba(255,255,255,0.9)"),
+            "icon_filter": brand.get("icon_filter", "brightness(0) invert(1)"),
+            "text_shadow": brand.get("text_shadow", "0 2px 8px rgba(0,0,0,0.25)"),
             "spotlight": False,
             "icon": brand["icon"],
         })
@@ -200,7 +204,7 @@ def render_pulse_deck():
 
 
 def _render_pulse_card(slot: dict):
-    """Render V21 card - spotlight (white) or Pastel Mesh (light gradient)."""
+    """Render V22 card - spotlight (white) or Vibrant Mesh (white text + shadow)."""
 
     mode = slot["mode"]
     icon = slot["icon"]
@@ -208,7 +212,7 @@ def _render_pulse_card(slot: dict):
     pct = slot.get("pct", 0)
     spent = slot.get("spent", 0)
 
-    # === THEME: Spotlight vs Pastel Mesh ===
+    # === THEME: Spotlight vs Vibrant Mesh ===
     if is_spotlight:
         # White Titanium - The Anchor
         bg = "#FFFFFF"
@@ -216,39 +220,43 @@ def _render_pulse_card(slot: dict):
         sub_color = "#8e8e93"
         shadow = "0 4px 12px rgba(0,0,0,0.15)"
         icon_filter = "brightness(0)"  # Black icon on white
-        track_color = "rgba(0,0,0,0.1)"
+        track_color = "rgba(0,0,0,0.06)"
         accent = "#000000"
+        text_shadow = "none"
+        fill_shadow = "none"
     else:
-        # Pastel Mesh - Light gradients with dark typography
-        bg = slot.get("bg", "linear-gradient(135deg, #E0C3FC 0%, #8EC5FC 100%)")
-        text_color = slot.get("text_color", "#1c1c1e")
-        sub_color = slot.get("sub_color", "rgba(28, 28, 30, 0.6)")
+        # Vibrant Mesh - Saturated gradients with white text + shadow lift
+        bg = slot.get("bg", "linear-gradient(135deg, #c792ea 0%, #7dc5f5 100%)")
+        text_color = slot.get("text_color", "#FFFFFF")
+        sub_color = slot.get("sub_color", "rgba(255,255,255,0.9)")
         shadow = slot.get("shadow", "none")
-        icon_filter = slot.get("icon_filter", "none")  # Native logo colors
-        track_color = "rgba(255,255,255,0.5)"  # Light track on pastel
-        accent = slot.get("accent", "#1c1c1e")  # Dark fill
+        icon_filter = slot.get("icon_filter", "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))")
+        track_color = "rgba(255,255,255,0.3)"
+        accent = slot.get("accent", "#FFFFFF")
+        text_shadow = slot.get("text_shadow", "0 2px 8px rgba(0,0,0,0.25)")
+        fill_shadow = "0 0 8px rgba(255,255,255,0.5)"
 
     # === ICON ===
-    icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:0.9;">'
+    icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:1.0;">'
 
     # === MAIN VALUE ===
     if mode == "perk" and spent > 0:
         main_html = f'''<div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
-            <span style="font-family:Inter;font-size:17px;font-weight:700;color:{text_color};letter-spacing:-0.03em;">{slot["main"]}</span>
-            <span style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};">{int(spent)} USDC</span>
+            <span style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span>
+            <span style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-shadow:{text_shadow};">{int(spent)} USDC</span>
         </div>'''
     else:
-        main_html = f'''<div style="font-family:Inter;font-size:17px;font-weight:700;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;">
+        main_html = f'''<div style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;text-shadow:{text_shadow};">
             {slot["main"]}
         </div>'''
 
     # === BOTTOM SECTION ===
     if mode == "perk":
-        # Progress bar: light track, dark fill
+        # Progress bar: translucent track, white fill with glow
         bottom = f'''<div>
-            <div style="font-family:Inter;font-size:11px;color:{sub_color};margin-bottom:6px;font-weight:600;">{slot["sub"]}</div>
-            <div style="width:100%;height:3px;background:{track_color};border-radius:3px;">
-                <div style="width:{pct}%;height:100%;background:{accent};border-radius:3px;opacity:0.8;"></div>
+            <div style="font-family:Inter;font-size:11px;color:{sub_color};margin-bottom:6px;font-weight:600;text-shadow:{text_shadow};">{slot["sub"]}</div>
+            <div style="width:100%;height:4px;background:{track_color};border-radius:4px;">
+                <div style="width:{pct}%;height:100%;background:{accent};border-radius:4px;box-shadow:{fill_shadow};"></div>
             </div>
         </div>'''
     elif mode == "stat" and slot.get("stats"):
@@ -262,16 +270,16 @@ def _render_pulse_card(slot: dict):
             <span style="font-family:Inter;font-weight:700;font-size:14px;color:#000;">→</span>
         </div>'''
     else:
-        bottom = f'''<div style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-align:right;">
+        bottom = f'''<div style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-align:right;text-shadow:{text_shadow};">
             {slot.get("sub", "")} →
         </div>'''
 
-    # === THE CARD (V21: Pastel Mesh) ===
+    # === THE CARD (V22: Cupertino White) ===
     st.markdown(f'''
     <div style="
         background:{bg};
-        border-radius:16px;
-        padding:18px;
+        border-radius:14px;
+        padding:16px;
         height:96px;
         display:flex;
         flex-direction:column;
@@ -280,7 +288,7 @@ def _render_pulse_card(slot: dict):
         transition:transform 0.2s;
     ">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-family:JetBrains Mono;font-size:9px;color:{sub_color};letter-spacing:0.05em;font-weight:700;text-transform:uppercase;">
+            <span style="font-family:Inter;font-size:10px;color:{sub_color};letter-spacing:0.02em;font-weight:700;text-transform:uppercase;text-shadow:{text_shadow};">
                 {slot["title"]}
             </span>
             {icon_html}
