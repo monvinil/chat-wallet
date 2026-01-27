@@ -322,15 +322,17 @@ def _render_pulse_card_html(slot: dict) -> str:
     icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:1.0;">'
 
     # === MAIN VALUE (compact for mobile) ===
-    if mode == "perk" and spent > 0:
-        main_html = f'<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;margin-top:4px;"><span style="font-family:Inter;font-size:17px;font-weight:600;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span><span style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-shadow:{text_shadow};">USDC Spent</span></div>'
+    if mode == "perk":
+        # Clean layout: progress on top, USDC Spent label below
+        main_html = f'<div class="pulse-card-main"><div style="font-family:Inter;font-size:20px;font-weight:700;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</div><div style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};margin-top:2px;">USDC Spent</div></div>'
     else:
         main_html = f'<div class="pulse-card-main" style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</div>'
 
     # === BOTTOM SECTION ===
     if mode == "perk":
-        # No bottom text - cleaner look, progress bar at bottom border
-        bottom = ""
+        # Show reward text with arrow
+        reward = slot.get("sub", "")
+        bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-shadow:{text_shadow};">{reward} →</div>'
     elif mode == "ai":
         bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:{accent};">●</span> {slot["sub"]}</div>'
     elif mode == "stat" and slot.get("stats"):
@@ -346,9 +348,9 @@ def _render_pulse_card_html(slot: dict) -> str:
     pct = slot.get("pct", 0)
     accent = slot.get("accent", "#1ed760")
 
-    # For perk cards, add bottom border progress bar and center content
+    # For perk cards, add bottom border progress bar with proper layout
     if mode == "perk":
-        card_style = f"background:{bg};border:{border};border-radius:14px;padding:16px;height:96px;display:flex;flex-direction:column;justify-content:center;gap:6px;box-shadow:{shadow};position:relative;overflow:hidden;"
+        card_style = f"background:{bg};border:{border};border-radius:14px;padding:16px;padding-bottom:18px;height:96px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:{shadow};position:relative;overflow:hidden;"
         progress_bar = f'<div style="position:absolute;bottom:0;left:0;width:100%;height:3px;background:{track_color};"><div style="width:{pct}%;height:100%;background:{accent};box-shadow:{fill_shadow};"></div></div>'
     else:
         card_style = f"background:{bg};border:{border};border-radius:14px;padding:16px;height:96px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:{shadow};"
