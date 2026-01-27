@@ -125,13 +125,14 @@ def render_pulse_deck():
         },
         "ai": {
             "icon": "https://api.iconify.design/mdi/robot-outline.svg",
-            # Black card - matches original Spotify dark style
-            "bg": "#000000",
-            "shadow": "0 4px 12px rgba(0,0,0,0.3)",
+            # Matte dark glass - original V15 Spotify/Netflix style
+            "bg": "rgba(255,255,255,0.03)",
+            "border": "1px solid rgba(255,255,255,0.08)",
+            "shadow": "none",
             "accent": "#1ed760",  # Green accent for AI status
             "text_color": "#FFFFFF",
             "sub_color": "rgba(255,255,255,0.6)",
-            "icon_filter": "brightness(0) invert(1)",
+            "icon_filter": "brightness(0) invert(1) opacity(0.8)",
             "text_shadow": "none",
         },
         "system": {
@@ -196,6 +197,7 @@ def render_pulse_deck():
         "main": ai_provider,
         "sub": f"{ai_tier} · {ai_remaining} msgs",
         "bg": ai_brand["bg"],
+        "border": ai_brand.get("border", "none"),
         "shadow": ai_brand["shadow"],
         "accent": ai_brand["accent"],
         "text_color": ai_brand["text_color"],
@@ -352,10 +354,12 @@ def _render_pulse_card_html(slot: dict) -> str:
         </div>'''
 
     # === THE CARD ===
+    border = slot.get("border", "none")
     return f'''
     <div class="pulse-card">
         <div class="pulse-card-inner" style="
             background:{bg};
+            border:{border};
             border-radius:14px;
             padding:16px;
             height:96px;
