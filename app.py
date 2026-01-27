@@ -737,7 +737,7 @@ def main():
     }
 
     .stChatInput > div > div > textarea {
-        background-color: transparent !important;
+        background-color: rgba(255,255,255,0.03) !important;
         border: 1px solid var(--border-glass) !important;
         border-radius: 12px !important;
         color: white !important;
