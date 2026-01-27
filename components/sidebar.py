@@ -9,6 +9,62 @@ from wallet_manager import WalletManager
 from session_manager import SessionManager
 
 
+# === SKELETON LOADING STATES ===
+def _inject_skeleton_css():
+    """Inject CSS for skeleton loading animations (call once per page)"""
+    st.markdown("""
+    <style>
+    @keyframes skeleton-shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    .skeleton {
+        background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+        background-size: 200% 100%;
+        animation: skeleton-shimmer 1.5s ease-in-out infinite;
+        border-radius: 4px;
+    }
+    .skeleton-text { height: 14px; margin-bottom: 8px; }
+    .skeleton-title { height: 32px; width: 60%; margin-bottom: 12px; }
+    .skeleton-block { height: 40px; margin-bottom: 8px; }
+    .skeleton-card { height: 96px; border-radius: 14px; }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+def render_balance_skeleton():
+    """Render skeleton placeholder for balance display"""
+    st.markdown("""
+    <div style="margin-bottom: 1.5rem;">
+        <div class="skeleton skeleton-text" style="width: 50px;"></div>
+        <div class="skeleton skeleton-title"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_transaction_skeleton(count: int = 3):
+    """Render skeleton placeholder for transaction history"""
+    st.markdown("""
+    <div style="margin-bottom: 8px;">
+        <div class="skeleton skeleton-text" style="width: 60px;"></div>
+    </div>
+    """, unsafe_allow_html=True)
+    for _ in range(count):
+        st.markdown("""
+        <div class="skeleton" style="height: 32px; margin-bottom: 8px;"></div>
+        """, unsafe_allow_html=True)
+
+
+def render_address_skeleton():
+    """Render skeleton placeholder for address display"""
+    st.markdown("""
+    <div style="margin-bottom: 12px;">
+        <div class="skeleton skeleton-text" style="width: 30px;"></div>
+        <div class="skeleton skeleton-block"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def _get_solana_address_from_session() -> str:
     """Get Solana address from wallet data or session state"""
     # First try wallet data (most reliable)
@@ -213,6 +269,9 @@ def render_transaction_history():
 def sidebar():
     """Render V12 sidebar - The Spine"""
     with st.sidebar:
+        # Inject skeleton CSS once
+        _inject_skeleton_css()
+
         st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
         render_sidebar_header()
 
@@ -236,10 +295,15 @@ def sidebar():
         if st.session_state.wallet_address and not st.session_state.get("wallet_locked", True):
             render_status_card(is_active=True)
 
-            # Balance display
+            # Balance display (with skeleton loading state)
+            is_loading_balance = st.session_state.get("_balance_loading", False)
             balances = st.session_state.balances if st.session_state.balances else {}
-            total_usdc = ChainUtils.calculate_total_usdc(balances) if balances else 0.0
-            render_balance_display(total_usdc, balances)
+
+            if is_loading_balance and not balances:
+                render_balance_skeleton()
+            else:
+                total_usdc = ChainUtils.calculate_total_usdc(balances) if balances else 0.0
+                render_balance_display(total_usdc, balances)
 
             # Addresses - responsive middle-ellipsis with copy button
             solana_addr = _get_solana_address_from_session()

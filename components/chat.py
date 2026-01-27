@@ -8,6 +8,52 @@ import streamlit as st
 from chain_utils import ChainUtils
 
 
+# === SKELETON LOADING STATES ===
+def _inject_chat_skeleton_css():
+    """Inject CSS for skeleton loading animations"""
+    st.markdown("""
+    <style>
+    @keyframes skeleton-shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    .skeleton {
+        background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+        background-size: 200% 100%;
+        animation: skeleton-shimmer 1.5s ease-in-out infinite;
+        border-radius: 4px;
+    }
+    .skeleton-card {
+        height: 96px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+def render_pulse_deck_skeleton(count: int = 3):
+    """Render skeleton placeholder for pulse deck cards"""
+    _inject_chat_skeleton_css()
+    cols = st.columns(count)
+    for i in range(count):
+        with cols[i]:
+            st.markdown("""
+            <div class="skeleton skeleton-card"></div>
+            """, unsafe_allow_html=True)
+
+
+def render_message_skeleton():
+    """Render skeleton placeholder for chat message"""
+    st.markdown("""
+    <div style="padding: 16px 0;">
+        <div class="skeleton" style="height: 14px; width: 80%; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="height: 14px; width: 60%; margin-bottom: 8px;"></div>
+        <div class="skeleton" style="height: 14px; width: 70%;"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 # --- VISUAL: FLOATING DATA ---
 def render_fashion_card(label, value, tag=None):
     """Minimalist data point floating in space."""
