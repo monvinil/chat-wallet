@@ -248,23 +248,51 @@ def sidebar():
             total_usdc = ChainUtils.calculate_total_usdc(balances) if balances else 0.0
             render_balance_display(total_usdc, balances)
 
-            # Addresses - full address, responsive overflow
+            # Addresses - responsive middle-ellipsis (shows more when wider)
             solana_addr = _get_solana_address_from_session()
+            evm_addr = st.session_state.wallet_address
 
-            # EVM Address
+            # CSS for responsive middle-truncation
             st.markdown("""
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
-                        letter-spacing: 0.1em; color: #444; margin-bottom: 4px;">EVM</div>
+            <style>
+            .addr-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+            .addr-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #444; flex-shrink: 0; min-width: 28px; }
+            .addr-value {
+                flex: 1; min-width: 0; display: flex; overflow: hidden;
+                font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888;
+                background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 4px;
+            }
+            .addr-start { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .addr-end { flex-shrink: 0; white-space: nowrap; }
+            .addr-copy { flex-shrink: 0; cursor: pointer; opacity: 0.5; font-size: 10px; margin-left: 6px; }
+            .addr-copy:hover { opacity: 1; }
+            </style>
             """, unsafe_allow_html=True)
-            st.code(st.session_state.wallet_address, language=None)
+
+            # EVM Address - split into start...end
+            evm_mid = len(evm_addr) // 2
+            st.markdown(f"""
+            <div class="addr-row">
+                <span class="addr-label">EVM</span>
+                <div class="addr-value" onclick="navigator.clipboard.writeText('{evm_addr}')" title="Click to copy">
+                    <span class="addr-start">{evm_addr[:evm_mid]}</span>
+                    <span class="addr-end">{evm_addr[evm_mid:]}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             # Solana Address (if available)
             if solana_addr:
-                st.markdown("""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
-                            letter-spacing: 0.1em; color: #444; margin-bottom: 4px; margin-top: 12px;">SOL</div>
+                sol_mid = len(solana_addr) // 2
+                st.markdown(f"""
+                <div class="addr-row">
+                    <span class="addr-label">SOL</span>
+                    <div class="addr-value" onclick="navigator.clipboard.writeText('{solana_addr}')" title="Click to copy">
+                        <span class="addr-start">{solana_addr[:sol_mid]}</span>
+                        <span class="addr-end">{solana_addr[sol_mid:]}</span>
+                    </div>
+                </div>
                 """, unsafe_allow_html=True)
-                st.code(solana_addr, language=None)
 
             st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
