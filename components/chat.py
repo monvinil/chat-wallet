@@ -230,15 +230,59 @@ def render_pulse_deck():
             "icon": brand["icon"],
         })
 
-    # === RENDER ===
-    cols = st.columns(len(slots))
-    for i, slot in enumerate(slots):
-        with cols[i]:
-            _render_pulse_card(slot)
+    # === RENDER: Mobile-First Responsive ===
+    # Inject mobile CSS once
+    st.markdown("""
+    <style>
+    .pulse-deck {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 4px 0 8px 0;
+        margin: 0 -16px;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    .pulse-deck::-webkit-scrollbar { display: none; }
+    .pulse-card {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        min-width: 140px;
+        width: calc(25% - 9px);
+    }
+    /* Mobile: 2 cards visible, scroll for more */
+    @media (max-width: 768px) {
+        .pulse-card {
+            min-width: 160px;
+            width: calc(50% - 6px);
+        }
+        .pulse-deck { gap: 8px; }
+    }
+    /* Small mobile: slightly smaller cards */
+    @media (max-width: 480px) {
+        .pulse-card { min-width: 145px; }
+        .pulse-card-inner { padding: 14px !important; height: 88px !important; }
+        .pulse-card-title { font-size: 9px !important; }
+        .pulse-card-main { font-size: 15px !important; }
+        .pulse-card-sub { font-size: 10px !important; }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Build all cards as HTML for horizontal scroll container
+    cards_html = ""
+    for slot in slots:
+        cards_html += _render_pulse_card_html(slot)
+
+    st.markdown(f'<div class="pulse-deck">{cards_html}</div>', unsafe_allow_html=True)
 
 
-def _render_pulse_card(slot: dict):
-    """Render V22 card - spotlight (white) or Vibrant Mesh (white text + shadow)."""
+def _render_pulse_card_html(slot: dict) -> str:
+    """Return HTML string for a pulse card (for horizontal scroll container)."""
 
     mode = slot["mode"]
     icon = slot["icon"]
@@ -248,18 +292,16 @@ def _render_pulse_card(slot: dict):
 
     # === THEME: Spotlight vs Vibrant Mesh ===
     if is_spotlight:
-        # White Titanium - The Anchor
         bg = "#FFFFFF"
         text_color = "#000000"
         sub_color = "#8e8e93"
         shadow = "0 4px 12px rgba(0,0,0,0.15)"
-        icon_filter = "brightness(0)"  # Black icon on white
+        icon_filter = "brightness(0)"
         track_color = "rgba(0,0,0,0.06)"
         accent = "#000000"
         text_shadow = "none"
         fill_shadow = "none"
     else:
-        # Vibrant Mesh - Saturated gradients with white text + shadow lift
         bg = slot.get("bg", "linear-gradient(135deg, #c792ea 0%, #7dc5f5 100%)")
         text_color = slot.get("text_color", "#FFFFFF")
         sub_color = slot.get("sub_color", "rgba(255,255,255,0.9)")
@@ -273,69 +315,71 @@ def _render_pulse_card(slot: dict):
     # === ICON ===
     icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:1.0;">'
 
-    # === MAIN VALUE ===
+    # === MAIN VALUE (compact for mobile) ===
     if mode == "perk" and spent > 0:
-        main_html = f'''<div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
+        main_html = f'''<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;margin-top:4px;">
             <span style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span>
-            <span style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-shadow:{text_shadow};">{int(spent)} USDC</span>
+            <span style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};">{int(spent)}</span>
         </div>'''
     else:
-        main_html = f'''<div style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;text-shadow:{text_shadow};">
+        main_html = f'''<div class="pulse-card-main" style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;text-shadow:{text_shadow};">
             {slot["main"]}
         </div>'''
 
     # === BOTTOM SECTION ===
     if mode == "perk":
-        # Progress bar: translucent track, white fill with glow
         bottom = f'''<div>
-            <div style="font-family:Inter;font-size:11px;color:{sub_color};margin-bottom:6px;font-weight:600;text-shadow:{text_shadow};">{slot["sub"]}</div>
-            <div style="width:100%;height:4px;background:{track_color};border-radius:4px;">
-                <div style="width:{pct}%;height:100%;background:{accent};border-radius:4px;box-shadow:{fill_shadow};"></div>
+            <div class="pulse-card-sub" style="font-family:Inter;font-size:11px;color:{sub_color};margin-bottom:5px;font-weight:600;text-shadow:{text_shadow};">{slot["sub"]}</div>
+            <div style="width:100%;height:3px;background:{track_color};border-radius:3px;">
+                <div style="width:{pct}%;height:100%;background:{accent};border-radius:3px;box-shadow:{fill_shadow};"></div>
             </div>
         </div>'''
     elif mode == "ai":
-        # AI status - simple sub text with green dot
-        bottom = f'''<div style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        bottom = f'''<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             <span style="color:{accent};">●</span> {slot["sub"]}
         </div>'''
     elif mode == "stat" and slot.get("stats"):
-        # Multi-line summary stats
-        bottom = f'''<div style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        bottom = f'''<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             {slot["stats"]}
         </div>'''
     elif is_spotlight:
-        # Arrow for spotlight action cards
         bottom = f'''<div style="text-align:right;">
             <span style="font-family:Inter;font-weight:700;font-size:14px;color:#000;">→</span>
         </div>'''
     else:
-        bottom = f'''<div style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-align:right;text-shadow:{text_shadow};">
+        bottom = f'''<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-align:right;text-shadow:{text_shadow};">
             {slot.get("sub", "")} →
         </div>'''
 
-    # === THE CARD (V22: Cupertino White) ===
-    st.markdown(f'''
-    <div style="
-        background:{bg};
-        border-radius:14px;
-        padding:16px;
-        height:96px;
-        display:flex;
-        flex-direction:column;
-        justify-content:space-between;
-        box-shadow:{shadow};
-        transition:transform 0.2s;
-    ">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-family:Inter;font-size:10px;color:{sub_color};letter-spacing:0.02em;font-weight:700;text-transform:uppercase;text-shadow:{text_shadow};">
-                {slot["title"]}
-            </span>
-            {icon_html}
+    # === THE CARD ===
+    return f'''
+    <div class="pulse-card">
+        <div class="pulse-card-inner" style="
+            background:{bg};
+            border-radius:14px;
+            padding:16px;
+            height:96px;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+            box-shadow:{shadow};
+        ">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="pulse-card-title" style="font-family:Inter;font-size:10px;color:{sub_color};letter-spacing:0.02em;font-weight:700;text-transform:uppercase;text-shadow:{text_shadow};">
+                    {slot["title"]}
+                </span>
+                {icon_html}
+            </div>
+            {main_html}
+            {bottom}
         </div>
-        {main_html}
-        {bottom}
     </div>
-    ''', unsafe_allow_html=True)
+    '''
+
+
+def _render_pulse_card(slot: dict):
+    """Legacy wrapper - renders single card via st.markdown."""
+    st.markdown(_render_pulse_card_html(slot), unsafe_allow_html=True)
 
 
 # Legacy alias
@@ -346,56 +390,78 @@ def render_action_deck():
 # --- MODULES: FULL CAPABILITY LIBRARY ---
 def render_modules():
     """
-    Render full capability library with all categories.
+    Render full capability library with responsive mobile grid.
+    Mobile: 2 columns, Desktop: 4 columns
     """
-    st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
+    # Inject mobile-responsive CSS for modules
+    st.markdown("""
+    <style>
+    /* Mobile-responsive tabs */
+    @media (max-width: 768px) {
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none; }
+        .stTabs [data-baseweb="tab"] {
+            font-size: 12px !important;
+            padding: 8px 12px !important;
+            white-space: nowrap;
+        }
+        /* Compact buttons on mobile */
+        .stButton button {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+        }
+    }
+    @media (max-width: 480px) {
+        .stTabs [data-baseweb="tab"] {
+            font-size: 11px !important;
+            padding: 6px 10px !important;
+        }
+        .stButton button {
+            padding: 6px 10px !important;
+            font-size: 12px !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    # Full categories with (label, prompt, is_live)
+    st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+
+    # Compact categories - most used first
     categories = {
-        "Send & Pay": [
-            ("Send USDC", "Help me send USDC to someone", True),
-            ("Pay Bills", "Help me pay a bill with crypto", True),
-            ("Phone Top-up", "I need to add minutes to my phone", True),
-            ("Schedule", "I want to set up a recurring payment", True),
+        "Pay": [
+            ("Send", "Help me send USDC to someone", True),
+            ("Bills", "Help me pay a bill with crypto", True),
+            ("Phone", "I need to add minutes to my phone", True),
         ],
-        "Earn": [
-            ("Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
-            ("Swap to ETH", "Swap USDC to ETH at best rates", False),
-            ("Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
-        ],
-        "Tools": [
-            ("Get Domain", "I want to register a domain", True),
-            ("VPN", "I want a Mullvad VPN subscription", True),
-            ("eSIM", "I need an international eSIM", False),
-            ("Alerts", "Set up balance alerts and spending notifications", False),
-        ],
-        "Shopping": [
+        "Shop": [
             ("Amazon", "I want to buy an Amazon gift card", True),
             ("Target", "Show me Target gift cards", True),
             ("Walmart", "I want a Walmart gift card", True),
-            ("Best Buy", "Show me Best Buy gift cards", True),
-            ("Sephora", "Get a Sephora gift card", True),
         ],
         "Food": [
             ("DoorDash", "I want a DoorDash gift card", True),
             ("Uber Eats", "I want Uber Eats gift card credits", True),
             ("Starbucks", "Get me a Starbucks gift card", True),
-            ("Chipotle", "I want a Chipotle gift card", True),
-            ("Grubhub", "Show me Grubhub gift cards", True),
         ],
-        "Streaming": [
+        "Stream": [
             ("Netflix", "I want a Netflix gift card", True),
             ("Spotify", "Get me a Spotify gift card", True),
             ("Disney+", "I want a Disney+ gift card", False),
-            ("Hulu", "Show me Hulu gift cards", False),
-            ("Apple TV+", "I want an Apple TV+ subscription", False),
         ],
-        "Gaming": [
+        "Games": [
             ("PlayStation", "Show me PlayStation gift cards", True),
             ("Xbox", "I want an Xbox gift card", True),
             ("Steam", "Get me a Steam gift card", True),
-            ("Nintendo", "I want a Nintendo eShop card", True),
-            ("Roblox", "Show me Roblox gift cards", True),
+        ],
+        "Tools": [
+            ("Domain", "I want to register a domain", True),
+            ("VPN", "I want a Mullvad VPN subscription", True),
+            ("eSIM", "I need an international eSIM", False),
         ],
     }
 
@@ -403,9 +469,10 @@ def render_modules():
 
     for tab_idx, (category_name, items) in enumerate(categories.items()):
         with tabs[tab_idx]:
-            cols = st.columns(min(len(items), 4))
+            # Responsive: 3 columns (fits mobile better)
+            cols = st.columns(3)
             for i, (label, prompt, is_live) in enumerate(items):
-                col_idx = i % 4
+                col_idx = i % 3
                 with cols[col_idx]:
                     if is_live:
                         if st.button(label, key=f"mod_{tab_idx}_{i}", use_container_width=True):
@@ -420,24 +487,25 @@ def render_modules():
 def render_modules_preview():
     """
     Render capability preview for pre-login users (all disabled).
+    Mobile-optimized with compact grid.
     """
+    # Same compact categories as render_modules
     categories = {
-        "Send & Pay": ["Send USDC", "Pay Bills", "Phone Top-up", "Schedule"],
-        "Earn": ["Earn Yield", "Swap to ETH", "Stack Sats"],
-        "Tools": ["Get Domain", "VPN", "eSIM", "Alerts"],
-        "Shopping": ["Amazon", "Target", "Walmart", "Best Buy", "Sephora"],
-        "Food": ["DoorDash", "Uber Eats", "Starbucks", "Chipotle", "Grubhub"],
-        "Streaming": ["Netflix", "Spotify", "Disney+", "Hulu", "Apple TV+"],
-        "Gaming": ["PlayStation", "Xbox", "Steam", "Nintendo", "Roblox"],
+        "Pay": ["Send", "Bills", "Phone"],
+        "Shop": ["Amazon", "Target", "Walmart"],
+        "Food": ["DoorDash", "Uber Eats", "Starbucks"],
+        "Stream": ["Netflix", "Spotify", "Disney+"],
+        "Games": ["PlayStation", "Xbox", "Steam"],
+        "Tools": ["Domain", "VPN", "eSIM"],
     }
 
     tabs = st.tabs(list(categories.keys()))
 
     for tab_idx, (category_name, items) in enumerate(categories.items()):
         with tabs[tab_idx]:
-            cols = st.columns(min(len(items), 4))
+            cols = st.columns(3)
             for i, label in enumerate(items):
-                col_idx = i % 4
+                col_idx = i % 3
                 with cols[col_idx]:
                     st.button(label, key=f"prev_{tab_idx}_{i}", disabled=True,
                               use_container_width=True, help="Sign up to use")
