@@ -99,33 +99,35 @@ def render_pulse_deck():
     - Text shadows make white text readable on bright backgrounds
     """
 
-    # === BRAND DEFINITIONS: Vibrant Mesh with White Text ===
+    # === BRAND DEFINITIONS: Matte Dark Glass Style ===
     BRANDS = {
         "spotify": {
             "icon": "https://api.iconify.design/simple-icons/spotify.svg",
-            # Saturated Mesh: Lavender -> Electric Blue -> Mint
-            "bg": "linear-gradient(135deg, #c792ea 0%, #7dc5f5 50%, #6bf2d3 100%)",
-            "shadow": "0 8px 25px -6px rgba(125, 197, 245, 0.5)",
-            "accent": "#FFFFFF",
+            # Matte dark glass with green accent
+            "bg": "rgba(255,255,255,0.03)",
+            "border": "1px solid rgba(255,255,255,0.08)",
+            "shadow": "none",
+            "accent": "#1ed760",  # Spotify green
             "text_color": "#FFFFFF",
-            "sub_color": "rgba(255,255,255,0.9)",
-            "icon_filter": "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
-            "text_shadow": "0 2px 8px rgba(0,0,0,0.25)",
+            "sub_color": "rgba(255,255,255,0.6)",
+            "icon_filter": "brightness(0) invert(1) opacity(0.8)",
+            "text_shadow": "none",
         },
         "netflix": {
             "icon": "https://api.iconify.design/simple-icons/netflix.svg",
-            # Saturated Mesh: Hot Orange -> Deep Pink -> Peach
-            "bg": "linear-gradient(135deg, #ff9a44 0%, #fc6076 50%, #ff9a9e 100%)",
-            "shadow": "0 8px 25px -6px rgba(252, 96, 118, 0.5)",
-            "accent": "#FFFFFF",
+            # Matte dark glass with red accent
+            "bg": "rgba(255,255,255,0.03)",
+            "border": "1px solid rgba(255,255,255,0.08)",
+            "shadow": "none",
+            "accent": "#e50914",  # Netflix red
             "text_color": "#FFFFFF",
-            "sub_color": "rgba(255,255,255,0.9)",
-            "icon_filter": "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
-            "text_shadow": "0 2px 8px rgba(0,0,0,0.25)",
+            "sub_color": "rgba(255,255,255,0.6)",
+            "icon_filter": "brightness(0) invert(1) opacity(0.8)",
+            "text_shadow": "none",
         },
         "ai": {
             "icon": "https://api.iconify.design/mdi/robot-outline.svg",
-            # Matte dark glass - original V15 Spotify/Netflix style
+            # Matte dark glass
             "bg": "rgba(255,255,255,0.03)",
             "border": "1px solid rgba(255,255,255,0.08)",
             "shadow": "none",
@@ -208,7 +210,7 @@ def render_pulse_deck():
             "icon": BRANDS["system"]["icon"],
         })
 
-    # Slots 3-4: Perks (Vibrant Mesh with White Text)
+    # Slots 3-4: Perks (Matte dark glass with glowing progress bars)
     for p in perks[:2]:
         brand = BRANDS.get(p["brand"].lower(), BRANDS["system"])
         pct = int((p["progress"] / p["target"]) * 100) if p["target"] > 0 else 0
@@ -222,12 +224,13 @@ def render_pulse_deck():
             "spent": spent,
             "brand_key": p["brand"].lower(),
             "bg": brand["bg"],
+            "border": brand.get("border", "none"),
             "shadow": brand["shadow"],
             "accent": brand["accent"],
             "text_color": brand.get("text_color", "#FFFFFF"),
-            "sub_color": brand.get("sub_color", "rgba(255,255,255,0.9)"),
-            "icon_filter": brand.get("icon_filter", "brightness(0) invert(1)"),
-            "text_shadow": brand.get("text_shadow", "0 2px 8px rgba(0,0,0,0.25)"),
+            "sub_color": brand.get("sub_color", "rgba(255,255,255,0.6)"),
+            "icon_filter": brand.get("icon_filter", "brightness(0) invert(1) opacity(0.8)"),
+            "text_shadow": brand.get("text_shadow", "none"),
             "spotlight": False,
             "icon": brand["icon"],
         })
@@ -304,15 +307,16 @@ def _render_pulse_card_html(slot: dict) -> str:
         text_shadow = "none"
         fill_shadow = "none"
     else:
-        bg = slot.get("bg", "linear-gradient(135deg, #c792ea 0%, #7dc5f5 100%)")
+        bg = slot.get("bg", "rgba(255,255,255,0.03)")
         text_color = slot.get("text_color", "#FFFFFF")
-        sub_color = slot.get("sub_color", "rgba(255,255,255,0.9)")
+        sub_color = slot.get("sub_color", "rgba(255,255,255,0.6)")
         shadow = slot.get("shadow", "none")
-        icon_filter = slot.get("icon_filter", "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))")
-        track_color = "rgba(255,255,255,0.3)"
-        accent = slot.get("accent", "#FFFFFF")
-        text_shadow = slot.get("text_shadow", "0 2px 8px rgba(0,0,0,0.25)")
-        fill_shadow = "0 0 8px rgba(255,255,255,0.5)"
+        icon_filter = slot.get("icon_filter", "brightness(0) invert(1) opacity(0.8)")
+        track_color = "rgba(255,255,255,0.1)"
+        accent = slot.get("accent", "#1ed760")
+        text_shadow = slot.get("text_shadow", "none")
+        # Glowing progress bar uses accent color
+        fill_shadow = f"0 0 10px {accent}, 0 0 20px {accent}"
 
     # === ICON ===
     icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:1.0;">'
