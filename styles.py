@@ -74,12 +74,25 @@ h1, h2, h3 {
 
 /* Chat input wrapper - remove inner rectangle */
 .stChatInput,
-.stChatInput *,
-.stChatInput div,
+.stChatInput > div,
+.stChatInput > div > div,
+.stChatInput > div > div > div,
+.stChatInput form,
+.stChatInput [data-testid],
 [data-testid="stChatInput"],
-[data-testid="stChatInput"] *,
+[data-testid="stChatInput"] > div,
 [data-testid="stChatInputContainer"],
-[data-testid="stChatInputContainer"] * {
+[data-testid="stChatInputContainer"] > div,
+[data-testid="stBottom"] > div,
+[data-testid="stBottom"] > div > div {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+
+/* Kill any element using secondaryBackgroundColor inside chat input */
+.stChatInput [style*="background"],
+.stChatInput div[class*="st-"] {
     background: transparent !important;
     background-color: transparent !important;
 }
@@ -89,6 +102,11 @@ h1, h2, h3 {
 [data-testid="stChatInput"] textarea {
     background-color: rgba(255,255,255,0.03) !important;
     border: 1px solid var(--border-glass) !important;
+}
+
+/* Focus state for textarea */
+.stChatInput textarea:focus {
+    border-color: rgba(255,255,255,0.3) !important;
 }
 
 /* 4. REFINED BUTTONS */
