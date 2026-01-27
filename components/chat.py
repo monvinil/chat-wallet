@@ -103,27 +103,27 @@ def render_pulse_deck():
     BRANDS = {
         "spotify": {
             "icon": "https://api.iconify.design/simple-icons/spotify.svg",
-            # Mesh gradient: lavender → sky → mint
-            "bg": "linear-gradient(135deg, #c792ea 0%, #7dc5f5 50%, #6bf2d3 100%)",
+            # Matte dark glass - matches AI card
+            "bg": "rgba(255,255,255,0.03)",
             "border": "none",
-            "shadow": "0 4px 16px rgba(199,146,234,0.3)",
-            "accent": "#FFFFFF",  # White progress bar
+            "shadow": "none",
+            "accent": "#1ed760",  # Spotify green for progress bar
             "text_color": "#FFFFFF",
-            "sub_color": "rgba(255,255,255,0.85)",
-            "icon_filter": "brightness(0) invert(1)",
-            "text_shadow": "0 2px 8px rgba(0,0,0,0.25)",
+            "sub_color": "rgba(255,255,255,0.6)",
+            "icon_filter": "brightness(0) invert(1) opacity(0.8)",
+            "text_shadow": "none",
         },
         "netflix": {
             "icon": "https://api.iconify.design/simple-icons/netflix.svg",
-            # Mesh gradient: gold → pink → peach
-            "bg": "linear-gradient(135deg, #ffd89b 0%, #f5a0c7 50%, #ffc3a0 100%)",
+            # Matte dark glass - matches AI card
+            "bg": "rgba(255,255,255,0.03)",
             "border": "none",
-            "shadow": "0 4px 16px rgba(245,160,199,0.3)",
-            "accent": "#FFFFFF",  # White progress bar
+            "shadow": "none",
+            "accent": "#e50914",  # Netflix red for progress bar
             "text_color": "#FFFFFF",
-            "sub_color": "rgba(255,255,255,0.85)",
-            "icon_filter": "brightness(0) invert(1)",
-            "text_shadow": "0 2px 8px rgba(0,0,0,0.25)",
+            "sub_color": "rgba(255,255,255,0.6)",
+            "icon_filter": "brightness(0) invert(1) opacity(0.8)",
+            "text_shadow": "none",
         },
         "ai": {
             "icon": "https://api.iconify.design/mdi/robot-outline.svg",
