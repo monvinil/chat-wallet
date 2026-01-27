@@ -43,29 +43,19 @@ def render_header():
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 
 
-# --- THE PULSE DECK (V13 Brand Edition) ---
+# --- THE PULSE DECK (V14: Unified Icon Edition) ---
 def render_pulse_deck():
     """
-    Premium wallet card aesthetic with brand immersion.
-    Features: SVG logos, cinematic gradients, frosted glass, neon progress.
+    Premium wallet card aesthetic with unified SVG icons.
+    All icons are now high-fidelity vectors for visual consistency.
     """
 
-    # === BRAND DEFINITIONS (with explicit gradients for control) ===
+    # === BRAND DEFINITIONS (all SVG icons for consistency) ===
     BRANDS = {
         "spotify": {
             "color": "#1DB954",
             "gradient": "linear-gradient(135deg, rgba(29,185,84,0.15) 0%, rgba(29,185,84,0.02) 100%)",
             "icon": "https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg"
-        },
-        "metal": {
-            "color": "#e5e5e5",
-            "gradient": "linear-gradient(135deg, rgba(229,229,229,0.15) 0%, rgba(229,229,229,0.02) 100%)",
-            "icon": "✦"
-        },
-        "pro": {
-            "color": "#a855f7",
-            "gradient": "linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(168,85,247,0.02) 100%)",
-            "icon": "◆"
         },
         "netflix": {
             "color": "#E50914",
@@ -75,7 +65,7 @@ def render_pulse_deck():
         "system": {
             "color": "#e5e5e5",
             "gradient": "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.01) 100%)",
-            "icon": "⚡"
+            "icon": "https://api.iconify.design/mdi/chart-line.svg"
         },
     }
 
@@ -83,8 +73,8 @@ def render_pulse_deck():
     active_tasks = []  # TODO: Pull from pending_approvals table
 
     perks = [
-        {"brand": "spotify", "progress": 75, "target": 100, "reward": "1 Mo Free", "spent": 75.00},
-        {"brand": "netflix", "progress": 0, "target": 100, "reward": "1 Mo Free", "spent": 0.00},
+        {"brand": "spotify", "progress": 75, "target": 100, "reward": "1 Mo Free", "spent": 75},
+        {"brand": "netflix", "progress": 0, "target": 100, "reward": "1 Mo Free", "spent": 0},
     ]
 
     # === SLOT BUILDER ===
@@ -109,16 +99,16 @@ def render_pulse_deck():
             "mode": "stat",
             "title": "THIS MONTH",
             "main": "$0.00",
-            "sub": "spent",
+            "sub": "View",
             "accent": brand["color"],
             "bg": brand["gradient"],
-            "icon": "📈",
+            "icon": brand["icon"],
         })
 
     # Slots 2-3: Perks
     for p in perks[:2]:
-        brand = BRANDS.get(p["brand"].lower(), {"color": "#888", "gradient": "linear-gradient(135deg, rgba(136,136,136,0.1) 0%, rgba(136,136,136,0.02) 100%)", "icon": "●"})
-        pct = int((p["progress"] / p["target"]) * 100)
+        brand = BRANDS.get(p["brand"].lower(), BRANDS["system"])
+        pct = int((p["progress"] / p["target"]) * 100) if p["target"] > 0 else 0
         spent = p.get("spent", 0)
         slots.append({
             "mode": "perk",
@@ -140,7 +130,7 @@ def render_pulse_deck():
 
 
 def _render_brand_card(slot: dict):
-    """Render premium brand card with frosted glass and neon accents."""
+    """Render V14 premium card with unified SVG icons and enhanced styling."""
 
     mode = slot["mode"]
     accent = slot["accent"]
@@ -149,28 +139,27 @@ def _render_brand_card(slot: dict):
     pct = slot.get("pct", 0)
     spent = slot.get("spent", 0)
 
-    # Icon: SVG image or text symbol
-    if icon.startswith("http"):
-        icon_html = f'<img src="{icon}" style="width:16px;height:16px;opacity:0.9;filter:grayscale(100%) brightness(200%);">'
+    # Icon: All SVG for consistency, with appropriate filters
+    if mode in ["stat", "task"]:
+        icon_filter = "brightness(0) invert(1) opacity(0.7)"
     else:
-        icon_html = f'<span style="font-size:14px;color:{accent};">{icon}</span>'
+        icon_filter = "grayscale(100%) brightness(200%)"
+    icon_html = f'<img src="{icon}" style="height:16px;width:auto;max-width:20px;object-fit:contain;filter:{icon_filter};">'
 
     # Build main display - include spent for perks
     if mode == "perk" and spent > 0:
-        main_html = f'<div style="display:flex;align-items:baseline;gap:8px;margin-top:2px;"><span style="font-family:Inter;font-size:15px;font-weight:500;color:white;letter-spacing:-0.02em;">{slot["main"]}</span><span style="font-family:JetBrains Mono;font-size:11px;color:#888;">${spent:.2f}</span></div>'
+        main_html = f'<div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;"><span style="font-family:Inter;font-size:15px;font-weight:500;color:#e5e5e5;letter-spacing:-0.02em;">{slot["main"]}</span><span style="font-family:JetBrains Mono;font-size:10px;color:#666;">{int(spent)} USDC</span></div>'
     else:
-        main_html = f'<div style="font-family:Inter;font-size:15px;font-weight:500;color:white;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">{slot["main"]}</div>'
+        main_html = f'<div style="font-family:Inter;font-size:15px;font-weight:500;color:#e5e5e5;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">{slot["main"]}</div>'
 
     # Build bottom section based on mode
     if mode == "perk":
-        bottom = f'<div style="margin-top:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:9px;color:#888;font-family:Inter;">{slot["sub"]}</span><span style="font-size:9px;color:{accent};font-family:JetBrains Mono;opacity:0.8;">{pct}%</span></div><div style="width:100%;height:2px;background:rgba(255,255,255,0.05);border-radius:2px;"><div style="width:{pct}%;height:100%;background:{accent};border-radius:2px;box-shadow:0 0 8px {accent};"></div></div></div>'
-    elif mode == "task":
-        bottom = f'<div style="font-family:JetBrains Mono;font-size:9px;color:{accent};text-align:right;margin-top:auto;border:1px solid {accent}40;border-radius:4px;padding:3px 8px;display:inline-block;align-self:flex-end;">{slot["sub"]} →</div>'
+        bottom = f'<div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:9px;color:#555;font-family:Inter;">{slot["sub"]}</span></div><div style="width:100%;height:1px;background:rgba(255,255,255,0.05);"><div style="width:{pct}%;height:100%;background:{accent};box-shadow:0 0 8px {accent};"></div></div></div>'
     else:
-        bottom = f'<div style="font-family:JetBrains Mono;font-size:9px;color:{accent};text-align:right;margin-top:auto;border:1px solid {accent}40;border-radius:4px;padding:3px 8px;display:inline-block;align-self:flex-end;">{slot["sub"]} →</div>'
+        bottom = f'<div style="font-family:JetBrains Mono;font-size:10px;color:{accent};text-align:right;margin-top:auto;opacity:0.8;">{slot["sub"]} →</div>'
 
-    # Single-line HTML for reliable Streamlit parsing
-    card_html = f'<div style="border:1px solid {accent}40;background:{bg};border-radius:12px;padding:16px;height:100px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;backdrop-filter:blur(10px);"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:{accent};letter-spacing:0.1em;font-weight:600;">{slot["title"]}</span>{icon_html}</div>{main_html}{bottom}</div>'
+    # V14 Card: Enhanced borders, shadow, refined styling
+    card_html = f'<div style="background:{bg};border-top:1px solid rgba(255,255,255,0.1);border-bottom:1px solid rgba(0,0,0,0.5);border-radius:16px;padding:18px;height:96px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 10px 20px -5px rgba(0,0,0,0.3);"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:#666;letter-spacing:0.05em;font-weight:500;">{slot["title"]}</span>{icon_html}</div>{main_html}{bottom}</div>'
 
     st.markdown(card_html, unsafe_allow_html=True)
 
