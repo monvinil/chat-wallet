@@ -77,19 +77,8 @@ def _get_solana_address_from_session() -> str:
 
 
 def render_sidebar_header():
-    """Render sidebar logo: — $ →"""
-    # Dash (28px line), Dollar (42px bold italic), Arrow (SVG matching dash weight)
-    st.markdown(
-        '<div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:1.5rem;padding:1rem 0;">'
-        '<span style="display:inline-block;width:28px;height:2.5px;background:white;"></span>'
-        '<span style="font-family:Menlo,Monaco,Courier New,monospace;font-size:42px;font-weight:700;font-style:italic;color:white;line-height:1;">$</span>'
-        '<svg width="28" height="12" viewBox="0 0 28 12" style="display:inline-block;">'
-        '<line x1="0" y1="6" x2="22" y2="6" stroke="white" stroke-width="2.5" stroke-linecap="round"/>'
-        '<polyline points="18,2 24,6 18,10" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
-        '</svg>'
-        '</div>',
-        unsafe_allow_html=True
-    )
+    """Render V12 minimal header"""
+    st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
 
 
 def render_status_card(is_active: bool):
