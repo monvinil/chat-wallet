@@ -80,12 +80,12 @@ def render_sidebar_header():
     """Render sidebar logo: — $ →"""
     # Dash/arrow 20% smaller than dollar
     st.markdown(
-        '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:1.5rem;padding:0.25rem 0;">'
-        '<span style="display:inline-block;width:18px;height:1.6px;background:white;"></span>'
+        '<div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:1.5rem;padding:0.25rem 0;">'
+        '<span style="display:inline-block;width:16px;height:1.6px;background:white;"></span>'
         '<span style="font-family:Menlo,Monaco,Courier New,monospace;font-size:34px;font-weight:700;font-style:italic;color:white;line-height:1;">$</span>'
-        '<svg width="18" height="8" viewBox="0 0 18 8" style="display:inline-block;">'
-        '<line x1="0" y1="4" x2="14" y2="4" stroke="white" stroke-width="1.6" stroke-linecap="round"/>'
-        '<polyline points="11,1 15,4 11,7" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+        '<svg width="16" height="7" viewBox="0 0 16 7" style="display:inline-block;">'
+        '<line x1="0" y1="3.5" x2="12" y2="3.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>'
+        '<polyline points="9.5,1 13,3.5 9.5,6" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
         '</svg>'
         '</div>',
         unsafe_allow_html=True
