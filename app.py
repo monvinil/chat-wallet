@@ -834,7 +834,7 @@ def main():
         background: transparent !important;
     }
 
-    /* Remove yellow/orange focus outlines */
+    /* Remove all focus outlines and highlights */
     [data-testid="stSidebar"] input:focus,
     [data-testid="stSidebar"] button:focus,
     [data-testid="stForm"] input:focus,
@@ -844,13 +844,29 @@ def main():
         box-shadow: none !important;
     }
 
-    /* Remove Streamlit's default focus ring */
     *:focus {
         outline: none !important;
     }
 
-    [data-baseweb="input"]:focus-within {
-        border-color: rgba(255,255,255,0.3) !important;
+    /* Remove Streamlit's input wrapper highlights */
+    [data-baseweb="input"],
+    [data-baseweb="input"]:focus-within,
+    [data-baseweb="base-input"],
+    [data-testid="stForm"] [data-baseweb="input"] {
+        border-color: var(--border-glass) !important;
+        box-shadow: none !important;
+        background: rgba(255,255,255,0.03) !important;
+        transition: none !important;
+    }
+
+    /* Remove form container highlight */
+    [data-testid="stForm"] {
+        border: none !important;
+        background: transparent !important;
+    }
+
+    [data-testid="stForm"] > div {
+        border: none !important;
         box-shadow: none !important;
     }
 
