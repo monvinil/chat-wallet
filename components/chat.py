@@ -70,7 +70,7 @@ def render_pulse_deck():
         "netflix": {
             "color": "#E50914",
             "gradient": "linear-gradient(135deg, rgba(229,9,20,0.15) 0%, rgba(229,9,20,0.02) 100%)",
-            "icon": "▶"
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Netflix_2015_N_logo.svg"
         },
         "system": {
             "color": "#e5e5e5",
@@ -83,8 +83,8 @@ def render_pulse_deck():
     active_tasks = []  # TODO: Pull from pending_approvals table
 
     perks = [
-        {"brand": "spotify", "progress": 75, "target": 100, "reward": "1 Mo Free"},
-        {"brand": "metal", "progress": 2, "target": 5, "reward": "Unlock"},
+        {"brand": "spotify", "progress": 75, "target": 100, "reward": "1 Mo Free", "spent": 75.00},
+        {"brand": "netflix", "progress": 0, "target": 100, "reward": "1 Mo Free", "spent": 0.00},
     ]
 
     # === SLOT BUILDER ===
@@ -119,12 +119,14 @@ def render_pulse_deck():
     for p in perks[:2]:
         brand = BRANDS.get(p["brand"].lower(), {"color": "#888", "gradient": "linear-gradient(135deg, rgba(136,136,136,0.1) 0%, rgba(136,136,136,0.02) 100%)", "icon": "●"})
         pct = int((p["progress"] / p["target"]) * 100)
+        spent = p.get("spent", 0)
         slots.append({
             "mode": "perk",
             "title": p["brand"].upper(),
             "main": f"{p['progress']}/{p['target']}",
             "sub": p["reward"],
             "pct": pct,
+            "spent": spent,
             "accent": brand["color"],
             "bg": brand["gradient"],
             "icon": brand["icon"],
@@ -145,12 +147,19 @@ def _render_brand_card(slot: dict):
     bg = slot["bg"]
     icon = slot["icon"]
     pct = slot.get("pct", 0)
+    spent = slot.get("spent", 0)
 
     # Icon: SVG image or text symbol
     if icon.startswith("http"):
         icon_html = f'<img src="{icon}" style="width:16px;height:16px;opacity:0.9;filter:grayscale(100%) brightness(200%);">'
     else:
         icon_html = f'<span style="font-size:14px;color:{accent};">{icon}</span>'
+
+    # Build main display - include spent for perks
+    if mode == "perk" and spent > 0:
+        main_html = f'<div style="display:flex;align-items:baseline;gap:8px;margin-top:2px;"><span style="font-family:Inter;font-size:15px;font-weight:500;color:white;letter-spacing:-0.02em;">{slot["main"]}</span><span style="font-family:JetBrains Mono;font-size:11px;color:#888;">${spent:.2f}</span></div>'
+    else:
+        main_html = f'<div style="font-family:Inter;font-size:15px;font-weight:500;color:white;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">{slot["main"]}</div>'
 
     # Build bottom section based on mode
     if mode == "perk":
@@ -161,7 +170,7 @@ def _render_brand_card(slot: dict):
         bottom = f'<div style="font-family:JetBrains Mono;font-size:9px;color:{accent};text-align:right;margin-top:auto;border:1px solid {accent}40;border-radius:4px;padding:3px 8px;display:inline-block;align-self:flex-end;">{slot["sub"]} →</div>'
 
     # Single-line HTML for reliable Streamlit parsing
-    card_html = f'<div style="border:1px solid {accent}40;background:{bg};border-radius:12px;padding:16px;height:100px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;backdrop-filter:blur(10px);"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:{accent};letter-spacing:0.1em;font-weight:600;">{slot["title"]}</span>{icon_html}</div><div style="font-family:Inter;font-size:15px;font-weight:500;color:white;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">{slot["main"]}</div>{bottom}</div>'
+    card_html = f'<div style="border:1px solid {accent}40;background:{bg};border-radius:12px;padding:16px;height:100px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;backdrop-filter:blur(10px);"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-family:JetBrains Mono;font-size:9px;color:{accent};letter-spacing:0.1em;font-weight:600;">{slot["title"]}</span>{icon_html}</div>{main_html}{bottom}</div>'
 
     st.markdown(card_html, unsafe_allow_html=True)
 
