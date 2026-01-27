@@ -236,8 +236,8 @@ def save_guest_wallet_modal():
                                 st.session_state.guest_mode = False
                                 st.session_state._guest_user_id = None  # Clear guest ID
 
-                                # Create persistent session
-                                SessionManager.login(user["id"], email, st.session_state.wallet_address)
+                                # Create persistent session (include Solana address)
+                                SessionManager.login(user["id"], email, st.session_state.wallet_address, st.session_state.get("solana_address"))
 
                                 st.success("Account created. Your wallet is now saved.")
 

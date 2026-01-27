@@ -107,7 +107,7 @@ class SessionManager:
         return secrets.token_urlsafe(32)
 
     @staticmethod
-    def create_session(user_id: str, email: str, wallet_address: str) -> Optional[str]:
+    def create_session(user_id: str, email: str, wallet_address: str, solana_address: str = None) -> Optional[str]:
         """Create a new session and store in database"""
         from supabase_client import get_supabase_client
         from utils.logger import logger
@@ -122,14 +122,18 @@ class SessionManager:
             expires_at = datetime.utcnow() + timedelta(days=SessionManager.SESSION_EXPIRY_DAYS)
 
             # Store session in database
-            result = supabase.table("sessions").upsert({
+            session_data = {
                 "user_id": user_id,
                 "session_token": session_token,
                 "expires_at": expires_at.isoformat(),
                 "created_at": datetime.utcnow().isoformat(),
                 "email": email,
                 "wallet_address": wallet_address
-            }, on_conflict="user_id").execute()
+            }
+            if solana_address:
+                session_data["solana_address"] = solana_address
+
+            result = supabase.table("sessions").upsert(session_data, on_conflict="user_id").execute()
 
             if result.data:
                 logger.debug("Session created successfully")
@@ -327,6 +331,10 @@ class SessionManager:
             st.session_state.wallet_address = session_data["wallet_address"]
             st.session_state.session_token = session_token
 
+            # Restore Solana address if stored
+            if session_data.get("solana_address"):
+                st.session_state.solana_address = session_data["solana_address"]
+
             # Try to restore encrypted wallet from cloud
             from supabase_client import get_encrypted_wallet
             encrypted_wallet = get_encrypted_wallet(session_data["user_id"])
@@ -343,11 +351,11 @@ class SessionManager:
             return False
 
     @staticmethod
-    def login(user_id: str, email: str, wallet_address: str) -> bool:
+    def login(user_id: str, email: str, wallet_address: str, solana_address: str = None) -> bool:
         """Complete login: create session and set cookie"""
         from utils.logger import logger
 
-        session_token = SessionManager.create_session(user_id, email, wallet_address)
+        session_token = SessionManager.create_session(user_id, email, wallet_address, solana_address)
         if session_token:
             SessionManager.save_session_cookie(session_token)
             st.session_state.session_token = session_token
@@ -355,6 +363,31 @@ class SessionManager:
             return True
         logger.warning("Login failed: session creation error")
         return False
+
+    @staticmethod
+    def update_session_solana_address(solana_address: str) -> bool:
+        """Update the current session with Solana address (after wallet unlock)"""
+        from supabase_client import get_supabase_client
+        from utils.logger import logger
+
+        session_token = st.session_state.get("session_token")
+        if not session_token or not solana_address:
+            return False
+
+        try:
+            supabase = get_supabase_client(use_service_key=True)
+            if not supabase:
+                return False
+
+            supabase.table("sessions").update({
+                "solana_address": solana_address
+            }).eq("session_token", session_token).execute()
+
+            st.session_state.solana_address = solana_address
+            return True
+        except Exception as e:
+            logger.debug(f"Failed to update session with Solana address: {type(e).__name__}")
+            return False
 
     @staticmethod
     def logout():

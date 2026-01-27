@@ -471,11 +471,12 @@ def wallet_setup_ui():
                                 st.session_state.user_id = user["id"]
 
                                 # Store Solana address if available
-                                if wallet_info.get("solana_address"):
-                                    st.session_state.solana_address = wallet_info["solana_address"]
+                                solana_addr = wallet_info.get("solana_address")
+                                if solana_addr:
+                                    st.session_state.solana_address = solana_addr
 
-                                # Create persistent session (cookie)
-                                SessionManager.login(user["id"], email, wallet_info["address"])
+                                # Create persistent session (cookie) - include Solana address
+                                SessionManager.login(user["id"], email, wallet_info["address"], solana_addr)
 
                                 st.success("Account created")
 
@@ -585,6 +586,13 @@ def wallet_setup_ui():
                                     if WalletManager.unlock_wallet_with_password(login_password):
                                         st.session_state.wallet_locked = False
                                         st.success("Signed in. Wallet restored.")
+
+                                        # Update session with Solana address from decrypted wallet
+                                        wallet_data = WalletManager.get_wallet_from_session()
+                                        if wallet_data and wallet_data.get("solana"):
+                                            sol_addr = wallet_data["solana"].get("address")
+                                            if sol_addr:
+                                                SessionManager.update_session_solana_address(sol_addr)
                                     else:
                                         st.session_state.wallet_locked = True
                                         st.success("Signed in")
