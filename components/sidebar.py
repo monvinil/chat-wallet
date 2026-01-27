@@ -252,7 +252,7 @@ def sidebar():
             solana_addr = _get_solana_address_from_session()
             evm_addr = st.session_state.wallet_address
 
-            # CSS for responsive middle-truncation
+            # CSS for responsive middle-truncation (first 2 fixed, last 4 fixed)
             st.markdown("""
             <style>
             .addr-section { margin-bottom: 12px; }
@@ -265,7 +265,8 @@ def sidebar():
                 flex: 1; min-width: 0; display: flex; overflow: hidden;
                 font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888;
             }
-            .addr-start { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .addr-start { flex-shrink: 0; white-space: nowrap; }
+            .addr-mid { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .addr-end { flex-shrink: 0; white-space: nowrap; }
             .addr-copy {
                 flex-shrink: 0; cursor: pointer; opacity: 0.4; font-size: 12px;
@@ -275,15 +276,15 @@ def sidebar():
             </style>
             """, unsafe_allow_html=True)
 
-            # EVM Address
-            evm_mid = len(evm_addr) // 2
+            # EVM Address (first 2 fixed, last 4 fixed)
             st.markdown(f"""
             <div class="addr-section">
                 <div class="addr-label">EVM</div>
                 <div class="addr-box">
                     <div class="addr-text">
-                        <span class="addr-start">{evm_addr[:evm_mid]}</span>
-                        <span class="addr-end">{evm_addr[evm_mid:]}</span>
+                        <span class="addr-start">{evm_addr[:2]}</span>
+                        <span class="addr-mid">{evm_addr[2:-4]}</span>
+                        <span class="addr-end">{evm_addr[-4:]}</span>
                     </div>
                     <span class="addr-copy" onclick="navigator.clipboard.writeText('{evm_addr}')" title="Copy">⧉</span>
                 </div>
@@ -292,14 +293,14 @@ def sidebar():
 
             # Solana Address (if available)
             if solana_addr:
-                sol_mid = len(solana_addr) // 2
                 st.markdown(f"""
                 <div class="addr-section">
                     <div class="addr-label">SOL</div>
                     <div class="addr-box">
                         <div class="addr-text">
-                            <span class="addr-start">{solana_addr[:sol_mid]}</span>
-                            <span class="addr-end">{solana_addr[sol_mid:]}</span>
+                            <span class="addr-start">{solana_addr[:2]}</span>
+                            <span class="addr-mid">{solana_addr[2:-4]}</span>
+                            <span class="addr-end">{solana_addr[-4:]}</span>
                         </div>
                         <span class="addr-copy" onclick="navigator.clipboard.writeText('{solana_addr}')" title="Copy">⧉</span>
                     </div>
