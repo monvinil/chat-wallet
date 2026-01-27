@@ -19,13 +19,6 @@ def _get_solana_address_from_session() -> str:
     return st.session_state.get("solana_address", "")
 
 
-def _format_address(address: str, prefix_len: int = 6, suffix_len: int = 4) -> str:
-    """Format address with ellipsis in middle: 0x1234...abcd"""
-    if not address or len(address) <= prefix_len + suffix_len + 3:
-        return address
-    return f"{address[:prefix_len]}...{address[-suffix_len:]}"
-
-
 def render_sidebar_header():
     """Render V12 minimal header"""
     st.markdown("""
@@ -255,25 +248,23 @@ def sidebar():
             total_usdc = ChainUtils.calculate_total_usdc(balances) if balances else 0.0
             render_balance_display(total_usdc, balances)
 
-            # Addresses - compressed with copy button
+            # Addresses - full address, responsive overflow
             solana_addr = _get_solana_address_from_session()
-            evm_short = _format_address(st.session_state.wallet_address, 6, 4)
 
             # EVM Address
             st.markdown("""
             <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
                         letter-spacing: 0.1em; color: #444; margin-bottom: 4px;">EVM</div>
             """, unsafe_allow_html=True)
-            st.code(evm_short, language=None)
+            st.code(st.session_state.wallet_address, language=None)
 
             # Solana Address (if available)
             if solana_addr:
-                sol_short = _format_address(solana_addr, 4, 4)
                 st.markdown("""
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
                             letter-spacing: 0.1em; color: #444; margin-bottom: 4px; margin-top: 12px;">SOL</div>
                 """, unsafe_allow_html=True)
-                st.code(sol_short, language=None)
+                st.code(solana_addr, language=None)
 
             st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
