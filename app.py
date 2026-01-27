@@ -695,7 +695,7 @@ def main():
     /* 1. THE VOID */
     .stApp {
         background-color: var(--bg-void);
-        background-image: radial-gradient(circle at 50% -20%, #1a1a1a 0%, var(--bg-void) 50%);
+        background-image: radial-gradient(circle at 100% 120%, #1a1a1a 0%, var(--bg-void) 50%);
         background-attachment: fixed;
     }
 
