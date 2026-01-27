@@ -710,7 +710,6 @@ def main():
         font-weight: 300 !important;
         letter-spacing: -0.04em !important;
         color: white !important;
-        text-transform: uppercase;
     }
 
     /* 3. INPUTS: MATTE SURFACES */
