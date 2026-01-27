@@ -60,7 +60,7 @@ def render_pulse_deck():
         "netflix": {
             "color": "#E50914",
             "gradient": "linear-gradient(135deg, rgba(229,9,20,0.15) 0%, rgba(229,9,20,0.02) 100%)",
-            "icon": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Netflix_2015_N_logo.svg"
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/8/89/Netflix_N_logo.svg"
         },
         "system": {
             "color": "#e5e5e5",
@@ -74,7 +74,7 @@ def render_pulse_deck():
 
     perks = [
         {"brand": "spotify", "progress": 75, "target": 100, "reward": "1 Mo Free", "spent": 75},
-        {"brand": "netflix", "progress": 0, "target": 100, "reward": "1 Mo Free", "spent": 0},
+        {"brand": "netflix", "progress": 32, "target": 100, "reward": "1 Mo Free", "spent": 32},
     ]
 
     # === SLOT BUILDER ===
