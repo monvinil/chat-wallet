@@ -194,10 +194,10 @@ def _render_pulse_card(slot: dict):
         shadow = "0 4px 20px rgba(0,0,0,0.15)"
         icon_filter = "brightness(0)"  # Black icon on white
     else:
-        bg = "rgba(0,0,0,0.2)"  # Matte background (halfway between original and dark)
+        bg = "rgba(255,255,255,0.03)"
         text_color = "#FFFFFF"
         sub_color = "#888888"
-        border = "1px solid rgba(255,255,255,0.06)"
+        border = "1px solid rgba(255,255,255,0.08)"
         shadow = "none"
         icon_filter = "brightness(0) invert(1) opacity(0.6)"  # White icon on dark
 

@@ -796,6 +796,34 @@ def main():
         transform: none !important;
     }
 
+    /* Form submit buttons - same styling as regular buttons */
+    [data-testid="stFormSubmitButton"] > button,
+    .stFormSubmitButton > button {
+        background: white !important;
+        color: black !important;
+        border: none !important;
+        font-weight: 600 !important;
+        border-radius: 20px !important;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px !important;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 10px 24px !important;
+    }
+
+    [data-testid="stFormSubmitButton"] > button:hover,
+    .stFormSubmitButton > button:hover {
+        box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        transform: scale(1.02);
+    }
+
+    [data-testid="stFormSubmitButton"] > button p,
+    [data-testid="stFormSubmitButton"] > button span,
+    .stFormSubmitButton > button p,
+    .stFormSubmitButton > button span {
+        color: black !important;
+    }
+
     /* 5. SIDEBAR: FLOATING LIST */
     [data-testid="stSidebar"] {
         background-color: var(--bg-void) !important;
@@ -1172,14 +1200,35 @@ def main():
         h2 { font-size: 18px !important; }
         h3 { font-size: 16px !important; }
 
-        /* 11. SIDEBAR - Full width drawer on mobile */
+        /* 11. SIDEBAR - Proper drawer behavior on mobile */
         [data-testid="stSidebar"] {
-            min-width: 100% !important;
-            width: 100% !important;
+            min-width: 85vw !important;
+            max-width: 85vw !important;
+            width: 85vw !important;
         }
 
         [data-testid="stSidebar"] > div {
             padding: 1rem !important;
+        }
+
+        /* Ensure sidebar collapse button is visible and touchable */
+        [data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"],
+        [data-testid="collapsedControl"] {
+            min-width: 48px !important;
+            min-height: 48px !important;
+            z-index: 999999 !important;
+        }
+
+        /* Fix sidebar overlay - ensure it doesn't block main content when collapsed */
+        [data-testid="stSidebar"][aria-expanded="false"] {
+            transform: translateX(-100%) !important;
+            pointer-events: none !important;
+        }
+
+        /* Main content should be fully accessible */
+        [data-testid="stAppViewBlockContainer"],
+        .main .block-container {
+            pointer-events: auto !important;
         }
     }
 
