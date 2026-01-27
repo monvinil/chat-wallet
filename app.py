@@ -350,18 +350,36 @@ def init_state():
 
 
 def wallet_setup_ui():
-    """Show wallet setup screen with email/password account"""
-    st.title("Chat Wallet")
-    st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555; margin-top: -10px;'>Self-custodial wallet with AI-powered transactions</div>", unsafe_allow_html=True)
+    """Show wallet setup screen with email/password account - V12 Liquid Silver"""
+    # V12 Header - centered, minimal
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="font-size: 24px; font-weight: 300; letter-spacing: -0.04em; margin-bottom: 12px;">CHAT02</h1>
+        <div style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 300; color: #666; line-height: 1.6;">
+            Self-custodial wallet with AI-powered transactions
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.info("Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.")
+    # V12 Info box - subtle border, no icon
+    st.markdown("""
+    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 0; padding: 16px; margin-bottom: 24px;">
+        <div style="font-family: 'Inter', sans-serif; font-size: 13px; color: #888; line-height: 1.6;">
+            Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     tab1, tab2, tab3 = st.tabs(["Create Account", "Sign In", "Import Wallet"])
 
     # ========== TAB 1: SIGN UP ==========
     with tab1:
-        st.markdown("#### Create Account")
-        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Create a new wallet that syncs across all your devices.</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="margin-bottom: 20px;">
+            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Create Account</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #555; line-height: 1.6;">Create a new wallet that syncs across all your devices.</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Use form to prevent sidebar closing and enable password autofill
         with st.form(key="signup_form", clear_on_submit=False):
@@ -476,12 +494,20 @@ def wallet_setup_ui():
                             else:
                                 st.error("Could not create account. Please try again.")
 
-        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555; margin-top: 16px;'>Your wallet syncs across all your devices automatically.</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #444; margin-top: 16px;">
+            Your wallet syncs across all your devices automatically.
+        </div>
+        """, unsafe_allow_html=True)
 
     # ========== TAB 2: LOG IN ==========
     with tab2:
-        st.markdown("#### Sign In")
-        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Access your existing wallet.</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="margin-bottom: 20px;">
+            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Sign In</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #555; line-height: 1.6;">Access your existing wallet.</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Use form to prevent sidebar closing and enable password autofill
         with st.form(key="login_form", clear_on_submit=False):
@@ -567,7 +593,7 @@ def wallet_setup_ui():
                                     # No cloud backup - need manual import (legacy account)
                                     st.session_state.wallet_locked = True
                                     st.success("Signed in")
-                                    st.info("Import your wallet using your recovery phrase to access your funds.")
+                                    st.markdown("<div style='font-family: Inter; font-size: 12px; color: #666; margin-top: 8px;'>Import your wallet using your recovery phrase to access your funds.</div>", unsafe_allow_html=True)
 
                                 # Check if onboarding was completed
                                 from settings_manager import SettingsManager
@@ -578,7 +604,7 @@ def wallet_setup_ui():
                                     # Resume onboarding at API setup step
                                     st.session_state.onboarding_step = 2
                                     st.session_state.onboarding_complete = False
-                                    st.info("Connect an AI provider to start chatting.")
+                                    st.markdown("<div style='font-family: Inter; font-size: 12px; color: #666; margin-top: 8px;'>Connect an AI provider to start chatting.</div>", unsafe_allow_html=True)
 
                                 st.rerun()
                             else:
@@ -586,8 +612,12 @@ def wallet_setup_ui():
 
     # ========== TAB 3: IMPORT WALLET ==========
     with tab3:
-        st.markdown("#### Import Wallet")
-        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Import an existing wallet using your recovery phrase or private key.</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="margin-bottom: 20px;">
+            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Import Wallet</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #555; line-height: 1.6;">Import an existing wallet using your recovery phrase or private key.</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         import_email = st.text_input("Email (optional)", key="import_email", placeholder="your@email.com")
         recovery_input = st.text_area(
@@ -599,7 +629,11 @@ def wallet_setup_ui():
         )
         import_password = st.text_input("Password", type="password", key="import_pwd", help="This password will encrypt your wallet locally")
 
-        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555; margin-top: 8px;'>Your wallet is encrypted locally before storage.</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #444; margin-top: 8px;">
+            Your wallet is encrypted locally before storage.
+        </div>
+        """, unsafe_allow_html=True)
 
         if st.button("Import Wallet", type="primary", disabled=not (recovery_input and import_password)):
             with st.spinner("Importing wallet..."):
