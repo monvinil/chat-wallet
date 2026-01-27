@@ -123,6 +123,17 @@ def render_pulse_deck():
             "icon_filter": "brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
             "text_shadow": "0 2px 8px rgba(0,0,0,0.25)",
         },
+        "ai": {
+            "icon": "https://api.iconify.design/mdi/robot-outline.svg",
+            # Black card - matches original Spotify dark style
+            "bg": "#000000",
+            "shadow": "0 4px 12px rgba(0,0,0,0.3)",
+            "accent": "#1ed760",  # Green accent for AI status
+            "text_color": "#FFFFFF",
+            "sub_color": "rgba(255,255,255,0.6)",
+            "icon_filter": "brightness(0) invert(1)",
+            "text_shadow": "none",
+        },
         "system": {
             "icon": "https://api.iconify.design/mdi/chart-line.svg",
             "bg": "#FFFFFF",
@@ -172,7 +183,30 @@ def render_pulse_deck():
             "icon": BRANDS["system"]["icon"],
         })
 
-    # Slots 2-3: Perks (Vibrant Mesh with White Text)
+    # Slot 2: AI Data (Black card)
+    # TODO: Pull real data from llm_config / free tier usage
+    ai_brand = BRANDS["ai"]
+    ai_provider = "Claude"  # TODO: Get from user's LLM config
+    ai_tier = "Free"  # TODO: Get from subscription status
+    ai_remaining = "8/10"  # TODO: Get from FreeTier.get_remaining_messages()
+
+    slots.append({
+        "mode": "ai",
+        "title": "YOUR AI",
+        "main": ai_provider,
+        "sub": f"{ai_tier} · {ai_remaining} msgs",
+        "bg": ai_brand["bg"],
+        "shadow": ai_brand["shadow"],
+        "accent": ai_brand["accent"],
+        "text_color": ai_brand["text_color"],
+        "sub_color": ai_brand["sub_color"],
+        "icon_filter": ai_brand["icon_filter"],
+        "text_shadow": ai_brand["text_shadow"],
+        "spotlight": False,
+        "icon": ai_brand["icon"],
+    })
+
+    # Slots 3-4: Perks (Vibrant Mesh with White Text)
     for p in perks[:2]:
         brand = BRANDS.get(p["brand"].lower(), BRANDS["system"])
         pct = int((p["progress"] / p["target"]) * 100) if p["target"] > 0 else 0
@@ -258,6 +292,11 @@ def _render_pulse_card(slot: dict):
             <div style="width:100%;height:4px;background:{track_color};border-radius:4px;">
                 <div style="width:{pct}%;height:100%;background:{accent};border-radius:4px;box-shadow:{fill_shadow};"></div>
             </div>
+        </div>'''
+    elif mode == "ai":
+        # AI status - simple sub text with green dot
+        bottom = f'''<div style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            <span style="color:{accent};">●</span> {slot["sub"]}
         </div>'''
     elif mode == "stat" and slot.get("stats"):
         # Multi-line summary stats
