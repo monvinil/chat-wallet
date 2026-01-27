@@ -239,6 +239,9 @@ def render_pulse_deck():
     # Inject mobile CSS once
     st.markdown("""
     <style>
+    .pulse-deck-wrapper {
+        position: relative;
+    }
     .pulse-deck {
         display: flex;
         gap: 12px;
@@ -266,14 +269,37 @@ def render_pulse_deck():
             width: calc(50% - 6px);
         }
         .pulse-deck { gap: 8px; }
+        /* Scroll hint: fade on right edge */
+        .pulse-deck-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 32px;
+            background: linear-gradient(to right, transparent, #09090b);
+            pointer-events: none;
+            opacity: 0.8;
+        }
     }
-    /* Small mobile: slightly smaller cards */
+    /* Small mobile: compact cards */
     @media (max-width: 480px) {
         .pulse-card { min-width: 145px; }
         .pulse-card-inner { padding: 14px !important; height: 88px !important; }
         .pulse-card-title { font-size: 9px !important; }
-        .pulse-card-main { font-size: 15px !important; }
+        .pulse-card-main { font-size: 14px !important; }
         .pulse-card-sub { font-size: 10px !important; }
+        /* Hide secondary label on small screens for cleaner look */
+        .pulse-card-main .usdc-label { display: none; }
+    }
+    /* Extra small: iPhone SE, Mini */
+    @media (max-width: 375px) {
+        .pulse-card { min-width: 130px; }
+        .pulse-card-inner { padding: 12px !important; height: 82px !important; }
+        .pulse-card-title { font-size: 8px !important; }
+        .pulse-card-main { font-size: 13px !important; }
+        /* Hide bottom text on tiny screens */
+        .pulse-card-sub { display: none; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -283,7 +309,7 @@ def render_pulse_deck():
     for slot in slots:
         cards_html += _render_pulse_card_html(slot)
 
-    st.markdown(f'<div class="pulse-deck">{cards_html}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="pulse-deck-wrapper"><div class="pulse-deck">{cards_html}</div></div>', unsafe_allow_html=True)
 
 
 def _render_pulse_card_html(slot: dict) -> str:
@@ -324,7 +350,7 @@ def _render_pulse_card_html(slot: dict) -> str:
     # === MAIN VALUE (compact for mobile) ===
     if mode == "perk":
         # Same line: 75/100 USDC Spent
-        main_html = f'<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;"><span style="font-family:Inter;font-size:20px;font-weight:700;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span><span style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};">USDC Spent</span></div>'
+        main_html = f'<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;"><span style="font-family:Inter;font-size:20px;font-weight:700;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span><span class="usdc-label" style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};">USDC Spent</span></div>'
     else:
         main_html = f'<div class="pulse-card-main" style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</div>'
 
@@ -380,13 +406,18 @@ def render_modules():
     # Inject mobile-responsive CSS for modules
     st.markdown("""
     <style>
-    /* Mobile-responsive tabs */
+    /* Mobile-responsive tabs with scroll hint */
     @media (max-width: 768px) {
+        .stTabs {
+            position: relative;
+        }
         .stTabs [data-baseweb="tab-list"] {
             gap: 0;
             overflow-x: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+            mask-image: linear-gradient(to right, black 85%, transparent 100%);
         }
         .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none; }
         .stTabs [data-baseweb="tab"] {

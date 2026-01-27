@@ -1245,9 +1245,15 @@ def main():
             font-size: 14px !important;
         }
 
-        /* 8. SPACING - Reduce excessive margins */
+        /* 8. SPACING - Reduce excessive margins + iOS safe areas */
         .block-container {
             padding: 1rem 1rem !important;
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+
+        /* iOS safe area for chat input at bottom */
+        .stChatInput {
+            padding-bottom: env(safe-area-inset-bottom, 0px) !important;
         }
 
         /* 9. ALERTS - Readable on narrow screens */
