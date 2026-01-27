@@ -285,7 +285,7 @@ def sidebar():
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("SIGN IN", use_container_width=True, type="primary"):
+            if st.button("LOG IN / SIGN UP", use_container_width=True, type="primary"):
                 st.session_state.show_auth_modal = True
                 st.rerun()
 
