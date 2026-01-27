@@ -881,10 +881,18 @@ def main():
         max-width: 1100px;
     }
 
-    /* Match chat input width to content */
+    /* Match chat input width to content area */
     [data-testid="stChatInput"] {
         max-width: 1100px;
         margin: 0 auto;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        box-sizing: border-box;
+    }
+
+    /* Ensure chat input inner box fills properly */
+    [data-testid="stChatInput"] > div {
+        max-width: 100%;
     }
 
     /* 8. CODE BLOCKS - V12 Minimal */
