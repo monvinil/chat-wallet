@@ -19,6 +19,13 @@ def _get_solana_address_from_session() -> str:
     return st.session_state.get("solana_address", "")
 
 
+def _format_address(address: str, prefix_len: int = 6, suffix_len: int = 4) -> str:
+    """Format address with ellipsis in middle: 0x1234...abcd"""
+    if not address or len(address) <= prefix_len + suffix_len + 3:
+        return address
+    return f"{address[:prefix_len]}...{address[-suffix_len:]}"
+
+
 def render_sidebar_header():
     """Render V12 minimal header"""
     st.markdown("""
@@ -248,23 +255,31 @@ def sidebar():
             total_usdc = ChainUtils.calculate_total_usdc(balances) if balances else 0.0
             render_balance_display(total_usdc, balances)
 
-            # Addresses - floating data display
+            # Addresses - compact inline display
             solana_addr = _get_solana_address_from_session()
+            evm_short = _format_address(st.session_state.wallet_address, 6, 4)
+            sol_short = _format_address(solana_addr, 4, 4) if solana_addr else None
 
             # EVM Address
-            st.markdown("""
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
-                        letter-spacing: 0.1em; color: #444; margin-bottom: 4px;">EVM</div>
+            st.markdown(f"""
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                            letter-spacing: 0.1em; color: #444;">EVM</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
+                            color: #888; letter-spacing: 0.02em;">{evm_short}</span>
+            </div>
             """, unsafe_allow_html=True)
-            st.code(st.session_state.wallet_address, language=None)
 
             # Solana Address (if available)
-            if solana_addr:
-                st.markdown("""
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
-                            letter-spacing: 0.1em; color: #444; margin-bottom: 4px; margin-top: 12px;">SOLANA</div>
+            if sol_short:
+                st.markdown(f"""
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+                                letter-spacing: 0.1em; color: #444;">SOL</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
+                                color: #888; letter-spacing: 0.02em;">{sol_short}</span>
+                </div>
                 """, unsafe_allow_html=True)
-                st.code(solana_addr, language=None)
 
             st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
