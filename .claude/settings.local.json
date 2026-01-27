@@ -30,7 +30,8 @@
       "Bash(npm start)",
       "Bash(lsof:*)",
       "Bash(PORT=3001 npm start:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "WebFetch(domain:developers.circle.com)"
     ]
   }
 }

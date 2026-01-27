@@ -21,14 +21,7 @@ def _get_solana_address_from_session() -> str:
 
 def render_sidebar_header():
     """Render V12 minimal header"""
-    st.markdown("""
-    <div style="margin-bottom: 2rem;">
-        <div style="font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 300;
-                    letter-spacing: -0.02em; color: white;">
-            Chat02. <span style="color: #666;">A USDC wallet for AI.</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
 
 
 def render_status_card(is_active: bool):
