@@ -79,7 +79,7 @@ def _get_solana_address_from_session() -> str:
 def render_sidebar_header():
     """Render sidebar logo: — $ →"""
     st.markdown(
-        '<div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:-0.25rem;margin-bottom:1rem;">'
+        '<div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:-0.75rem;margin-bottom:1rem;">'
         '<span style="display:inline-block;width:16px;height:1.6px;background:white;"></span>'
         '<span style="font-family:Menlo,Monaco,monospace;font-size:34px;font-weight:700;font-style:italic;color:white;line-height:1;">$</span>'
         '<svg width="16" height="7" viewBox="0 0 16 7" style="display:inline-block;">'
