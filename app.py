@@ -737,39 +737,81 @@ def main():
         transition: all 0.2s ease;
     }
 
-    /* Chat input - transparent background */
-    .stChatInput,
-    .stChatInput > div,
-    .stChatInput > div > div {
+    /* Chat input - V22 glass styling */
+    .stChatInput {
         background: transparent !important;
     }
 
-    .stChatInput > div > div > textarea {
-        background-color: rgba(255,255,255,0.03) !important;
-        border: 1px solid var(--border-glass) !important;
+    .stChatInput > div {
+        background: transparent !important;
+    }
+
+    /* Target the chat input container that holds both textarea and button */
+    .stChatInput [data-testid="stChatInputContainer"],
+    .stChatInput form {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
         border-radius: 12px !important;
+        overflow: hidden;
+    }
+
+    /* Target textarea in chat input - multiple selectors for compatibility */
+    .stChatInput textarea,
+    .stChatInput > div > div > textarea,
+    .stChatInput [data-testid="stChatInputTextArea"],
+    .stChatInput [data-testid="stChatInputTextArea"] textarea {
+        background-color: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
         color: white !important;
         font-family: 'Inter', sans-serif;
         font-size: 15px !important;
         padding: 12px 16px !important;
     }
 
-    .stTextInput > div > div > input:hover,
-    .stTextArea > div > div > textarea:hover,
+    .stChatInput textarea:hover,
     .stChatInput > div > div > textarea:hover {
+        background-color: transparent !important;
+    }
+
+    .stChatInput textarea:focus,
+    .stChatInput > div > div > textarea:focus {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    .stChatInput textarea::placeholder,
+    .stChatInput > div > div > textarea::placeholder {
+        color: #555 !important;
+    }
+
+    /* Chat input submit button */
+    .stChatInput button,
+    .stChatInput [data-testid="stChatInputSubmitButton"] {
+        background: transparent !important;
+        border: none !important;
+        color: #666 !important;
+    }
+
+    .stChatInput button:hover {
+        color: #fff !important;
+    }
+
+    /* Standard text inputs */
+    .stTextInput > div > div > input:hover,
+    .stTextArea > div > div > textarea:hover {
         background-color: rgba(255,255,255,0.05) !important;
         border-color: rgba(255,255,255,0.15) !important;
     }
 
     .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus,
-    .stChatInput > div > div > textarea:focus {
+    .stTextArea > div > div > textarea:focus {
         border-color: rgba(255,255,255,0.3) !important;
         box-shadow: 0 0 15px rgba(255,255,255,0.05) !important;
     }
 
-    .stTextInput > div > div > input::placeholder,
-    .stChatInput > div > div > textarea::placeholder {
+    .stTextInput > div > div > input::placeholder {
         color: #555 !important;
     }
 

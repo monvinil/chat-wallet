@@ -417,6 +417,12 @@ def sidebar():
                     submitted = st.form_submit_button("UNLOCK", use_container_width=True, type="primary")
                     if submitted and unlock_password:
                         if WalletManager.unlock_wallet_with_password(unlock_password):
+                            # Update session with Solana address after unlock
+                            wallet_data = WalletManager.get_wallet_from_session()
+                            if wallet_data and wallet_data.get("solana"):
+                                sol_addr = wallet_data["solana"].get("address")
+                                if sol_addr:
+                                    SessionManager.update_session_solana_address(sol_addr)
                             st.rerun()
                         else:
                             st.error("Invalid credentials")
