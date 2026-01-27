@@ -594,7 +594,9 @@ def wallet_setup_ui():
                                         if wallet_data and wallet_data.get("solana"):
                                             sol_addr = wallet_data["solana"].get("address")
                                             if sol_addr:
-                                                SessionManager.update_session_solana_address(sol_addr)
+                                                st.session_state.solana_address = sol_addr
+                                                # Save to wallets table for persistence
+                                                save_wallet_address(user["id"], sol_addr, chain="solana")
                                     else:
                                         st.session_state.wallet_locked = True
                                         st.success("Signed in")

@@ -8,11 +8,15 @@ CREATE TABLE IF NOT EXISTS sessions (
     session_token TEXT NOT NULL UNIQUE,
     email TEXT,
     wallet_address TEXT,
+    solana_address TEXT,
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT unique_user_session UNIQUE (user_id)
 );
+
+-- Add solana_address column if it doesn't exist (for existing tables)
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS solana_address TEXT;
 
 -- Index for fast session token lookup
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(session_token);
