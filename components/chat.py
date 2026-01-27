@@ -463,6 +463,9 @@ def render_modules():
             ("Pump.fun", "Launch or trade meme coins on Pump.fun", False),
             ("Kalshi", "Trade event contracts on Kalshi", False),
         ],
+        "Content": [
+            ("New AI Character", "Create a custom AI character or persona", False),
+        ],
         "Tools": [
             ("Get Domain", "I want to register a domain", True),
             ("VPN", "I want a Mullvad VPN subscription", True),
@@ -525,6 +528,7 @@ def render_modules_preview():
         "Send & Pay": ["Send USDC", "Pay Bills", "Phone Top-up", "Schedule"],
         "Earn": ["Earn Yield", "Swap to ETH", "Stack Sats"],
         "Bot Trade": ["Hyperliquid", "Polymarket", "Pump.fun", "Kalshi"],
+        "Content": ["New AI Character"],
         "Tools": ["Get Domain", "VPN", "eSIM", "Alerts"],
         "Shopping": ["Amazon", "Target", "Walmart", "Best Buy", "Sephora"],
         "Food": ["DoorDash", "Uber Eats", "Starbucks", "Chipotle", "Grubhub"],
