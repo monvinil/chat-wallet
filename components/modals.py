@@ -131,13 +131,13 @@ def seed_phrase_modal():
         </div>
         """, unsafe_allow_html=True)
 
-        # V12 minimal numbered grid
-        cols = st.columns(3)
+        # V12 minimal numbered grid (2 columns for mobile-friendly)
+        cols = st.columns(2)
         for i, word in enumerate(words):
-            with cols[i % 3]:
+            with cols[i % 2]:
                 st.markdown(f"""
-                <div style="margin-bottom: 20px; text-align: center;">
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; margin-bottom: 4px;">{i+1:02d}</div>
+                <div style="margin-bottom: 16px; text-align: center;">
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444; margin-bottom: 4px;">{i+1:02d}</div>
                     <div style="font-family: 'Inter', sans-serif; font-weight: 400; font-size: 15px; color: white;">{word}</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -228,7 +228,7 @@ def deposit_modal():
 
     # === EVM ADDRESS SECTION ===
     st.markdown("""
-    <div style="font-family: JetBrains Mono; font-size: 10px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
+    <div style="font-family: JetBrains Mono; font-size: 11px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
         EVM ADDRESS <span style="color: #444;">(Base, Arbitrum, Polygon)</span>
     </div>
     """, unsafe_allow_html=True)
@@ -238,7 +238,7 @@ def deposit_modal():
     if solana_address:
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
         st.markdown("""
-        <div style="font-family: JetBrains Mono; font-size: 10px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
+        <div style="font-family: JetBrains Mono; font-size: 11px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
             SOLANA ADDRESS
         </div>
         """, unsafe_allow_html=True)
@@ -328,21 +328,17 @@ def _render_send_confirmation():
     recipient = details.get('recipient', '')
     recipient_short = f"{recipient[:4]}...{recipient[-4:]}" if len(recipient) > 10 else recipient
 
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown(f"""
-        <div style="text-align: right; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 30px; height: 100%;">
-            <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #555; margin-bottom: 8px;">SENDING</div>
-            <div style="font-family: 'Inter'; font-size: 28px; font-weight: 300; color: white;">${details.get('total', 0):.2f}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with c2:
-        st.markdown(f"""
-        <div style="padding-left: 30px;">
-            <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #555; margin-bottom: 8px;">TO</div>
-            <div style="font-family: 'Inter'; font-size: 28px; font-weight: 300; color: white;">{recipient_short}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    # Mobile-friendly stacked layout
+    st.markdown(f"""
+    <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #555; margin-bottom: 8px;">SENDING</div>
+        <div style="font-family: 'Inter'; font-size: 32px; font-weight: 300; color: white;">${details.get('total', 0):.2f}</div>
+    </div>
+    <div style="text-align: center;">
+        <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #555; margin-bottom: 8px;">TO</div>
+        <div style="font-family: 'Inter'; font-size: 18px; font-weight: 300; color: white;">{recipient_short}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
 

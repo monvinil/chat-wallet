@@ -370,13 +370,13 @@ def wallet_setup_ui():
     </div>
     """, unsafe_allow_html=True)
 
-    tab1, tab2, tab3 = st.tabs(["Create Account", "Sign In", "Import Wallet"])
+    tab1, tab2, tab3 = st.tabs(["Sign Up", "Log In", "Import Wallet"])
 
     # ========== TAB 1: SIGN UP ==========
     with tab1:
         st.markdown("""
         <div style="margin-bottom: 20px;">
-            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Create Account</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Sign Up</div>
             <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #555; line-height: 1.6;">Create a new wallet that syncs across all your devices.</div>
         </div>
         """, unsafe_allow_html=True)
@@ -504,7 +504,7 @@ def wallet_setup_ui():
     with tab2:
         st.markdown("""
         <div style="margin-bottom: 20px;">
-            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Sign In</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Log In</div>
             <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #555; line-height: 1.6;">Access your existing wallet.</div>
         </div>
         """, unsafe_allow_html=True)
@@ -673,8 +673,8 @@ def main():
     st.set_page_config(
         page_title="Chat Wallet",
         page_icon="◈",
-        layout="wide",
-        initial_sidebar_state="expanded"
+        layout="wide",  # Keep wide but use CSS for responsive
+        initial_sidebar_state="auto"  # Collapse on mobile
     )
 
     # V12 Design System: "Liquid Silver" - The Void, Magazine Typography, Matte Surfaces
@@ -1089,6 +1089,121 @@ def main():
         color: #888 !important;
         font-family: var(--font-sans) !important;
         font-size: 13px !important;
+    }
+
+    /* ========================================
+       MOBILE OPTIMIZATION: < 768px
+       ======================================== */
+    @media (max-width: 768px) {
+        /* 1. BUTTONS - 48px touch target minimum */
+        .stButton > button {
+            padding: 14px 20px !important;
+            font-size: 12px !important;
+            min-height: 48px !important;
+        }
+
+        .stButton > button[kind="primary"]:hover {
+            transform: none !important; /* No scale on touch */
+        }
+
+        /* 2. INPUTS - 48px height, 16px font prevents iOS zoom */
+        .stTextInput > div > div > input,
+        .stTextArea > div > div > textarea,
+        .stNumberInput > div > div > input {
+            font-size: 16px !important;
+            padding: 14px 0 !important;
+            min-height: 48px !important;
+        }
+
+        .stChatInput > div > div > textarea {
+            font-size: 16px !important;
+            min-height: 48px !important;
+        }
+
+        /* 3. TABS - Better touch targets */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 16px !important;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            font-size: 12px !important;
+            padding: 12px 8px !important;
+        }
+
+        /* 4. CHAT - Reduce excess spacing */
+        [data-testid="stChatMessage"] {
+            padding: 0.75rem 0 !important;
+        }
+
+        /* 5. CODE BLOCKS - Readable on small screens */
+        code, [data-testid="stCode"] code {
+            font-size: 12px !important;
+        }
+
+        /* 6. EXPANDERS - Better headers */
+        .streamlit-expanderHeader {
+            font-size: 11px !important;
+            padding: 12px 0 !important;
+        }
+
+        /* 7. SELECT/RADIO - Larger targets */
+        .stSelectbox > div > div {
+            font-size: 14px !important;
+            min-height: 48px !important;
+        }
+
+        .stCheckbox label span,
+        .stRadio label span {
+            font-size: 14px !important;
+        }
+
+        /* 8. SPACING - Reduce excessive margins */
+        .block-container {
+            padding: 1rem 1rem !important;
+        }
+
+        /* 9. ALERTS - Readable on narrow screens */
+        .stAlert [data-testid="stMarkdownContainer"] p {
+            font-size: 13px !important;
+        }
+
+        /* 10. HEADERS - Scale down */
+        h1 { font-size: 22px !important; }
+        h2 { font-size: 18px !important; }
+        h3 { font-size: 16px !important; }
+
+        /* 11. SIDEBAR - Full width drawer on mobile */
+        [data-testid="stSidebar"] {
+            min-width: 100% !important;
+            width: 100% !important;
+        }
+
+        [data-testid="stSidebar"] > div {
+            padding: 1rem !important;
+        }
+    }
+
+    /* EXTRA SMALL SCREENS: < 480px (iPhone SE, older phones) */
+    @media (max-width: 480px) {
+        h1 { font-size: 20px !important; }
+
+        .stButton > button {
+            padding: 12px 16px !important;
+            font-size: 11px !important;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            font-size: 11px !important;
+            padding: 10px 6px !important;
+        }
+
+        code, [data-testid="stCode"] code {
+            font-size: 11px !important;
+        }
+
+        .block-container {
+            padding: 0.75rem 0.75rem !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)

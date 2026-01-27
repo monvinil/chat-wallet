@@ -7,6 +7,7 @@ import streamlit as st
 from chain_utils import ChainUtils
 from wallet_manager import WalletManager
 from session_manager import SessionManager
+from rate_limiter import RateLimiter
 
 
 # === SKELETON LOADING STATES ===
@@ -85,16 +86,16 @@ def render_status_card(is_active: bool):
     if is_active:
         st.markdown("""
         <div style="margin-bottom: 1.5rem;">
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
-                         color: #fff; background: rgba(255,255,255,0.1); padding: 4px 10px;
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
+                         color: #fff; background: rgba(255,255,255,0.1); padding: 6px 12px;
                          border-radius: 10px; letter-spacing: 0.05em;">ACTIVE</span>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
         <div style="margin-bottom: 1.5rem;">
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
-                         color: #666; background: rgba(255,255,255,0.05); padding: 4px 10px;
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
+                         color: #666; background: rgba(255,255,255,0.05); padding: 6px 12px;
                          border-radius: 10px; letter-spacing: 0.05em;">LOCKED</span>
         </div>
         """, unsafe_allow_html=True)
@@ -104,7 +105,7 @@ def render_balance_display(total_usdc: float, balances: dict = None):
     """Render V12 balance display with optional breakdown"""
     st.markdown(f"""
     <div style="margin-bottom: 1.5rem;">
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
                     letter-spacing: 0.1em; color: #555; margin-bottom: 8px;">
             EQUITY
         </div>
@@ -139,9 +140,9 @@ def render_balance_display(total_usdc: float, balances: dict = None):
             breakdown_html = "<div style='margin-bottom: 1.5rem;'>"
             for name, usdc in active_networks:
                 breakdown_html += f"""
-                <div style="display: flex; justify-content: space-between; padding: 4px 0;">
-                    <span style="font-family: JetBrains Mono; font-size: 10px; color: #444;">{name}</span>
-                    <span style="font-family: JetBrains Mono; font-size: 10px; color: #666;">${usdc:,.2f}</span>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                    <span style="font-family: JetBrains Mono; font-size: 11px; color: #444;">{name}</span>
+                    <span style="font-family: JetBrains Mono; font-size: 11px; color: #666;">${usdc:,.2f}</span>
                 </div>
                 """
             breakdown_html += "</div>"
@@ -161,13 +162,13 @@ def render_free_tier_indicator():
         remaining = llm_config.get("remaining_messages", 0)
         if remaining <= 10:
             st.markdown(f"""
-            <div style="font-family: JetBrains Mono; font-size: 9px; color: #a55; text-align: center; margin-bottom: 8px;">
+            <div style="font-family: JetBrains Mono; font-size: 11px; color: #a55; text-align: center; margin-bottom: 8px;">
                 {remaining} free messages left
             </div>
             """, unsafe_allow_html=True)
         elif remaining <= 25:
             st.markdown(f"""
-            <div style="font-family: JetBrains Mono; font-size: 9px; color: #555; text-align: center; margin-bottom: 8px;">
+            <div style="font-family: JetBrains Mono; font-size: 11px; color: #555; text-align: center; margin-bottom: 8px;">
                 {remaining} free messages
             </div>
             """, unsafe_allow_html=True)
@@ -180,7 +181,7 @@ def render_sidebar_footer():
 
     st.markdown("""
     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
                     letter-spacing: 0.05em; color: #333; text-align: center;">
             Encrypted locally
         </div>
@@ -197,7 +198,7 @@ def render_transaction_history():
 
     # Section header
     st.markdown("""
-    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
                 letter-spacing: 0.1em; color: #444; margin-bottom: 8px;">RECENT</div>
     """, unsafe_allow_html=True)
 
@@ -241,18 +242,18 @@ def render_transaction_history():
                 st.markdown(f"""
                 <a href="{explorer_url}" target="_blank" style="
                     display: flex; justify-content: space-between; align-items: center;
-                    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+                    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
                     text-decoration: none;">
                     <span style="font-family: 'Inter', sans-serif; font-size: 14px; color: {status_color}; font-weight: 300;">
                         {direction}${amount:.2f}
                     </span>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #333;">→</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #333;">→</span>
                 </a>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown(f"""
                 <div style="display: flex; justify-content: space-between; align-items: center;
-                            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                            padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
                     <span style="font-family: 'Inter', sans-serif; font-size: 14px; color: {status_color}; font-weight: 300;">
                         {direction}${amount:.2f}
                     </span>
@@ -313,21 +314,21 @@ def sidebar():
             st.markdown("""
             <style>
             .addr-section { margin-bottom: 12px; }
-            .addr-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #444; margin-bottom: 4px; }
+            .addr-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #444; margin-bottom: 4px; }
             .addr-box {
                 display: flex; align-items: center; gap: 8px;
-                background: rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 4px;
+                background: rgba(255,255,255,0.05); padding: 10px 12px; border-radius: 4px;
             }
             .addr-text {
                 flex: 1; min-width: 0; display: flex; overflow: hidden;
-                font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888;
+                font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #888;
             }
             .addr-start { flex-shrink: 0; white-space: nowrap; }
             .addr-mid { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .addr-end { flex-shrink: 0; white-space: nowrap; }
             .addr-copy {
                 flex-shrink: 0; cursor: pointer; opacity: 0.6; font-size: 11px;
-                padding: 4px 8px; border-radius: 4px; transition: all 0.15s;
+                padding: 8px 12px; border-radius: 4px; transition: all 0.15s;
                 background: rgba(255,255,255,0.08); color: #888;
                 font-family: 'JetBrains Mono', monospace;
             }
@@ -370,10 +371,12 @@ def sidebar():
 
             # Primary actions
             if st.button("DEPOSIT", use_container_width=True, type="primary"):
+                RateLimiter.update_activity()  # Reset timeout on user action
                 st.session_state.show_deposit_modal = True
                 st.rerun()
 
             if st.button("SEND", use_container_width=True):
+                RateLimiter.update_activity()  # Reset timeout on user action
                 st.session_state.show_send_modal = True
                 st.rerun()
 
@@ -386,6 +389,7 @@ def sidebar():
 
             # Secondary actions
             if st.button("SETTINGS", use_container_width=True):
+                RateLimiter.update_activity()  # Reset timeout on user action
                 st.session_state.show_settings = True
                 st.rerun()
 

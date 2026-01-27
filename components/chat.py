@@ -60,7 +60,7 @@ def render_fashion_card(label, value, tag=None, tag_color=None):
     color = tag_color or "#444"
     st.markdown(f"""
     <div style="padding: 12px 0;">
-        <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #444; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.1em;">{label}</div>
+        <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #444; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.1em;">{label}</div>
         <div style="font-family: 'Inter'; font-size: 18px; font-weight: 400; color: white; letter-spacing: -0.02em;">
             {value} {f'<span style="font-size: 12px; color: {color}; margin-left: 4px;">{tag}</span>' if tag else ''}
         </div>
@@ -84,10 +84,10 @@ def render_header():
     with c2:
         st.markdown("""
         <div style="text-align: right; margin-top: 40px;">
-            <span style="font-family: 'JetBrains Mono'; font-size: 10px; color: #fff; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 10px;">ONLINE</span>
+            <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #fff; background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 10px;">ONLINE</span>
         </div>
         """, unsafe_allow_html=True)
-    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
 
 # --- THE PULSE DECK (V15: High Contrast / Spotlight) ---
@@ -208,7 +208,7 @@ def _render_pulse_card(slot: dict):
     if mode == "perk" and spent > 0:
         main_html = f'''<div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
             <span style="font-family:Inter;font-size:16px;font-weight:600;color:{text_color};letter-spacing:-0.02em;">{slot["main"]}</span>
-            <span style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};">{int(spent)} USDC</span>
+            <span style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};">{int(spent)} USDC</span>
         </div>'''
     else:
         main_html = f'''<div style="font-family:Inter;font-size:16px;font-weight:600;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">
@@ -219,14 +219,14 @@ def _render_pulse_card(slot: dict):
     if mode == "perk":
         # Progress bar with glow
         bottom = f'''<div>
-            <div style="font-family:Inter;font-size:10px;color:{sub_color};margin-bottom:6px;">{slot["sub"]}</div>
+            <div style="font-family:Inter;font-size:11px;color:{sub_color};margin-bottom:6px;">{slot["sub"]}</div>
             <div style="width:100%;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;">
                 <div style="width:{pct}%;height:100%;background:{accent};border-radius:2px;box-shadow:0 0 8px {accent};"></div>
             </div>
         </div>'''
     elif mode == "stat" and slot.get("stats"):
         # Multi-line summary stats
-        bottom = f'''<div style="font-family:JetBrains Mono;font-size:9px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        bottom = f'''<div style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             {slot["stats"]}
         </div>'''
     elif is_spotlight:
@@ -235,7 +235,7 @@ def _render_pulse_card(slot: dict):
             <span style="font-family:JetBrains Mono;font-size:14px;color:#000;">→</span>
         </div>'''
     else:
-        bottom = f'''<div style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-align:right;">
+        bottom = f'''<div style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-align:right;">
             {slot.get("sub", "")} →
         </div>'''
 
@@ -253,7 +253,7 @@ def _render_pulse_card(slot: dict):
         box-shadow:{shadow};
     ">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-family:JetBrains Mono;font-size:9px;color:{sub_color};letter-spacing:0.05em;font-weight:600;">
+            <span style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};letter-spacing:0.05em;font-weight:600;">
                 {slot["title"]}
             </span>
             {icon_html}
