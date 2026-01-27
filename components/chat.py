@@ -76,7 +76,7 @@ def render_header():
         st.markdown("""
         <div style="margin-top: 30px;">
             <h1 style="font-size: 28px; margin: 0; font-weight: 500; letter-spacing: -0.04em; text-transform: none !important;">USDChat</h1>
-            <p style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 300; color: #666; margin: 8px 0 0 0; letter-spacing: -0.01em;">
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; margin: 8px 0 0 0; letter-spacing: 0.1em;">
                 Fuel your AI chat ideas with real money. Go from 0 to action with USDC.
             </p>
         </div>
