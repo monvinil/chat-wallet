@@ -19,8 +19,8 @@ class RateLimiter:
     MAX_LOGIN_ATTEMPTS = 3
     LOGIN_LOCKOUT_SECONDS = 300  # 5 minutes
 
-    # Session activity timeout
-    SESSION_TIMEOUT_SECONDS = 900  # 15 minutes of inactivity
+    # Session activity timeout (SECURITY: 5 minutes for wallet protection)
+    SESSION_TIMEOUT_SECONDS = 300  # 5 minutes of inactivity
 
     @staticmethod
     def _get_login_key(email: str) -> str:

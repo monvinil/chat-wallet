@@ -386,9 +386,8 @@ class WalletManager:
                 st.session_state.wallet_locked = False
                 st.session_state.wallet_data = decrypted.decode()
 
-                # Defer wallet key save to next render cycle (to let JS execute)
-                # The JS component needs to render to set the cookie
-                st.session_state._pending_wallet_key_save = fernet_key
+                # SECURITY: Do NOT save wallet key to cookie
+                # Users must re-enter password after page refresh
 
                 return True
             except Exception as e:

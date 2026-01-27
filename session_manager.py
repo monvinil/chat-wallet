@@ -256,54 +256,23 @@ class SessionManager:
 
     @staticmethod
     def save_wallet_key(wallet_key: str):
-        """Save wallet decryption key to session cookie (for auto-unlock on refresh)"""
-        # Use session cookie (no expiry) - cleared when browser closes
-        # This keeps wallet unlocked across page refreshes but not browser restarts
-        try:
-            import base64
-            import re
-            # Encode key for cookie storage (base64 is safe for cookie values)
-            encoded_key = base64.b64encode(wallet_key.encode()).decode()
-
-            # Validate encoded key format to prevent injection
-            if not re.match(r'^[a-zA-Z0-9+/=]+$', encoded_key):
-                raise ValueError("Invalid encoded key format")
-
-            # Method 1: Direct JavaScript (session cookie with Secure flag)
-            js_code = f"""
-            <script>
-            document.cookie = "chat_wallet_key={encoded_key};path=/;SameSite=Lax;Secure";
-            </script>
-            """
-            components.html(js_code, height=0)
-
-            # Method 2: stx cookie manager (backup, with 1 day expiry for persistence)
-            cookie_manager = SessionManager.get_cookie_manager()
-            if cookie_manager:
-                cookie_manager.set(
-                    "chat_wallet_key",
-                    encoded_key,
-                    expires_at=datetime.now() + timedelta(days=1),
-                    key="set_wallet_key"
-                )
-
-        except Exception as e:
-            from utils.logger import logger
-            logger.error(f"Failed to save wallet key cookie: {type(e).__name__}")
+        """
+        DEPRECATED: No longer saves wallet key to cookie for security.
+        Wallet key is only stored in session state (memory).
+        Users must re-enter password after page refresh.
+        """
+        # SECURITY: Intentionally does nothing
+        # Keeping method signature for backwards compatibility
+        pass
 
     @staticmethod
     def get_wallet_key() -> Optional[str]:
-        """Get wallet decryption key from cookie (for auto-unlock)"""
-        try:
-            import base64
-            # Use cached cookies to avoid multiple get_all() component calls
-            all_cookies = SessionManager._get_all_cookies()
-            encoded_key = all_cookies.get("chat_wallet_key")
-            if encoded_key:
-                return base64.b64decode(encoded_key.encode()).decode()
-        except Exception as e:
-            from utils.logger import logger
-            logger.debug(f"Failed to get wallet key: {type(e).__name__}")
+        """
+        DEPRECATED: No longer reads wallet key from cookie for security.
+        Always returns None - wallet must be unlocked with password.
+        """
+        # SECURITY: Intentionally returns None
+        # Keeping method signature for backwards compatibility
         return None
 
     @staticmethod
@@ -366,15 +335,9 @@ class SessionManager:
                 st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
                 st.session_state.wallet_salt = encrypted_wallet["salt"]
 
-                # Try to auto-unlock with saved wallet key (from session cookie)
-                saved_key = SessionManager.get_wallet_key()
-                if saved_key:
-                    # Key was saved - auto-unlock wallet
-                    st.session_state.wallet_key = saved_key
-                    st.session_state.wallet_locked = False
-                else:
-                    # No saved key - wallet stays locked
-                    st.session_state.wallet_locked = True
+                # SECURITY: Always require password on page refresh
+                # Do NOT auto-unlock from saved cookie
+                st.session_state.wallet_locked = True
             else:
                 st.session_state.wallet_locked = True
 

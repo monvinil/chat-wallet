@@ -453,8 +453,8 @@ def wallet_setup_ui():
                                 st.session_state.wallet_key = encrypted["key"]
                                 st.session_state.wallet_locked = False
 
-                                # Defer wallet key save to next render cycle (to let JS execute)
-                                st.session_state._pending_wallet_key_save = encrypted["key"]
+                                # SECURITY: Do NOT save wallet key to cookie
+                                # Users must re-enter password after page refresh
 
                                 # Save encrypted wallet to Supabase for cloud backup
                                 save_wallet_address(
@@ -1115,12 +1115,9 @@ def main():
             from utils.logger import logger
             logger.warning(f"Session restore error: {e}")
 
-    # Handle deferred wallet key save (from previous unlock)
-    # This needs to happen on a separate render cycle so the JS component can execute
-    if st.session_state.get("_pending_wallet_key_save"):
-        wallet_key = st.session_state._pending_wallet_key_save
-        del st.session_state._pending_wallet_key_save
-        SessionManager.save_wallet_key(wallet_key)
+    # SECURITY: Removed wallet key cookie saving
+    # Wallet key is only stored in session state (memory)
+    # Users must re-enter password after page refresh
 
     # Check session timeout and lock wallet if inactive
     from rate_limiter import check_and_handle_timeout, RateLimiter

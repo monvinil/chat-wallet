@@ -245,7 +245,7 @@ def sidebar():
             solana_addr = _get_solana_address_from_session()
             evm_addr = st.session_state.wallet_address
 
-            # CSS for responsive middle-truncation (first 2 fixed, last 4 fixed)
+            # CSS for responsive middle-truncation (first 6 fixed, last 4 fixed)
             st.markdown("""
             <style>
             .addr-section { margin-bottom: 12px; }
@@ -262,40 +262,42 @@ def sidebar():
             .addr-mid { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .addr-end { flex-shrink: 0; white-space: nowrap; }
             .addr-copy {
-                flex-shrink: 0; cursor: pointer; opacity: 0.4; font-size: 12px;
-                padding: 2px 6px; border-radius: 3px; transition: all 0.15s;
+                flex-shrink: 0; cursor: pointer; opacity: 0.6; font-size: 11px;
+                padding: 4px 8px; border-radius: 4px; transition: all 0.15s;
+                background: rgba(255,255,255,0.08); color: #888;
+                font-family: 'JetBrains Mono', monospace;
             }
-            .addr-copy:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+            .addr-copy:hover { opacity: 1; background: rgba(255,255,255,0.15); color: #fff; }
             </style>
             """, unsafe_allow_html=True)
 
-            # EVM Address (first 2 fixed, last 4 fixed)
+            # EVM Address (first 6 fixed, last 4 fixed) - e.g. 0x1234...cdef
             st.markdown(f"""
             <div class="addr-section">
                 <div class="addr-label">EVM</div>
                 <div class="addr-box">
                     <div class="addr-text">
-                        <span class="addr-start">{evm_addr[:2]}</span>
-                        <span class="addr-mid">{evm_addr[2:-4]}</span>
+                        <span class="addr-start">{evm_addr[:6]}</span>
+                        <span class="addr-mid">{evm_addr[6:-4]}</span>
                         <span class="addr-end">{evm_addr[-4:]}</span>
                     </div>
-                    <span class="addr-copy" onclick="navigator.clipboard.writeText('{evm_addr}')" title="Copy">⧉</span>
+                    <span class="addr-copy" onclick="navigator.clipboard.writeText('{evm_addr}')" title="Copy address">Copy</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-            # Solana Address (if available)
+            # Solana Address (if available) - first 6 fixed, last 4 fixed
             if solana_addr:
                 st.markdown(f"""
                 <div class="addr-section">
                     <div class="addr-label">SOL</div>
                     <div class="addr-box">
                         <div class="addr-text">
-                            <span class="addr-start">{solana_addr[:2]}</span>
-                            <span class="addr-mid">{solana_addr[2:-4]}</span>
+                            <span class="addr-start">{solana_addr[:6]}</span>
+                            <span class="addr-mid">{solana_addr[6:-4]}</span>
                             <span class="addr-end">{solana_addr[-4:]}</span>
                         </div>
-                        <span class="addr-copy" onclick="navigator.clipboard.writeText('{solana_addr}')" title="Copy">⧉</span>
+                        <span class="addr-copy" onclick="navigator.clipboard.writeText('{solana_addr}')" title="Copy address">Copy</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)

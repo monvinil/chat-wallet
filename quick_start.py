@@ -42,8 +42,8 @@ def create_guest_wallet():
             st.session_state.user_id = guest_user_id
             st.session_state._guest_user_id = guest_user_id  # Preserve for conversion
 
-            # Defer wallet key save to next render cycle (to let JS execute)
-            st.session_state._pending_wallet_key_save = encrypted["key"]
+            # SECURITY: Do NOT save wallet key to cookie
+            # Guest wallets stay unlocked in session only
 
             # Store Solana address if available (multi-chain wallet)
             if wallet_info.get("solana_address"):
