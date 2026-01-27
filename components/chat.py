@@ -323,13 +323,13 @@ def _render_pulse_card_html(slot: dict) -> str:
 
     # === MAIN VALUE (compact for mobile) ===
     if mode == "perk" and spent > 0:
-        main_html = f'<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;margin-top:4px;"><span style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span><span style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};">{int(spent)} USDC Spent</span></div>'
+        main_html = f'<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;margin-top:4px;"><span style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span><span style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};">USDC Spent</span></div>'
     else:
         main_html = f'<div class="pulse-card-main" style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</div>'
 
     # === BOTTOM SECTION ===
     if mode == "perk":
-        bottom = f'<div><div class="pulse-card-sub" style="font-family:Inter;font-size:11px;color:{sub_color};margin-bottom:5px;font-weight:600;text-shadow:{text_shadow};">{slot["sub"]}</div><div style="width:100%;height:3px;background:{track_color};border-radius:3px;"><div style="width:{pct}%;height:100%;background:{accent};border-radius:3px;box-shadow:{fill_shadow};"></div></div></div>'
+        bottom = f'<div><div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};margin-bottom:5px;font-weight:400;text-shadow:{text_shadow};">{slot["sub"]}</div><div style="width:100%;height:3px;background:{track_color};border-radius:3px;"><div style="width:{pct}%;height:100%;background:{accent};border-radius:3px;box-shadow:{fill_shadow};"></div></div></div>'
     elif mode == "ai":
         bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:{accent};">●</span> {slot["sub"]}</div>'
     elif mode == "stat" and slot.get("stats"):
