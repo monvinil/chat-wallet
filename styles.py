@@ -23,10 +23,6 @@ MAIN_CSS = """
 /* 1. THE ATMOSPHERE BACKGROUND */
 .stApp {
     background-color: var(--bg-deep);
-    background-image:
-        radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
-        linear-gradient(180deg, var(--bg-deep) 0%, #000000 100%);
-    background-attachment: fixed;
 }
 
 html, body, [class*="css"] {
