@@ -596,7 +596,7 @@ def chat_interface(create_agent_func):
     # 8. INPUT FIELD
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
     if not prompt:
-        prompt = st.chat_input("Input command...")
+        prompt = st.chat_input("Start typing...")
         if prompt:
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):

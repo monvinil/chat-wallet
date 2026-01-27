@@ -718,7 +718,6 @@ def main():
     /* 3. GLASS INPUTS */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
-    .stChatInput > div > div > textarea,
     .stNumberInput > div > div > input {
         background-color: rgba(255,255,255,0.03) !important;
         border: 1px solid var(--border-glass) !important;
@@ -728,6 +727,23 @@ def main():
         font-size: 15px !important;
         padding: 12px 16px !important;
         transition: all 0.2s ease;
+    }
+
+    /* Chat input - transparent background */
+    .stChatInput,
+    .stChatInput > div,
+    .stChatInput > div > div {
+        background: transparent !important;
+    }
+
+    .stChatInput > div > div > textarea {
+        background-color: transparent !important;
+        border: 1px solid var(--border-glass) !important;
+        border-radius: 12px !important;
+        color: white !important;
+        font-family: 'Inter', sans-serif;
+        font-size: 15px !important;
+        padding: 12px 16px !important;
     }
 
     .stTextInput > div > div > input:hover,
