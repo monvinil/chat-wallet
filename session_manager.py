@@ -334,14 +334,8 @@ class SessionManager:
             if encrypted_wallet:
                 st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
                 st.session_state.wallet_salt = encrypted_wallet["salt"]
-
-                # Only lock if not already set - allows browsing without re-entering password
-                # Actual signing operations will check for wallet_key presence
-                if "wallet_locked" not in st.session_state:
-                    st.session_state.wallet_locked = False
-            else:
-                if "wallet_locked" not in st.session_state:
-                    st.session_state.wallet_locked = False
+                # Don't force lock - let user browse/chat freely
+                # Transaction signing will prompt for unlock when wallet_key is needed
 
             return True
         except Exception as e:

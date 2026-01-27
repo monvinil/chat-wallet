@@ -338,7 +338,7 @@ def init_state():
         "messages": [],
         "agent": None,
         "wallet_address": None,
-        "wallet_locked": True,
+        "wallet_locked": False,  # Don't lock by default - let session restore handle it
         "authenticated": False,
         "user_email": None,
         "balances": {},
