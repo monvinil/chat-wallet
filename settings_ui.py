@@ -5,11 +5,15 @@ V12 "Liquid Silver" - The List: Minimal rows, floating text
 
 import streamlit as st
 from settings_manager import SettingsManager
+from rate_limiter import RateLimiter
 from typing import Optional
 
 
 def settings_page():
     """Render settings page with V12 styling"""
+    # Update activity to prevent session timeout while using settings
+    RateLimiter.update_activity()
+
     # V12 header
     st.markdown("""
     <div style="margin: 30px 0 40px 0;">

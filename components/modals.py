@@ -11,6 +11,7 @@ from io import BytesIO
 from config import NETWORKS
 from wallet_manager import WalletManager
 from chain_utils import ChainUtils
+from rate_limiter import RateLimiter
 
 
 def generate_qr(data: str):
@@ -106,6 +107,7 @@ def show_success_animation():
 
 def seed_phrase_modal():
     """V12 seed phrase modal - centered void aesthetic"""
+    RateLimiter.update_activity()  # Keep session active during modal
     mnemonic = st.session_state.get("_pending_seed_phrase", "")
     if not mnemonic:
         st.session_state.show_seed_phrase_modal = False
@@ -210,6 +212,7 @@ def seed_phrase_modal():
 
 def deposit_modal():
     """V12 deposit modal - shows both addresses upfront"""
+    RateLimiter.update_activity()  # Keep session active during modal
     st.markdown("<h2 style='text-align: center; font-weight: 300; margin-bottom: 8px;'>Deposit</h2>", unsafe_allow_html=True)
     st.markdown("<div style='text-align: center; font-size: 12px; color: #555; margin-bottom: 24px;'>Send USDC to your wallet address</div>", unsafe_allow_html=True)
 
@@ -429,6 +432,7 @@ def _render_send_confirmation():
 
 def send_modal():
     """V12 send modal - void transfer"""
+    RateLimiter.update_activity()  # Keep session active during modal
     from transaction_relayer import TransactionRelayer
     from spending_limits import check_spending_limit
 

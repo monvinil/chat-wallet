@@ -1366,6 +1366,9 @@ def main():
 
     # Show settings page if requested (allow access even when wallet is locked)
     if st.session_state.get("show_settings") and (st.session_state.wallet_address or st.session_state.get("user_id")):
+        # Keep sidebar visible for consistent navigation
+        sidebar()
+
         # Show OAuth result toast if just completed
         if st.session_state.get("_oauth_result"):
             if st.session_state._oauth_result == "success":
