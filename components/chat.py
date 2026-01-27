@@ -90,27 +90,35 @@ def render_header():
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
 
-# --- THE PULSE DECK (V15: High Contrast / Spotlight) ---
+# --- THE PULSE DECK (V18: Vivid Glass / Apple Wallet) ---
 def render_pulse_deck():
     """
-    V15: High contrast design with white spotlight card and matte dark perks.
+    V18: Vivid Glass design - glowing colored cards like Apple Wallet.
     - Spotlight (first card): Solid white, pops aggressively
-    - Perks (cards 2-3): Matte dark glass, subtle borders
+    - Perks (cards 2-3): Vivid gradients with colored glow shadows
     """
 
-    # === BRAND DEFINITIONS (Iconify SVG icons) ===
+    # === BRAND DEFINITIONS: Vivid Glass Theme ===
     BRANDS = {
         "spotify": {
-            "color": "#1DB954",
-            "icon": "https://api.iconify.design/simple-icons/spotify.svg"
+            "icon": "https://api.iconify.design/simple-icons/spotify.svg",
+            # Electric Green Gradient
+            "bg": "linear-gradient(135deg, #1ed760 0%, #1db954 100%)",
+            "shadow": "0 8px 25px -5px rgba(29, 185, 84, 0.5)",  # Green glow
+            "accent": "#FFFFFF",  # White progress bar fill
         },
         "netflix": {
-            "color": "#E50914",
-            "icon": "https://api.iconify.design/simple-icons/netflix.svg"
+            "icon": "https://api.iconify.design/simple-icons/netflix.svg",
+            # Deep Crimson Gradient
+            "bg": "linear-gradient(135deg, #ff4b55 0%, #e50914 100%)",
+            "shadow": "0 8px 25px -5px rgba(229, 9, 20, 0.5)",  # Red glow
+            "accent": "#FFFFFF",
         },
         "system": {
-            "color": "#000000",
-            "icon": "https://api.iconify.design/mdi/chart-line.svg"
+            "icon": "https://api.iconify.design/mdi/chart-line.svg",
+            "bg": "#FFFFFF",
+            "shadow": "0 4px 20px rgba(255,255,255,0.1)",
+            "accent": "#000000",
         },
     }
 
@@ -151,7 +159,7 @@ def render_pulse_deck():
             "icon": BRANDS["system"]["icon"],
         })
 
-    # Slots 2-3: Perks (MATTE DARK)
+    # Slots 2-3: Perks (VIVID GLASS)
     for p in perks[:2]:
         brand = BRANDS.get(p["brand"].lower(), BRANDS["system"])
         pct = int((p["progress"] / p["target"]) * 100) if p["target"] > 0 else 0
@@ -163,7 +171,10 @@ def render_pulse_deck():
             "sub": p["reward"],
             "pct": pct,
             "spent": spent,
-            "accent": brand["color"],
+            "brand_key": p["brand"].lower(),
+            "bg": brand["bg"],
+            "shadow": brand["shadow"],
+            "accent": brand["accent"],
             "spotlight": False,
             "icon": brand["icon"],
         })
@@ -176,52 +187,57 @@ def render_pulse_deck():
 
 
 def _render_pulse_card(slot: dict):
-    """Render V15 card - spotlight (white) or matte (dark)."""
+    """Render V18 card - spotlight (white) or vivid glass (gradient)."""
 
     mode = slot["mode"]
     icon = slot["icon"]
     is_spotlight = slot.get("spotlight", False)
     pct = slot.get("pct", 0)
     spent = slot.get("spent", 0)
-    accent = slot.get("accent", "#000000")
 
-    # === THEME: Spotlight vs Matte ===
+    # === THEME: Spotlight vs Vivid Glass ===
     if is_spotlight:
+        # White card - The Anchor
         bg = "#FFFFFF"
         text_color = "#000000"
         sub_color = "#666666"
         border = "none"
-        shadow = "0 4px 20px rgba(0,0,0,0.15)"
+        shadow = "0 4px 20px rgba(255,255,255,0.1)"
         icon_filter = "brightness(0)"  # Black icon on white
+        track_color = "rgba(0,0,0,0.1)"
+        accent = "#000000"
     else:
-        bg = "rgba(255,255,255,0.03)"
+        # Vivid Glass - Gradient with colored glow
+        bg = slot.get("bg", "linear-gradient(135deg, #333 0%, #222 100%)")
         text_color = "#FFFFFF"
-        sub_color = "#888888"
-        border = "1px solid rgba(255,255,255,0.08)"
-        shadow = "none"
-        icon_filter = "brightness(0) invert(1) opacity(0.6)"  # White icon on dark
+        sub_color = "rgba(255,255,255,0.8)"  # Translucent white - picks up color
+        border = "none"  # Color defines the edge
+        shadow = slot.get("shadow", "none")
+        icon_filter = "brightness(0) invert(1)"  # Pure white icon
+        track_color = "rgba(255,255,255,0.25)"  # Glass track
+        accent = slot.get("accent", "#FFFFFF")
 
     # === ICON ===
-    icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};">'
+    icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:0.95;">'
 
     # === MAIN VALUE ===
     if mode == "perk" and spent > 0:
         main_html = f'''<div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
-            <span style="font-family:Inter;font-size:16px;font-weight:600;color:{text_color};letter-spacing:-0.02em;">{slot["main"]}</span>
+            <span style="font-family:Inter;font-size:16px;font-weight:700;color:{text_color};letter-spacing:-0.02em;">{slot["main"]}</span>
             <span style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};">{int(spent)} USDC</span>
         </div>'''
     else:
-        main_html = f'''<div style="font-family:Inter;font-size:16px;font-weight:600;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">
+        main_html = f'''<div style="font-family:Inter;font-size:16px;font-weight:700;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em;">
             {slot["main"]}
         </div>'''
 
     # === BOTTOM SECTION ===
     if mode == "perk":
-        # Progress bar with glow
+        # Glass track progress bar - translucent track, solid white fill
         bottom = f'''<div>
-            <div style="font-family:Inter;font-size:11px;color:{sub_color};margin-bottom:6px;">{slot["sub"]}</div>
-            <div style="width:100%;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;">
-                <div style="width:{pct}%;height:100%;background:{accent};border-radius:2px;box-shadow:0 0 8px {accent};"></div>
+            <div style="font-family:Inter;font-size:10px;color:{sub_color};margin-bottom:6px;font-weight:500;">{slot["sub"]}</div>
+            <div style="width:100%;height:3px;background:{track_color};border-radius:3px;">
+                <div style="width:{pct}%;height:100%;background:{accent};border-radius:3px;"></div>
             </div>
         </div>'''
     elif mode == "stat" and slot.get("stats"):
@@ -239,13 +255,12 @@ def _render_pulse_card(slot: dict):
             {slot.get("sub", "")} →
         </div>'''
 
-    # === THE CARD ===
+    # === THE CARD (V18: Vivid Glass) ===
     st.markdown(f'''
     <div style="
         background:{bg};
-        border:{border};
-        border-radius:14px;
-        padding:16px;
+        border-radius:16px;
+        padding:18px;
         height:96px;
         display:flex;
         flex-direction:column;
@@ -253,7 +268,7 @@ def _render_pulse_card(slot: dict):
         box-shadow:{shadow};
     ">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};letter-spacing:0.05em;font-weight:600;">
+            <span style="font-family:JetBrains Mono;font-size:9px;color:{sub_color};letter-spacing:0.05em;font-weight:700;">
                 {slot["title"]}
             </span>
             {icon_html}
