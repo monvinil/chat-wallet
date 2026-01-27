@@ -834,6 +834,26 @@ def main():
         background: transparent !important;
     }
 
+    /* Remove yellow/orange focus outlines */
+    [data-testid="stSidebar"] input:focus,
+    [data-testid="stSidebar"] button:focus,
+    [data-testid="stForm"] input:focus,
+    [data-testid="stForm"] button:focus,
+    input:focus, button:focus, textarea:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Remove Streamlit's default focus ring */
+    *:focus {
+        outline: none !important;
+    }
+
+    [data-baseweb="input"]:focus-within {
+        border-color: rgba(255,255,255,0.3) !important;
+        box-shadow: none !important;
+    }
+
     /* 6. CHAT BUBBLES */
     [data-testid="stChatMessage"] {
         background: transparent !important;
