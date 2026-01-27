@@ -77,8 +77,14 @@ def _get_solana_address_from_session() -> str:
 
 
 def render_sidebar_header():
-    """Render V12 minimal header"""
-    st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
+    """Render sidebar logo: → $ →"""
+    st.markdown("""
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 1.5rem; padding: 1rem 0;">
+        <span style="font-size: 18px; color: white; font-weight: 300;">→</span>
+        <span style="font-family: 'Menlo', 'Monaco', monospace; font-size: 32px; font-weight: 700; font-style: italic; color: white;">$</span>
+        <span style="font-size: 18px; color: white; font-weight: 300;">→</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def render_status_card(is_active: bool):
