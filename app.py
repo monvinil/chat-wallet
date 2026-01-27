@@ -677,24 +677,29 @@ def main():
         initial_sidebar_state="auto"  # Collapse on mobile
     )
 
-    # V12 Design System: "Liquid Silver" - The Void, Magazine Typography, Matte Surfaces
+    # V22 Design System: "Cinematic Atmosphere" - Deep Zinc, Spotlight, Glass Inputs
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
     :root {
-        --bg-void: #050505;
-        --text-primary: #ffffff;
-        --text-muted: #666666;
-        --border-hairline: rgba(255, 255, 255, 0.08);
-        --accent-silver: #e5e5e5;
+        /* V22 Atmosphere Palette */
+        --bg-deep: #09090b;
+        --bg-surface: #18181b;
+        --text-primary: #f4f4f5;
+        --text-secondary: #a1a1aa;
+        --border-glass: rgba(255, 255, 255, 0.08);
         --font-sans: 'Inter', sans-serif;
         --font-mono: 'JetBrains Mono', monospace;
     }
 
-    /* 1. THE VOID */
+    /* 1. THE ATMOSPHERE BACKGROUND */
     .stApp {
-        background-color: var(--bg-void);
+        background-color: var(--bg-deep);
+        background-image:
+            radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
+            linear-gradient(180deg, var(--bg-deep) 0%, #000000 100%);
+        background-attachment: fixed;
     }
 
     html, body, [class*="css"] {
@@ -702,71 +707,69 @@ def main():
         color: var(--text-primary);
     }
 
-    /* 2. TYPOGRAPHY: MAGAZINE STYLE */
+    /* 2. TYPOGRAPHY */
     h1, h2, h3 {
         font-family: 'Inter', sans-serif;
-        font-weight: 300 !important;
+        font-weight: 500 !important;
         letter-spacing: -0.04em !important;
         color: white !important;
     }
 
-    /* 3. INPUTS: MATTE SURFACES */
+    /* 3. GLASS INPUTS */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
-    .stChatInput > div > div > textarea {
-        background-color: transparent !important;
-        border-bottom: 1px solid #333 !important;
-        border-top: none !important;
-        border-left: none !important;
-        border-right: none !important;
-        border-radius: 0 !important;
+    .stChatInput > div > div > textarea,
+    .stNumberInput > div > div > input {
+        background-color: rgba(255,255,255,0.03) !important;
+        border: 1px solid var(--border-glass) !important;
+        border-radius: 12px !important;
         color: white !important;
         font-family: 'Inter', sans-serif;
         font-size: 15px !important;
-        padding: 16px 0 !important;
+        padding: 12px 16px !important;
         transition: all 0.2s ease;
     }
 
     .stTextInput > div > div > input:hover,
     .stTextArea > div > div > textarea:hover,
     .stChatInput > div > div > textarea:hover {
-        background-color: rgba(255,255,255,0.02) !important;
+        background-color: rgba(255,255,255,0.05) !important;
+        border-color: rgba(255,255,255,0.15) !important;
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus,
     .stChatInput > div > div > textarea:focus {
-        border-bottom-color: white !important;
-        background-color: transparent !important;
-        box-shadow: none !important;
+        border-color: rgba(255,255,255,0.3) !important;
+        box-shadow: 0 0 15px rgba(255,255,255,0.05) !important;
     }
 
     .stTextInput > div > div > input::placeholder,
     .stChatInput > div > div > textarea::placeholder {
-        color: #444 !important;
+        color: #555 !important;
     }
 
-    /* 4. BUTTONS: WIREFRAMES & LIQUID PILLS */
+    /* 4. REFINED BUTTONS */
     .stButton > button {
         background: transparent !important;
-        border: 1px solid var(--border-hairline) !important;
-        color: #888 !important;
-        border-radius: 20px !important;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 10px !important;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 10px 24px !important;
-        transition: all 0.3s ease;
+        border: 1px solid var(--border-glass) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 10px !important;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500 !important;
+        font-size: 13px !important;
+        padding: 8px 20px !important;
+        transition: all 0.2s ease;
     }
 
     .stButton > button:hover {
-        border-color: white !important;
-        color: white !important;
         background: rgba(255,255,255,0.05) !important;
+        color: white !important;
+        border-color: rgba(255,255,255,0.2) !important;
+        transform: translateY(-1px);
     }
 
-    /* Primary: The "Liquid Pill" */
+    /* Primary Action Buttons */
     .stButton > button[kind="primary"],
     .stButton > button[data-testid="baseButton-primary"],
     button[kind="primary"] {
@@ -774,13 +777,14 @@ def main():
         color: black !important;
         border: none !important;
         font-weight: 600 !important;
-        border-radius: 20px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 12px rgba(255,255,255,0.15);
     }
 
     .stButton > button[kind="primary"]:hover,
     .stButton > button[data-testid="baseButton-primary"]:hover {
-        box-shadow: 0 0 20px rgba(255,255,255,0.3);
-        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(255,255,255,0.25);
+        transform: translateY(-1px);
     }
 
     .stButton > button[kind="primary"] p,
@@ -793,25 +797,24 @@ def main():
         transform: none !important;
     }
 
-    /* Form submit buttons - same styling as regular buttons */
+    /* Form submit buttons */
     [data-testid="stFormSubmitButton"] > button,
     .stFormSubmitButton > button {
         background: white !important;
         color: black !important;
         border: none !important;
         font-weight: 600 !important;
-        border-radius: 20px !important;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 10px !important;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 10px 24px !important;
+        border-radius: 10px !important;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px !important;
+        padding: 8px 20px !important;
+        box-shadow: 0 4px 12px rgba(255,255,255,0.15);
     }
 
     [data-testid="stFormSubmitButton"] > button:hover,
     .stFormSubmitButton > button:hover {
-        box-shadow: 0 0 20px rgba(255,255,255,0.3);
-        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(255,255,255,0.25);
+        transform: translateY(-1px);
     }
 
     [data-testid="stFormSubmitButton"] > button p,
@@ -821,53 +824,61 @@ def main():
         color: black !important;
     }
 
-    /* 5. SIDEBAR: FLOATING LIST */
+    /* 5. SIDEBAR */
     [data-testid="stSidebar"] {
-        background-color: var(--bg-void) !important;
-        border-right: 1px solid var(--border-hairline);
+        background-color: #050505 !important;
+        border-right: 1px solid var(--border-glass);
     }
 
     [data-testid="stSidebar"] > div:first-child {
         background: transparent !important;
     }
 
-    /* 6. CHAT: PURE TEXT */
+    /* 6. CHAT BUBBLES */
     [data-testid="stChatMessage"] {
         background: transparent !important;
-        padding: 1.5rem 0 !important;
+        padding: 12px 0 !important;
         border: none !important;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
     }
 
     [data-testid="stChatMessage"] [data-testid="stImage"] {
-        display: none; /* Minimalist: No avatars */
+        display: none;
     }
 
-    /* 7. TABS: MINIMAL TEXT */
+    /* 7. TABS */
     .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 1px solid var(--border-hairline);
-        gap: 30px;
+        gap: 8px;
+        border: none !important;
         background: transparent;
     }
 
     .stTabs [data-baseweb="tab"] {
-        background: transparent;
+        height: 40px;
+        border-radius: 8px;
         border: none !important;
-        color: #444;
-        font-family: 'JetBrains Mono';
-        font-size: 11px;
-        text-transform: uppercase;
-        padding: 10px 0;
+        background: transparent;
+        color: #666;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 0 16px;
+        transition: all 0.2s ease;
     }
 
     .stTabs [data-baseweb="tab"]:hover {
-        color: #888;
+        color: #999;
+        background: rgba(255,255,255,0.03);
     }
 
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background: rgba(255,255,255,0.1);
         color: white;
-        font-weight: 500;
-        background: transparent;
+    }
+
+    /* 8. LAYOUT - Centered Chat Feel */
+    .block-container {
+        padding-top: 2rem;
+        max-width: 800px;
     }
 
     /* 8. CODE BLOCKS - V12 Minimal */
