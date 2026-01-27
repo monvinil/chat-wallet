@@ -319,66 +319,28 @@ def _render_pulse_card_html(slot: dict) -> str:
 
     # === MAIN VALUE (compact for mobile) ===
     if mode == "perk" and spent > 0:
-        main_html = f'''<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;margin-top:4px;">
-            <span style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span>
-            <span style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};">{int(spent)}</span>
-        </div>'''
+        main_html = f'<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;margin-top:4px;"><span style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span><span style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};">{int(spent)}</span></div>'
     else:
-        main_html = f'''<div class="pulse-card-main" style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;text-shadow:{text_shadow};">
-            {slot["main"]}
-        </div>'''
+        main_html = f'<div class="pulse-card-main" style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</div>'
 
     # === BOTTOM SECTION ===
     if mode == "perk":
-        bottom = f'''<div>
-            <div class="pulse-card-sub" style="font-family:Inter;font-size:11px;color:{sub_color};margin-bottom:5px;font-weight:600;text-shadow:{text_shadow};">{slot["sub"]}</div>
-            <div style="width:100%;height:3px;background:{track_color};border-radius:3px;">
-                <div style="width:{pct}%;height:100%;background:{accent};border-radius:3px;box-shadow:{fill_shadow};"></div>
-            </div>
-        </div>'''
+        bottom = f'<div><div class="pulse-card-sub" style="font-family:Inter;font-size:11px;color:{sub_color};margin-bottom:5px;font-weight:600;text-shadow:{text_shadow};">{slot["sub"]}</div><div style="width:100%;height:3px;background:{track_color};border-radius:3px;"><div style="width:{pct}%;height:100%;background:{accent};border-radius:3px;box-shadow:{fill_shadow};"></div></div></div>'
     elif mode == "ai":
-        bottom = f'''<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            <span style="color:{accent};">●</span> {slot["sub"]}
-        </div>'''
+        bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:{accent};">●</span> {slot["sub"]}</div>'
     elif mode == "stat" and slot.get("stats"):
-        bottom = f'''<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            {slot["stats"]}
-        </div>'''
+        bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{slot["stats"]}</div>'
     elif is_spotlight:
-        bottom = f'''<div style="text-align:right;">
-            <span style="font-family:Inter;font-weight:700;font-size:14px;color:#000;">→</span>
-        </div>'''
+        bottom = '<div style="text-align:right;"><span style="font-family:Inter;font-weight:700;font-size:14px;color:#000;">→</span></div>'
     else:
-        bottom = f'''<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-align:right;text-shadow:{text_shadow};">
-            {slot.get("sub", "")} →
-        </div>'''
+        bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-align:right;text-shadow:{text_shadow};">{slot.get("sub", "")} →</div>'
 
     # === THE CARD ===
     border = slot.get("border", "none")
-    return f'''
-    <div class="pulse-card">
-        <div class="pulse-card-inner" style="
-            background:{bg};
-            border:{border};
-            border-radius:14px;
-            padding:16px;
-            height:96px;
-            display:flex;
-            flex-direction:column;
-            justify-content:space-between;
-            box-shadow:{shadow};
-        ">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span class="pulse-card-title" style="font-family:Inter;font-size:10px;color:{sub_color};letter-spacing:0.02em;font-weight:700;text-transform:uppercase;text-shadow:{text_shadow};">
-                    {slot["title"]}
-                </span>
-                {icon_html}
-            </div>
-            {main_html}
-            {bottom}
-        </div>
-    </div>
-    '''
+    card_style = f"background:{bg};border:{border};border-radius:14px;padding:16px;height:96px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:{shadow};"
+    title_style = f"font-family:Inter;font-size:10px;color:{sub_color};letter-spacing:0.02em;font-weight:700;text-transform:uppercase;text-shadow:{text_shadow};"
+
+    return f'<div class="pulse-card"><div class="pulse-card-inner" style="{card_style}"><div style="display:flex;justify-content:space-between;align-items:center;"><span class="pulse-card-title" style="{title_style}">{slot["title"]}</span>{icon_html}</div>{main_html}{bottom}</div></div>'
 
 
 def _render_pulse_card(slot: dict):
