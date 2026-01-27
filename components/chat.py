@@ -94,12 +94,17 @@ def render_pulse_deck():
             "icon": brand["icon"],
         })
     else:
+        # TODO: Replace with real data from transactions table
+        month_spending = 0.00
+        month_tx_count = 0
+        scheduled_count = 0  # TODO: Pull from scheduled_payments table
+
         brand = BRANDS["system"]
         slots.append({
             "mode": "stat",
             "title": "THIS MONTH",
-            "main": "$0.00",
-            "sub": "View",
+            "main": f"${month_spending:.2f}",
+            "stats": f"{month_tx_count} txs · {scheduled_count} scheduled",
             "accent": brand["color"],
             "bg": brand["gradient"],
             "icon": brand["icon"],
@@ -153,6 +158,9 @@ def _render_brand_card(slot: dict):
     # Build bottom section based on mode
     if mode == "perk":
         bottom = f'<div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:9px;color:#555;font-family:Inter;">{slot["sub"]}</span></div><div style="width:100%;height:1px;background:rgba(255,255,255,0.05);"><div style="width:{pct}%;height:100%;background:{accent};box-shadow:0 0 8px {accent};"></div></div></div>'
+    elif mode == "stat" and slot.get("stats"):
+        # Multi-line summary: compact stats at bottom
+        bottom = f'<div style="font-family:JetBrains Mono;font-size:9px;color:#555;margin-top:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{slot["stats"]}</div>'
     else:
         bottom = f'<div style="font-family:JetBrains Mono;font-size:10px;color:{accent};text-align:right;margin-top:auto;opacity:0.8;">{slot["sub"]} →</div>'
 
