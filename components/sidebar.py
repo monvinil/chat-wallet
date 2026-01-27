@@ -411,14 +411,7 @@ def sidebar():
                 </div>
                 """, unsafe_allow_html=True)
 
-                # Hide "Press Enter to submit form" text
-                st.markdown("""
-                <style>
-                [data-testid="stForm"] > div:last-child { display: none; }
-                </style>
-                """, unsafe_allow_html=True)
-
-                with st.form("unlock_form", clear_on_submit=False):
+                with st.form("unlock_form", clear_on_submit=False, border=False):
                     unlock_password = st.text_input("Password", type="password", key="unlock_pwd",
                                                      label_visibility="collapsed", placeholder="Enter password")
                     submitted = st.form_submit_button("UNLOCK", use_container_width=True, type="primary")
