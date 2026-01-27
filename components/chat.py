@@ -127,9 +127,9 @@ def render_pulse_deck():
         },
         "ai": {
             "icon": "https://api.iconify.design/mdi/robot-outline.svg",
-            # Matte dark glass
+            # Matte dark glass - no border
             "bg": "rgba(255,255,255,0.03)",
-            "border": "1px solid rgba(255,255,255,0.08)",
+            "border": "none",
             "shadow": "none",
             "accent": "#1ed760",  # Green accent for AI status
             "text_color": "#FFFFFF",
@@ -160,7 +160,31 @@ def render_pulse_deck():
     # === SLOT BUILDER ===
     slots = []
 
-    # Slot 1: Priority Action or Stats fallback (SPOTLIGHT - White)
+    # Slot 1: AI Data card (first)
+    # TODO: Pull real data from llm_config / free tier usage
+    ai_brand = BRANDS["ai"]
+    ai_provider = "Claude"  # TODO: Get from user's LLM config
+    ai_tier = "Free"  # TODO: Get from subscription status
+    ai_remaining = "8/10"  # TODO: Get from FreeTier.get_remaining_messages()
+
+    slots.append({
+        "mode": "ai",
+        "title": "YOUR AI",
+        "main": ai_provider,
+        "sub": f"{ai_tier} · {ai_remaining} msgs",
+        "bg": ai_brand["bg"],
+        "border": ai_brand.get("border", "none"),
+        "shadow": ai_brand["shadow"],
+        "accent": ai_brand["accent"],
+        "text_color": ai_brand["text_color"],
+        "sub_color": ai_brand["sub_color"],
+        "icon_filter": ai_brand["icon_filter"],
+        "text_shadow": ai_brand["text_shadow"],
+        "spotlight": False,
+        "icon": ai_brand["icon"],
+    })
+
+    # Slot 2: Priority Action or Stats fallback (SPOTLIGHT - White)
     if active_tasks:
         t = active_tasks[0]
         slots.append({
@@ -185,30 +209,6 @@ def render_pulse_deck():
             "spotlight": True,
             "icon": BRANDS["system"]["icon"],
         })
-
-    # Slot 2: AI Data card
-    # TODO: Pull real data from llm_config / free tier usage
-    ai_brand = BRANDS["ai"]
-    ai_provider = "Claude"  # TODO: Get from user's LLM config
-    ai_tier = "Free"  # TODO: Get from subscription status
-    ai_remaining = "8/10"  # TODO: Get from FreeTier.get_remaining_messages()
-
-    slots.append({
-        "mode": "ai",
-        "title": "YOUR AI",
-        "main": ai_provider,
-        "sub": f"{ai_tier} · {ai_remaining} msgs",
-        "bg": ai_brand["bg"],
-        "border": ai_brand.get("border", "none"),
-        "shadow": ai_brand["shadow"],
-        "accent": ai_brand["accent"],
-        "text_color": ai_brand["text_color"],
-        "sub_color": ai_brand["sub_color"],
-        "icon_filter": ai_brand["icon_filter"],
-        "text_shadow": ai_brand["text_shadow"],
-        "spotlight": False,
-        "icon": ai_brand["icon"],
-    })
 
     # Slots 3-4: Perks (Matte dark glass with glowing progress bars)
     for p in perks[:2]:
