@@ -881,6 +881,12 @@ def main():
         max-width: 1100px;
     }
 
+    /* Match chat input width to content */
+    [data-testid="stChatInput"] {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
     /* 8. CODE BLOCKS - V12 Minimal */
     code {
         background: transparent !important;
