@@ -72,6 +72,21 @@ h1, h2, h3 {
     color: #555 !important;
 }
 
+/* Chat input wrapper - remove inner rectangle */
+.stChatInput,
+.stChatInput > div,
+.stChatInput > div > div,
+.stChatInput [data-testid="stChatInputContainer"],
+.stChatInput [data-testid="stChatInputContainer"] > div {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Match chat input width to chat messages */
+.stChatInput {
+    max-width: 100% !important;
+}
+
 /* 4. REFINED BUTTONS */
 .stButton > button {
     background: transparent !important;
