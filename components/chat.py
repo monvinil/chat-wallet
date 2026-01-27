@@ -315,8 +315,8 @@ def _render_pulse_card_html(slot: dict) -> str:
         track_color = "rgba(255,255,255,0.1)"
         accent = slot.get("accent", "#1ed760")
         text_shadow = slot.get("text_shadow", "none")
-        # Glowing progress bar uses accent color
-        fill_shadow = f"0 0 10px {accent}, 0 0 20px {accent}"
+        # Subtle glow on progress bar
+        fill_shadow = f"0 0 6px {accent}40"
 
     # === ICON ===
     icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:1.0;">'
