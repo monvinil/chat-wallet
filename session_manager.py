@@ -331,9 +331,17 @@ class SessionManager:
             st.session_state.wallet_address = session_data["wallet_address"]
             st.session_state.session_token = session_token
 
-            # Restore Solana address if stored
+            # Restore Solana address - first from session, then from wallets table
             if session_data.get("solana_address"):
                 st.session_state.solana_address = session_data["solana_address"]
+            else:
+                # Fallback: fetch Solana address from wallets table
+                from supabase_client import get_user_wallets
+                wallets = get_user_wallets(session_data["user_id"])
+                for wallet in wallets:
+                    if wallet.get("chain") == "solana" and wallet.get("address"):
+                        st.session_state.solana_address = wallet["address"]
+                        break
 
             # Try to restore encrypted wallet from cloud
             from supabase_client import get_encrypted_wallet

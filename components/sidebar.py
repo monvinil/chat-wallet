@@ -79,10 +79,10 @@ def _get_solana_address_from_session() -> str:
 def render_sidebar_header():
     """Render sidebar logo: — $ →"""
     st.markdown("""
-    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 1.5rem; padding: 1rem 0;">
-        <span style="display: inline-block; width: 24px; height: 2px; background: white; opacity: 0.9;"></span>
-        <span style="font-family: 'Menlo', 'Monaco', monospace; font-size: 36px; font-weight: 700; font-style: italic; color: white;">$</span>
-        <span style="font-size: 20px; color: white; font-weight: 200; opacity: 0.9;">→</span>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 1.5rem; padding: 1rem 0;">
+        <span style="display: inline-block; width: 16px; height: 1.5px; background: white; opacity: 0.85;"></span>
+        <span style="font-family: 'Menlo', 'Monaco', monospace; font-size: 28px; font-weight: 700; font-style: italic; color: white; margin: 0 4px;">$</span>
+        <span style="font-size: 14px; color: white; font-weight: 300; opacity: 0.8;">→</span>
     </div>
     """, unsafe_allow_html=True)
 
@@ -429,6 +429,11 @@ def sidebar():
                                 sol_addr = wallet_data["solana"].get("address")
                                 if sol_addr:
                                     SessionManager.update_session_solana_address(sol_addr)
+                                    # Also save to wallets table for persistence across refreshes
+                                    user_id = st.session_state.get("user_id")
+                                    if user_id:
+                                        from supabase_client import save_wallet_address
+                                        save_wallet_address(user_id, sol_addr, chain="solana")
                             st.rerun()
                         else:
                             st.error("Invalid credentials")

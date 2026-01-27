@@ -474,6 +474,8 @@ def wallet_setup_ui():
                                 solana_addr = wallet_info.get("solana_address")
                                 if solana_addr:
                                     st.session_state.solana_address = solana_addr
+                                    # Save Solana address to wallets table for persistence
+                                    save_wallet_address(user["id"], solana_addr, chain="solana")
 
                                 # Create persistent session (cookie) - include Solana address
                                 SessionManager.login(user["id"], email, wallet_info["address"], solana_addr)

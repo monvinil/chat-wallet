@@ -208,13 +208,18 @@ def save_guest_wallet_modal():
                                 # Re-encrypt with user's password
                                 encrypted = WalletManager.encrypt_wallet_data(wallet_data, password)
 
-                                # Save to cloud
+                                # Save to cloud (EVM wallet)
                                 save_wallet_address(
                                     user["id"],
                                     st.session_state.wallet_address,
                                     encrypted_wallet_data=encrypted["encrypted_data"],
                                     encryption_salt=encrypted["salt"]
                                 )
+
+                                # Also save Solana address for persistence
+                                solana_addr = st.session_state.get("solana_address")
+                                if solana_addr:
+                                    save_wallet_address(user["id"], solana_addr, chain="solana")
 
                                 # Copy API key to new user account BEFORE updating user_id
                                 if guest_user_id:
