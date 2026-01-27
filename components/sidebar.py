@@ -411,11 +411,11 @@ def sidebar():
                 </div>
                 """, unsafe_allow_html=True)
 
-                unlock_password = st.text_input("Password", type="password", key="unlock_pwd",
-                                                 label_visibility="collapsed", placeholder="Enter password")
-
-                if st.button("UNLOCK", use_container_width=True, type="primary"):
-                    if unlock_password:
+                with st.form("unlock_form", clear_on_submit=False):
+                    unlock_password = st.text_input("Password", type="password", key="unlock_pwd",
+                                                     label_visibility="collapsed", placeholder="Enter password")
+                    submitted = st.form_submit_button("UNLOCK", use_container_width=True, type="primary")
+                    if submitted and unlock_password:
                         if WalletManager.unlock_wallet_with_password(unlock_password):
                             st.rerun()
                         else:
