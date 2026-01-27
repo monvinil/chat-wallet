@@ -301,29 +301,32 @@ class SessionManager:
             # Check for session cookie
             session_token = SessionManager.get_session_cookie()
 
-            # Cookie manager may return None on first render - need rerun
-            # Track attempts to prevent infinite rerun loops
+            # Cookie manager may return None on first render - need one rerun
+            # Reduced from 2 attempts to 1 for faster load times
             if session_token is None:
-                attempts = st.session_state.get("_cookie_read_attempts", 0)
-                if attempts < 2:
-                    st.session_state._cookie_read_attempts = attempts + 1
+                if not st.session_state.get("_cookie_checked"):
+                    st.session_state._cookie_checked = True
                     # Clear cached cookies so next render fetches fresh
                     if "_cached_cookies" in st.session_state:
                         del st.session_state["_cached_cookies"]
-                    # Cookie manager needs a rerun to read cookies from browser
+                    # Single rerun to let cookie manager initialize
                     st.rerun()
-                # After max attempts, no cookie found - user not logged in
+                # After check, no cookie found - user not logged in
                 return False
 
-            # Reset attempts counter on successful read
-            st.session_state._cookie_read_attempts = 0
+            # Clear check flag on successful read
+            st.session_state._cookie_checked = False
 
-            # Validate session in database
-            session_data = SessionManager.get_session(session_token)
-            if not session_data:
+            # Batched query: session + wallets + encrypted data in 2 queries (was 3)
+            from supabase_client import get_session_restore_data
+            restore_data = get_session_restore_data(session_token)
+
+            if not restore_data:
                 # Session invalid or expired - clear stale cookie
                 SessionManager.clear_session_cookie()
                 return False
+
+            session_data = restore_data["session"]
 
             # Restore session state
             st.session_state.user_id = session_data["user_id"]
@@ -331,22 +334,12 @@ class SessionManager:
             st.session_state.wallet_address = session_data["wallet_address"]
             st.session_state.session_token = session_token
 
-            # Restore Solana address - first from session, then from wallets table
-            if session_data.get("solana_address"):
-                st.session_state.solana_address = session_data["solana_address"]
-            else:
-                # Fallback: fetch Solana address from wallets table
-                from supabase_client import get_user_wallets
-                wallets = get_user_wallets(session_data["user_id"])
-                for wallet in wallets:
-                    if wallet.get("chain") == "solana" and wallet.get("address"):
-                        st.session_state.solana_address = wallet["address"]
-                        break
+            # Restore Solana address (from batched result)
+            if restore_data.get("solana_address"):
+                st.session_state.solana_address = restore_data["solana_address"]
 
-            # Try to restore encrypted wallet from cloud
-            from supabase_client import get_encrypted_wallet
-            encrypted_wallet = get_encrypted_wallet(session_data["user_id"])
-
+            # Restore encrypted wallet (from batched result)
+            encrypted_wallet = restore_data.get("encrypted_wallet")
             if encrypted_wallet:
                 st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
                 st.session_state.wallet_salt = encrypted_wallet["salt"]
