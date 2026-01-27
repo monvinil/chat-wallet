@@ -55,13 +55,14 @@ def render_message_skeleton():
 
 
 # --- VISUAL: FLOATING DATA ---
-def render_fashion_card(label, value, tag=None):
+def render_fashion_card(label, value, tag=None, tag_color=None):
     """Minimalist data point floating in space."""
+    color = tag_color or "#444"
     st.markdown(f"""
     <div style="padding: 12px 0;">
         <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #444; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.1em;">{label}</div>
         <div style="font-family: 'Inter'; font-size: 18px; font-weight: 400; color: white; letter-spacing: -0.02em;">
-            {value} {f'<span style="font-size: 12px; color: #444; margin-left: 4px;">{tag}</span>' if tag else ''}
+            {value} {f'<span style="font-size: 12px; color: {color}; margin-left: 4px;">{tag}</span>' if tag else ''}
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -445,7 +446,7 @@ def chat_interface(create_agent_func):
         with c2:
             render_fashion_card("Network", "Arc")
         with c3:
-            render_fashion_card("Status", "Active", "●")
+            render_fashion_card("Status", "Active", "●", "#22c55e")
 
         st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
         # Show modules when no messages
