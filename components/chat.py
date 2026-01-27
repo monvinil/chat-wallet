@@ -176,7 +176,7 @@ def render_pulse_deck():
 
         slots.append({
             "mode": "stat",
-            "title": "THIS MONTH",
+            "title": "YOUR STATS",
             "main": f"${month_spending:.2f}",
             "stats": f"{month_tx_count} txs · {scheduled_count} scheduled",
             "spotlight": True,
