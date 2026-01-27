@@ -139,11 +139,9 @@ def _render_brand_card(slot: dict):
     pct = slot.get("pct", 0)
     spent = slot.get("spent", 0)
 
-    # Icon: All SVG for consistency, with appropriate filters
-    if mode in ["stat", "task"]:
-        icon_filter = "brightness(0) invert(1) opacity(0.7)"
-    else:
-        icon_filter = "grayscale(100%) brightness(200%)"
+    # Icon: All SVG for consistency - invert black to white
+    # Iconify returns black SVGs, so we invert them to white
+    icon_filter = "brightness(0) invert(1) opacity(0.8)"
     icon_html = f'<img src="{icon}" style="height:16px;width:auto;max-width:20px;object-fit:contain;filter:{icon_filter};">'
 
     # Build main display - include spent for perks
