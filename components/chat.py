@@ -99,31 +99,31 @@ def render_pulse_deck():
     - Text shadows make white text readable on bright backgrounds
     """
 
-    # === BRAND DEFINITIONS: Matte Dark Glass Style ===
+    # === BRAND DEFINITIONS: V22 Cupertino White with Mesh Gradients ===
     BRANDS = {
         "spotify": {
             "icon": "https://api.iconify.design/simple-icons/spotify.svg",
-            # Matte dark glass with green accent
-            "bg": "rgba(255,255,255,0.03)",
-            "border": "1px solid rgba(255,255,255,0.08)",
-            "shadow": "none",
-            "accent": "#1ed760",  # Spotify green
+            # Mesh gradient: lavender → sky → mint
+            "bg": "linear-gradient(135deg, #c792ea 0%, #7dc5f5 50%, #6bf2d3 100%)",
+            "border": "none",
+            "shadow": "0 4px 16px rgba(199,146,234,0.3)",
+            "accent": "#FFFFFF",  # White progress bar
             "text_color": "#FFFFFF",
-            "sub_color": "rgba(255,255,255,0.6)",
-            "icon_filter": "brightness(0) invert(1) opacity(0.8)",
-            "text_shadow": "none",
+            "sub_color": "rgba(255,255,255,0.85)",
+            "icon_filter": "brightness(0) invert(1)",
+            "text_shadow": "0 2px 8px rgba(0,0,0,0.25)",
         },
         "netflix": {
             "icon": "https://api.iconify.design/simple-icons/netflix.svg",
-            # Matte dark glass with red accent
-            "bg": "rgba(255,255,255,0.03)",
-            "border": "1px solid rgba(255,255,255,0.08)",
-            "shadow": "none",
-            "accent": "#e50914",  # Netflix red
+            # Mesh gradient: gold → pink → peach
+            "bg": "linear-gradient(135deg, #ffd89b 0%, #f5a0c7 50%, #ffc3a0 100%)",
+            "border": "none",
+            "shadow": "0 4px 16px rgba(245,160,199,0.3)",
+            "accent": "#FFFFFF",  # White progress bar
             "text_color": "#FFFFFF",
-            "sub_color": "rgba(255,255,255,0.6)",
-            "icon_filter": "brightness(0) invert(1) opacity(0.8)",
-            "text_shadow": "none",
+            "sub_color": "rgba(255,255,255,0.85)",
+            "icon_filter": "brightness(0) invert(1)",
+            "text_shadow": "0 2px 8px rgba(0,0,0,0.25)",
         },
         "ai": {
             "icon": "https://api.iconify.design/mdi/robot-outline.svg",
@@ -312,11 +312,11 @@ def _render_pulse_card_html(slot: dict) -> str:
         sub_color = slot.get("sub_color", "rgba(255,255,255,0.6)")
         shadow = slot.get("shadow", "none")
         icon_filter = slot.get("icon_filter", "brightness(0) invert(1) opacity(0.8)")
-        track_color = "rgba(255,255,255,0.1)"
-        accent = slot.get("accent", "#1ed760")
+        track_color = "rgba(255,255,255,0.25)"
+        accent = slot.get("accent", "#FFFFFF")
         text_shadow = slot.get("text_shadow", "none")
-        # Subtle glow on progress bar
-        fill_shadow = f"0 0 6px {accent}40"
+        # White glow on mesh gradient cards
+        fill_shadow = "0 0 8px rgba(255,255,255,0.6)"
 
     # === ICON ===
     icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:1.0;">'
