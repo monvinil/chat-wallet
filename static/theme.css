@@ -52,12 +52,11 @@ html, body, [class*="css"] {
     color: var(--text-primary);
 }
 
-/* V10 Headers - Wide tracking, uppercase, weight contrast */
+/* V10 Headers - Wide tracking, weight contrast */
 h1, h2, h3 {
     font-family: var(--font-sans);
     font-weight: 300;
     letter-spacing: 0.15em;
-    text-transform: uppercase;
     color: white !important;
 }
 
