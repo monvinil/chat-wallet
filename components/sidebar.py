@@ -248,35 +248,44 @@ def sidebar():
             total_usdc = ChainUtils.calculate_total_usdc(balances) if balances else 0.0
             render_balance_display(total_usdc, balances)
 
-            # Addresses - responsive middle-ellipsis (shows more when wider)
+            # Addresses - responsive middle-ellipsis with copy button
             solana_addr = _get_solana_address_from_session()
             evm_addr = st.session_state.wallet_address
 
             # CSS for responsive middle-truncation
             st.markdown("""
             <style>
-            .addr-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-            .addr-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #444; flex-shrink: 0; min-width: 28px; }
-            .addr-value {
+            .addr-section { margin-bottom: 12px; }
+            .addr-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #444; margin-bottom: 4px; }
+            .addr-box {
+                display: flex; align-items: center; gap: 8px;
+                background: rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 4px;
+            }
+            .addr-text {
                 flex: 1; min-width: 0; display: flex; overflow: hidden;
                 font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888;
-                background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 4px;
             }
             .addr-start { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .addr-end { flex-shrink: 0; white-space: nowrap; }
-            .addr-copy { flex-shrink: 0; cursor: pointer; opacity: 0.5; font-size: 10px; margin-left: 6px; }
-            .addr-copy:hover { opacity: 1; }
+            .addr-copy {
+                flex-shrink: 0; cursor: pointer; opacity: 0.4; font-size: 12px;
+                padding: 2px 6px; border-radius: 3px; transition: all 0.15s;
+            }
+            .addr-copy:hover { opacity: 1; background: rgba(255,255,255,0.1); }
             </style>
             """, unsafe_allow_html=True)
 
-            # EVM Address - split into start...end
+            # EVM Address
             evm_mid = len(evm_addr) // 2
             st.markdown(f"""
-            <div class="addr-row">
-                <span class="addr-label">EVM</span>
-                <div class="addr-value" onclick="navigator.clipboard.writeText('{evm_addr}')" title="Click to copy">
-                    <span class="addr-start">{evm_addr[:evm_mid]}</span>
-                    <span class="addr-end">{evm_addr[evm_mid:]}</span>
+            <div class="addr-section">
+                <div class="addr-label">EVM</div>
+                <div class="addr-box">
+                    <div class="addr-text">
+                        <span class="addr-start">{evm_addr[:evm_mid]}</span>
+                        <span class="addr-end">{evm_addr[evm_mid:]}</span>
+                    </div>
+                    <span class="addr-copy" onclick="navigator.clipboard.writeText('{evm_addr}')" title="Copy">⧉</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -285,11 +294,14 @@ def sidebar():
             if solana_addr:
                 sol_mid = len(solana_addr) // 2
                 st.markdown(f"""
-                <div class="addr-row">
-                    <span class="addr-label">SOL</span>
-                    <div class="addr-value" onclick="navigator.clipboard.writeText('{solana_addr}')" title="Click to copy">
-                        <span class="addr-start">{solana_addr[:sol_mid]}</span>
-                        <span class="addr-end">{solana_addr[sol_mid:]}</span>
+                <div class="addr-section">
+                    <div class="addr-label">SOL</div>
+                    <div class="addr-box">
+                        <div class="addr-text">
+                            <span class="addr-start">{solana_addr[:sol_mid]}</span>
+                            <span class="addr-end">{solana_addr[sol_mid:]}</span>
+                        </div>
+                        <span class="addr-copy" onclick="navigator.clipboard.writeText('{solana_addr}')" title="Copy">⧉</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
