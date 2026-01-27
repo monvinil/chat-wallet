@@ -55,12 +55,12 @@ def render_pulse_deck():
         "spotify": {
             "color": "#1DB954",
             "gradient": "linear-gradient(135deg, rgba(29,185,84,0.15) 0%, rgba(29,185,84,0.02) 100%)",
-            "icon": "https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg"
+            "icon": "https://api.iconify.design/simple-icons/spotify.svg"
         },
         "netflix": {
             "color": "#E50914",
             "gradient": "linear-gradient(135deg, rgba(229,9,20,0.15) 0%, rgba(229,9,20,0.02) 100%)",
-            "icon": "https://upload.wikimedia.org/wikipedia/commons/8/89/Netflix_N_logo.svg"
+            "icon": "https://api.iconify.design/simple-icons/netflix.svg"
         },
         "system": {
             "color": "#e5e5e5",
