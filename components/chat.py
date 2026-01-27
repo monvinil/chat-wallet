@@ -349,8 +349,8 @@ def _render_pulse_card_html(slot: dict) -> str:
 
     # === MAIN VALUE (compact for mobile) ===
     if mode == "perk":
-        # Same line: 75/100 USDC Spent
-        main_html = f'<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;"><span style="font-family:Inter;font-size:20px;font-weight:700;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span><span class="usdc-label" style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};">USDC Spent</span></div>'
+        # Same line: 75/100 USDC Spent - matches stats card styling
+        main_html = f'<div class="pulse-card-main" style="display:flex;align-items:baseline;gap:6px;margin-top:4px;"><span style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</span><span class="usdc-label" style="font-family:JetBrains Mono;font-size:10px;color:{sub_color};text-shadow:{text_shadow};">USDC Spent</span></div>'
     else:
         main_html = f'<div class="pulse-card-main" style="font-family:Inter;font-size:17px;font-weight:800;color:{text_color};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.03em;text-shadow:{text_shadow};">{slot["main"]}</div>'
 
