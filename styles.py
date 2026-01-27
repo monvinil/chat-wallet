@@ -102,11 +102,14 @@ h1, h2, h3 {
 [data-testid="stChatInput"] textarea {
     background-color: rgba(255,255,255,0.03) !important;
     border: 1px solid var(--border-glass) !important;
+    padding: 14px 20px !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2) !important;
 }
 
 /* Focus state for textarea */
 .stChatInput textarea:focus {
     border-color: rgba(255,255,255,0.3) !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1) !important;
 }
 
 /* 4. REFINED BUTTONS */
