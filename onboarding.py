@@ -1,5 +1,5 @@
 """
-Chat02 Onboarding Flow
+USDChat Onboarding Flow
 V12 "Liquid Silver" - The Gateway
 """
 

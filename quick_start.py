@@ -1,5 +1,5 @@
 """
-Chat02 Quick Start - Zero-friction onboarding
+USDChat Quick Start - Zero-friction onboarding
 Users can start chatting immediately without any signup
 """
 

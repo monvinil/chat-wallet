@@ -1,5 +1,5 @@
 """
-Chat02 - Your money, your words
+USDChat - Your money, your words
 AI-powered wallet that turns conversation into action
 """
 
@@ -354,7 +354,7 @@ def wallet_setup_ui():
     # V12 Header - centered, minimal
     st.markdown("""
     <div style="text-align: center; margin-bottom: 40px;">
-        <h1 style="font-size: 24px; font-weight: 300; letter-spacing: -0.04em; margin-bottom: 12px;">CHAT02</h1>
+        <h1 style="font-size: 24px; font-weight: 300; letter-spacing: -0.04em; margin-bottom: 12px;">USDChat</h1>
         <div style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 300; color: #666; line-height: 1.6;">
             Self-custodial wallet with AI-powered transactions
         </div>
