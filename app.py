@@ -915,17 +915,6 @@ def main():
     .block-container {
         padding-top: 2rem;
         max-width: 1100px;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
-    }
-
-    /* Match chat input width exactly to block-container */
-    [data-testid="stBottom"] > div {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        box-sizing: border-box;
     }
 
     /* 8. CODE BLOCKS - V12 Minimal */
