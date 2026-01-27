@@ -356,8 +356,8 @@ def render_action_deck():
 # --- MODULES: FULL CAPABILITY LIBRARY ---
 def render_modules():
     """
-    Render full capability library with responsive mobile grid.
-    Mobile: 2 columns, Desktop: 4 columns
+    Render full capability library with all categories.
+    Desktop: 4 columns, Mobile: responsive with scrollable tabs
     """
     # Inject mobile-responsive CSS for modules
     st.markdown("""
@@ -395,39 +395,54 @@ def render_modules():
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
 
-    # Compact categories - most used first
+    # Full categories with (label, prompt, is_live)
     categories = {
-        "Pay": [
-            ("Send", "Help me send USDC to someone", True),
-            ("Bills", "Help me pay a bill with crypto", True),
-            ("Phone", "I need to add minutes to my phone", True),
+        "Send & Pay": [
+            ("Send USDC", "Help me send USDC to someone", True),
+            ("Pay Bills", "Help me pay a bill with crypto", True),
+            ("Phone Top-up", "I need to add minutes to my phone", True),
+            ("Schedule", "I want to set up a recurring payment", True),
         ],
-        "Shop": [
+        "Earn": [
+            ("Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
+            ("Swap to ETH", "Swap USDC to ETH at best rates", False),
+            ("Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
+        ],
+        "Tools": [
+            ("Get Domain", "I want to register a domain", True),
+            ("VPN", "I want a Mullvad VPN subscription", True),
+            ("eSIM", "I need an international eSIM", False),
+            ("Alerts", "Set up balance alerts and spending notifications", False),
+        ],
+        "Shopping": [
             ("Amazon", "I want to buy an Amazon gift card", True),
             ("Target", "Show me Target gift cards", True),
             ("Walmart", "I want a Walmart gift card", True),
+            ("Best Buy", "Show me Best Buy gift cards", True),
+            ("Sephora", "Get a Sephora gift card", True),
         ],
         "Food": [
             ("DoorDash", "I want a DoorDash gift card", True),
             ("Uber Eats", "I want Uber Eats gift card credits", True),
             ("Starbucks", "Get me a Starbucks gift card", True),
+            ("Chipotle", "I want a Chipotle gift card", True),
+            ("Grubhub", "Show me Grubhub gift cards", True),
         ],
-        "Stream": [
+        "Streaming": [
             ("Netflix", "I want a Netflix gift card", True),
             ("Spotify", "Get me a Spotify gift card", True),
             ("Disney+", "I want a Disney+ gift card", False),
+            ("Hulu", "Show me Hulu gift cards", False),
+            ("Apple TV+", "I want an Apple TV+ subscription", False),
         ],
-        "Games": [
+        "Gaming": [
             ("PlayStation", "Show me PlayStation gift cards", True),
             ("Xbox", "I want an Xbox gift card", True),
             ("Steam", "Get me a Steam gift card", True),
-        ],
-        "Tools": [
-            ("Domain", "I want to register a domain", True),
-            ("VPN", "I want a Mullvad VPN subscription", True),
-            ("eSIM", "I need an international eSIM", False),
+            ("Nintendo", "I want a Nintendo eShop card", True),
+            ("Roblox", "Show me Roblox gift cards", True),
         ],
     }
 
@@ -435,10 +450,9 @@ def render_modules():
 
     for tab_idx, (category_name, items) in enumerate(categories.items()):
         with tabs[tab_idx]:
-            # Responsive: 3 columns (fits mobile better)
-            cols = st.columns(3)
+            cols = st.columns(min(len(items), 4))
             for i, (label, prompt, is_live) in enumerate(items):
-                col_idx = i % 3
+                col_idx = i % 4
                 with cols[col_idx]:
                     if is_live:
                         if st.button(label, key=f"mod_{tab_idx}_{i}", use_container_width=True):
@@ -453,25 +467,24 @@ def render_modules():
 def render_modules_preview():
     """
     Render capability preview for pre-login users (all disabled).
-    Mobile-optimized with compact grid.
     """
-    # Same compact categories as render_modules
     categories = {
-        "Pay": ["Send", "Bills", "Phone"],
-        "Shop": ["Amazon", "Target", "Walmart"],
-        "Food": ["DoorDash", "Uber Eats", "Starbucks"],
-        "Stream": ["Netflix", "Spotify", "Disney+"],
-        "Games": ["PlayStation", "Xbox", "Steam"],
-        "Tools": ["Domain", "VPN", "eSIM"],
+        "Send & Pay": ["Send USDC", "Pay Bills", "Phone Top-up", "Schedule"],
+        "Earn": ["Earn Yield", "Swap to ETH", "Stack Sats"],
+        "Tools": ["Get Domain", "VPN", "eSIM", "Alerts"],
+        "Shopping": ["Amazon", "Target", "Walmart", "Best Buy", "Sephora"],
+        "Food": ["DoorDash", "Uber Eats", "Starbucks", "Chipotle", "Grubhub"],
+        "Streaming": ["Netflix", "Spotify", "Disney+", "Hulu", "Apple TV+"],
+        "Gaming": ["PlayStation", "Xbox", "Steam", "Nintendo", "Roblox"],
     }
 
     tabs = st.tabs(list(categories.keys()))
 
     for tab_idx, (category_name, items) in enumerate(categories.items()):
         with tabs[tab_idx]:
-            cols = st.columns(3)
+            cols = st.columns(min(len(items), 4))
             for i, label in enumerate(items):
-                col_idx = i % 3
+                col_idx = i % 4
                 with cols[col_idx]:
                     st.button(label, key=f"prev_{tab_idx}_{i}", disabled=True,
                               use_container_width=True, help="Sign up to use")
