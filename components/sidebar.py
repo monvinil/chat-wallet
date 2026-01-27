@@ -411,9 +411,6 @@ def sidebar():
                 </div>
                 """, unsafe_allow_html=True)
 
-                # Hide form instruction text
-                st.markdown('<style>[data-testid="stForm"] small { display: none !important; }</style>', unsafe_allow_html=True)
-
                 with st.form("unlock_form", clear_on_submit=False, border=False):
                     unlock_password = st.text_input("Password", type="password", key="unlock_pwd",
                                                      label_visibility="collapsed", placeholder="Enter password")
