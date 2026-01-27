@@ -697,12 +697,6 @@ def main():
         background-color: var(--bg-void);
     }
 
-    /* Hide form submit instructions */
-    .stForm [data-testid="stFormSubmitButton"] + div,
-    .stForm > div > div:last-child:not(:has(button)) {
-        display: none !important;
-    }
-
     html, body, [class*="css"] {
         font-family: var(--font-sans);
         color: var(--text-primary);
