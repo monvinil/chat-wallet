@@ -875,10 +875,10 @@ def main():
         color: white;
     }
 
-    /* 8. LAYOUT - Centered Chat Feel */
+    /* 8. LAYOUT - Comfortable Width for Cards + Chat */
     .block-container {
         padding-top: 2rem;
-        max-width: 800px;
+        max-width: 1100px;
     }
 
     /* 8. CODE BLOCKS - V12 Minimal */
