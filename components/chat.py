@@ -395,8 +395,6 @@ def render_modules():
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
-
     # Full categories with (label, prompt, is_live)
     categories = {
         "Send & Pay": [
@@ -569,7 +567,7 @@ def chat_interface(create_agent_func):
         with c3:
             render_fashion_card("Status", "Active", "●", "#22c55e")
 
-        st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
         # Show modules when no messages
         render_modules()
 
