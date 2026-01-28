@@ -326,6 +326,12 @@ def render_pulse_deck():
     .pulse-card[data-brand="ai"] .pulse-card-inner { --glow-color: transparent; }
     .pulse-card[data-brand="system"] .pulse-card-inner { --glow-color: rgba(255, 255, 255, 0.3); }
 
+    /* Spotify/Netflix: glow positioned at right-bottom corner */
+    .pulse-card[data-brand="spotify"] .pulse-card-inner::after,
+    .pulse-card[data-brand="netflix"] .pulse-card-inner::after {
+        background: radial-gradient(80% 80% at 85% 120%, var(--glow-color) 0%, transparent 60%);
+    }
+
     /* Noise texture overlay (inline SVG - no external deps) */
     .pulse-card-inner::before {
         content: "";
@@ -878,25 +884,37 @@ def chat_interface(create_agent_func):
                         agent = create_agent_func()
                         if agent:
                             st.session_state.agent = agent
-                    except Exception:
-                        pass
+                    except Exception as agent_err:
+                        from utils.logger import logger
+                        logger.error(f"Agent creation failed: {type(agent_err).__name__}: {str(agent_err)}")
+                        import traceback
+                        logger.error(traceback.format_exc())
 
                 if not st.session_state.get("agent"):
-                    # Handle missing agent - don't save to history, just show and retry
+                    # Handle missing agent - show helpful error
                     from api_key_setup import check_api_key_status
                     has_key, provider = check_api_key_status()
                     if not has_key:
-                        response = "**System Offline:** API Key required in Settings."
-                        response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+                        response = "**Setup Required:** Please configure your API key in Settings to enable AI."
+                        response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{response}</div>", unsafe_allow_html=True)
                     else:
-                        # Show initializing and retry - remove user message so they can resend
-                        response_container.markdown("<div style='color: #666; font-family: Inter; font-size: 14px;'>Initializing... please try again.</div>", unsafe_allow_html=True)
-                        import time
-                        time.sleep(1)
-                        # Remove the user message that couldn't be processed
-                        if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
-                            st.session_state.messages.pop()
-                        st.rerun()
+                        # Has key but agent still failed - show error and retry once
+                        retry_count = st.session_state.get("_agent_retry_count", 0)
+                        if retry_count < 2:
+                            st.session_state._agent_retry_count = retry_count + 1
+                            response_container.markdown("<div style='color: #888; font-family: Inter; font-size: 14px;'>Connecting to AI... please wait.</div>", unsafe_allow_html=True)
+                            import time
+                            time.sleep(0.5)
+                            # Keep the message, just retry
+                            st.rerun()
+                        else:
+                            # Failed after retries - show error
+                            st.session_state._agent_retry_count = 0
+                            response = f"**Connection Error:** Unable to connect to {provider or 'AI provider'}. Check your API key in Settings."
+                            response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{response}</div>", unsafe_allow_html=True)
+                            # Remove the user message that couldn't be processed
+                            if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+                                st.session_state.messages.pop()
                 else:
                     # Process with LangChain + Streaming
                     from langchain_core.messages import HumanMessage, AIMessage
