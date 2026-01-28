@@ -482,43 +482,7 @@ def render_pulse_deck():
     for slot in slots:
         cards_html += _render_pulse_card_html(slot)
 
-    # Add cursor pointer to AI card CSS
-    st.markdown("""
-    <style>
-    .pulse-card[data-brand="ai"] { cursor: pointer; }
-    .pulse-card[data-brand="ai"]:active .pulse-card-inner { transform: scale(0.98); }
-    </style>
-    """, unsafe_allow_html=True)
-
     st.markdown(f'<div class="pulse-deck-wrapper"><div class="pulse-deck">{cards_html}</div></div>', unsafe_allow_html=True)
-
-    # Invisible button overlaying AI card - triggers settings modal
-    # Using columns to position a clickable element for the AI card
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        # Style the button to be invisible but clickable
-        st.markdown("""
-        <style>
-        [data-testid="stButton"][data-key="ai_card_click"] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 25%;
-            height: 120px;
-            opacity: 0;
-            z-index: 10;
-        }
-        [data-testid="stButton"][data-key="ai_card_click"] button {
-            width: 100% !important;
-            height: 100% !important;
-            background: transparent !important;
-            border: none !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        if st.button("Configure AI", key="ai_card_click", help="Configure your AI provider"):
-            from api_key_setup import show_api_key_setup_modal
-            show_api_key_setup_modal()
 
 
 def _render_pulse_card_html(slot: dict) -> str:
