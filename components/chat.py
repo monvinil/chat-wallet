@@ -532,20 +532,81 @@ def render_action_deck():
     render_pulse_deck()
 
 
-# --- MODULES: FULL CAPABILITY LIBRARY ---
+# --- MODULES: DEEP GLASS TILES ---
 def render_modules():
     """
     Render full capability library with all categories.
-    Desktop: 4 columns, Mobile: responsive with scrollable tabs
+    V5 Deep Glass Tiles styling with 9 category tabs.
     """
-    # Inject mobile-responsive CSS for modules
+    # Deep Glass Tiles CSS
     st.markdown("""
     <style>
-    /* Mobile-responsive tabs with scroll hint */
-    @media (max-width: 768px) {
-        .stTabs {
-            position: relative;
+    /* Container padding */
+    [data-baseweb="tab-panel"] {
+        padding-top: 16px !important;
+    }
+
+    /* The Tile (Button) - Deep Glass Material */
+    [data-baseweb="tab-panel"] button {
+        padding: 10px 16px !important;
+        border-radius: 14px !important;
+        background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        box-shadow:
+            0 4px 12px rgba(0,0,0,0.2),
+            inset 0 1px 0 rgba(255,255,255,0.1)
+            !important;
+        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    }
+
+    /* Hover State - Lift with glow */
+    [data-baseweb="tab-panel"] button:hover:not(:disabled) {
+        transform: translateY(-3px) !important;
+        background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%) !important;
+        border-color: rgba(255,255,255,0.2) !important;
+        box-shadow:
+            0 8px 24px rgba(0,0,0,0.4),
+            0 0 20px rgba(255,255,255,0.08),
+            inset 0 1px 0 rgba(255,255,255,0.2)
+            !important;
+    }
+
+    /* Active/Press State */
+    [data-baseweb="tab-panel"] button:active:not(:disabled) {
+        transform: scale(0.97) !important;
+        background: rgba(255,255,255,0.02) !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    /* Text Styling */
+    [data-baseweb="tab-panel"] button p {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        color: rgba(255,255,255,0.7) !important;
+        letter-spacing: 0.01em !important;
+    }
+
+    /* Light up text on hover */
+    [data-baseweb="tab-panel"] button:hover:not(:disabled) p {
+        color: #fff !important;
+        text-shadow: 0 0 8px rgba(255,255,255,0.4) !important;
+    }
+
+    /* Disabled state */
+    [data-baseweb="tab-panel"] button:disabled {
+        opacity: 0.35 !important;
+    }
+
+    /* No hover transform on touch devices */
+    @media (hover: none) {
+        [data-baseweb="tab-panel"] button:hover:not(:disabled) {
+            transform: none !important;
         }
+    }
+
+    /* Mobile: scrollable tabs */
+    @media (max-width: 768px) {
         .stTabs [data-baseweb="tab-list"] {
             gap: 0;
             overflow-x: auto;
@@ -560,10 +621,11 @@ def render_modules():
             padding: 8px 12px !important;
             white-space: nowrap;
         }
-        /* Compact buttons on mobile */
-        .stButton button {
+        [data-baseweb="tab-panel"] button {
             padding: 8px 12px !important;
-            font-size: 13px !important;
+        }
+        [data-baseweb="tab-panel"] button p {
+            font-size: 12px !important;
         }
     }
     @media (max-width: 480px) {
@@ -571,9 +633,11 @@ def render_modules():
             font-size: 11px !important;
             padding: 6px 10px !important;
         }
-        .stButton button {
+        [data-baseweb="tab-panel"] button {
             padding: 6px 10px !important;
-            font-size: 12px !important;
+        }
+        [data-baseweb="tab-panel"] button p {
+            font-size: 11px !important;
         }
     }
     </style>
@@ -658,7 +722,29 @@ def render_modules():
 def render_modules_preview():
     """
     Render capability preview for pre-login users (all disabled).
+    Uses same Deep Glass Tiles styling as render_modules.
     """
+    # Same Deep Glass CSS (compact version)
+    st.markdown("""
+    <style>
+    [data-baseweb="tab-panel"] { padding-top: 16px !important; }
+    [data-baseweb="tab-panel"] button {
+        padding: 10px 16px !important;
+        border-radius: 14px !important;
+        background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+    }
+    [data-baseweb="tab-panel"] button p {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        color: rgba(255,255,255,0.7) !important;
+    }
+    [data-baseweb="tab-panel"] button:disabled { opacity: 0.35 !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
     categories = {
         "Send & Pay": ["Send USDC", "Pay Bills", "Phone Top-up", "Schedule"],
         "Earn": ["Earn Yield", "Swap to ETH", "Stack Sats"],
