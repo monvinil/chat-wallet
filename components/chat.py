@@ -446,16 +446,25 @@ def render_pulse_deck():
             "brand_key": "system",
         })
     else:
-        # TODO: Replace with real data from transactions table
-        month_spending = 0.00
-        month_tx_count = 0
-        scheduled_count = 0  # TODO: Pull from scheduled_payments table
+        # Get real USDC balance for stats card
+        usdc_balance = 0.00
+        if st.session_state.get("wallet_address"):
+            try:
+                from direct_tx import get_direct_executor
+                executor = get_direct_executor("arc-testnet")
+                usdc_balance = float(executor.get_usdc_balance(st.session_state.wallet_address))
+            except Exception:
+                pass
+
+        # Check for connected services
+        email_connected = bool(SettingsManager.get_oauth_connection(user_id, "email")) if user_id else False
+        services_status = "Email ✓" if email_connected else "No services"
 
         slots.append({
             "mode": "stat",
-            "title": "YOUR STATS",
-            "main": f"${month_spending:.2f}",
-            "stats": f"{month_tx_count} txs · {scheduled_count} scheduled",
+            "title": "BALANCE",
+            "main": f"${usdc_balance:.2f}",
+            "stats": f"USDC · {services_status}",
             "spotlight": True,
             "icon": BRANDS["system"]["icon"],
             "brand_key": "system",
@@ -854,7 +863,15 @@ def render_modules():
     """, unsafe_allow_html=True)
 
     # Full categories with (label, prompt, is_live)
+    # Import showcase agents for demo-ready flows
+    from showcase_agents import get_showcase_agents
+
+    # Build Showcase category from demo-ready agents
+    demo_agents = get_showcase_agents(demo_ready_only=True)
+    showcase_items = [(f"{a.icon} {a.name}", a.initial_prompt, True) for a in demo_agents]
+
     categories = {
+        "Showcase": showcase_items,  # Demo-ready AI agents first
         "Send & Pay": [
             ("Send USDC", "Help me send USDC to someone", True),
             ("Pay Bills", "Help me pay a bill with crypto", True),
