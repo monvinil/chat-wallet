@@ -415,170 +415,186 @@ def init_state():
             st.session_state[k] = v
 
 
-def wallet_setup_ui():
-    """Show wallet setup screen with email/password account - V12 Liquid Silver"""
-    # V12 Header - centered, minimal
-    st.markdown("""
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h1 style="font-size: 24px; font-weight: 300; letter-spacing: -0.04em; margin-bottom: 12px; text-transform: none !important;">USDChat</h1>
-        <div style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 300; color: #666; line-height: 1.6;">
-            Self-custodial wallet with AI-powered transactions
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+def _handle_login(login_email: str, login_password: str):
+    """Handle login form submission"""
+    if not login_email or not login_password:
+        st.error("Please enter email and password")
+        return
 
-    # V12 Info box - subtle border, no icon
-    st.markdown("""
-    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 0; padding: 16px; margin-bottom: 24px;">
-        <div style="font-family: 'Inter', sans-serif; font-size: 13px; color: #888; line-height: 1.6;">
-            Your wallet is encrypted locally and backed up to the cloud. Only you control the private keys.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    with st.spinner("Signing in..."):
+        from rate_limiter import RateLimiter
 
-    tab1, tab2, tab3 = st.tabs(["Sign Up", "Log In", "Import Wallet"])
+        allowed, lockout_msg = RateLimiter.check_login_allowed(login_email)
+        if not allowed:
+            st.error(lockout_msg)
+            return
 
-    # ========== TAB 1: SIGN UP ==========
-    with tab1:
-        st.markdown("""
-        <div style="margin-bottom: 20px;">
-            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Sign Up</div>
-            <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #555; line-height: 1.6;">Create a new wallet that syncs across all your devices.</div>
-        </div>
-        """, unsafe_allow_html=True)
+        login_data = get_user_login_data(login_email)
 
-        # Use form to prevent sidebar closing and enable password autofill
-        with st.form(key="signup_form", clear_on_submit=False):
-            email = st.text_input(
-                "Email",
-                key="signup_email",
-                placeholder="your@email.com",
-                autocomplete="username"
-            )
-            password = st.text_input(
-                "Password (min 8 characters)",
-                type="password",
-                key="signup_pwd",
-                autocomplete="new-password"
-            )
-            password_confirm = st.text_input(
-                "Confirm Password",
-                type="password",
-                key="signup_pwd_confirm",
-                autocomplete="new-password"
-            )
+        if not login_data:
+            st.error("No account found with this email")
+            return
 
-            submit_signup = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+        user = login_data["user"]
+        stored_hash = login_data["password_hash"]
+        wallets = login_data["wallets"]
+        encrypted_wallet = login_data["encrypted_wallet"]
 
-        if submit_signup:
-            if not email or not password:
-                st.error("Please enter both email and password")
-            elif password != password_confirm:
-                st.error("Passwords do not match")
-            elif len(password) < 8:
-                st.error("Password must be at least 8 characters")
-            elif "@" not in email:
-                st.error("Please enter a valid email address")
+        # Verify password
+        if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
+            RateLimiter.record_login_attempt(login_email, success=False)
+            remaining = RateLimiter.get_remaining_attempts(login_email)
+            if remaining > 0:
+                st.error(f"Incorrect password. {remaining} attempt(s) remaining.")
             else:
-                with st.spinner("Creating your account..."):
-                    # Check if user exists
-                    existing_user = get_user_by_email(email)
-                    if existing_user:
-                        st.error("Account already exists. Please log in.")
-                    else:
-                        # Create wallet
-                        wallet_info = WalletManager.create_new_wallet()
+                st.error("Account temporarily locked.")
+            return
 
-                        if wallet_info:
-                            # Hash password for storage (for login verification)
-                            password_hash = WalletManager.hash_password(password)
+        if not wallets or len(wallets) == 0:
+            st.error("No wallet found for this account")
+            return
 
-                            # Create user in Supabase with password hash
-                            try:
-                                user = create_user(
-                                    email=email,
-                                    primary_wallet_address=wallet_info["address"],
-                                    password_hash=password_hash
-                                )
-                            except Exception as e:
-                                from utils.logger import logger
-                                logger.error(f"Create user failed: {str(e)}")
-                                st.error("Could not create account. Please try again in a moment.")
-                                user = None
+        # Successful login
+        RateLimiter.record_login_attempt(login_email, success=True)
+        wallet_address = wallets[0]["wallet_address"]
 
-                            if user:
-                                # Encrypt wallet data
-                                encrypted = WalletManager.encrypt_wallet_data(
-                                    wallet_info["wallet_data"],
-                                    password
-                                )
+        st.session_state.wallet_address = wallet_address
+        st.session_state.user_email = login_email
+        st.session_state.user_id = user["id"]
+        st.session_state.show_auth_modal = False
 
-                                # Save to session
-                                st.session_state.wallet_encrypted = encrypted["encrypted_data"]
-                                st.session_state.wallet_salt = encrypted["salt"]
-                                st.session_state.wallet_key = encrypted["key"]
-                                st.session_state.wallet_locked = False
+        SessionManager.login(user["id"], login_email, wallet_address)
 
-                                # SECURITY: Do NOT save wallet key to cookie
-                                # Users must re-enter password after page refresh
+        # Update password hash if legacy account
+        if not stored_hash:
+            new_hash = WalletManager.hash_password(login_password)
+            update_user_password_hash(user["id"], new_hash)
 
-                                # Save encrypted wallet to Supabase for cloud backup
-                                save_wallet_address(
-                                    user["id"],
-                                    wallet_info["address"],
-                                    encrypted_wallet_data=encrypted["encrypted_data"],
-                                    encryption_salt=encrypted["salt"]
-                                )
+        # Restore encrypted wallet
+        if encrypted_wallet:
+            st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
+            st.session_state.wallet_salt = encrypted_wallet["salt"]
 
-                                # Update session
-                                st.session_state.wallet_address = wallet_info["address"]
-                                st.session_state.wallet_locked = False
-                                st.session_state.user_email = email
-                                st.session_state.user_id = user["id"]
+            if WalletManager.unlock_wallet_with_password(login_password):
+                st.session_state.wallet_locked = False
+                wallet_data = WalletManager.get_wallet_from_session()
+                if wallet_data and wallet_data.get("solana"):
+                    sol_addr = wallet_data["solana"].get("address")
+                    if sol_addr:
+                        st.session_state.solana_address = sol_addr
+                        save_wallet_address(user["id"], sol_addr, chain="solana")
+            else:
+                st.session_state.wallet_locked = True
+        else:
+            st.session_state.wallet_locked = True
 
-                                # Store Solana address if available
-                                solana_addr = wallet_info.get("solana_address")
-                                if solana_addr:
-                                    st.session_state.solana_address = solana_addr
-                                    # Save Solana address to wallets table for persistence
-                                    save_wallet_address(user["id"], solana_addr, chain="solana")
+        # Check onboarding status
+        from settings_manager import SettingsManager
+        user_settings = SettingsManager.get_llm_config(user["id"])
+        if not user_settings.get("api_key"):
+            st.session_state.onboarding_step = 2
+            st.session_state.onboarding_complete = False
 
-                                # Create persistent session (cookie) - include Solana address
-                                SessionManager.login(user["id"], email, wallet_info["address"], solana_addr)
+        st.rerun()
 
-                                st.success("Account created")
 
-                                # Store mnemonic for seed phrase modal and trigger it
-                                if wallet_info.get("mnemonic"):
-                                    st.session_state._pending_seed_phrase = wallet_info["mnemonic"]
-                                    st.session_state.show_auth_modal = False
-                                    st.session_state.show_seed_phrase_modal = True
-                                    st.rerun()
-                                else:
-                                    # No seed phrase (shouldn't happen, but handle gracefully)
-                                    st.session_state.show_auth_modal = False
-                                    st.session_state.onboarding_step = 1
-                                    st.session_state.onboarding_complete = False
-                                    st.rerun()
-                            else:
-                                st.error("Could not create account. Please try again.")
+def _handle_signup(email: str, password: str):
+    """Handle signup form submission"""
+    with st.spinner("Creating account..."):
+        existing_user = get_user_by_email(email)
+        if existing_user:
+            st.error("Account already exists. Please log in.")
+            return
 
-        st.markdown("""
-        <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #444; margin-top: 16px;">
-            Your wallet syncs across all your devices automatically.
+        wallet_info = WalletManager.create_new_wallet()
+        if not wallet_info:
+            st.error("Could not create wallet. Please try again.")
+            return
+
+        password_hash = WalletManager.hash_password(password)
+
+        try:
+            user = create_user(
+                email=email,
+                primary_wallet_address=wallet_info["address"],
+                password_hash=password_hash
+            )
+        except Exception as e:
+            from utils.logger import logger
+            logger.error(f"Create user failed: {str(e)}")
+            st.error("Could not create account. Please try again.")
+            return
+
+        if not user:
+            st.error("Could not create account. Please try again.")
+            return
+
+        # Encrypt wallet
+        encrypted = WalletManager.encrypt_wallet_data(wallet_info["wallet_data"], password)
+
+        st.session_state.wallet_encrypted = encrypted["encrypted_data"]
+        st.session_state.wallet_salt = encrypted["salt"]
+        st.session_state.wallet_key = encrypted["key"]
+        st.session_state.wallet_locked = False
+
+        # Save to cloud
+        save_wallet_address(
+            user["id"],
+            wallet_info["address"],
+            encrypted_wallet_data=encrypted["encrypted_data"],
+            encryption_salt=encrypted["salt"]
+        )
+
+        st.session_state.wallet_address = wallet_info["address"]
+        st.session_state.user_email = email
+        st.session_state.user_id = user["id"]
+
+        # Solana address
+        solana_addr = wallet_info.get("solana_address")
+        if solana_addr:
+            st.session_state.solana_address = solana_addr
+            save_wallet_address(user["id"], solana_addr, chain="solana")
+
+        SessionManager.login(user["id"], email, wallet_info["address"], solana_addr)
+
+        # Show seed phrase modal
+        if wallet_info.get("mnemonic"):
+            st.session_state._pending_seed_phrase = wallet_info["mnemonic"]
+            st.session_state.show_auth_modal = False
+            st.session_state.show_seed_phrase_modal = True
+            st.rerun()
+        else:
+            st.session_state.show_auth_modal = False
+            st.session_state.onboarding_step = 1
+            st.session_state.onboarding_complete = False
+            st.rerun()
+
+
+def wallet_setup_ui():
+    """Show wallet setup screen with email/password account - V24 Streamlined"""
+    from design_system import DS
+
+    # Clean header - centered, minimal
+    st.markdown(f"""
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h1 style="font-family: {DS.typography.FONT_SANS}; font-size: 28px; font-weight: 300; letter-spacing: -0.04em; margin-bottom: 8px; color: {DS.colors.TEXT_PRIMARY};">USDChat</h1>
+        <div style="font-family: {DS.typography.FONT_SANS}; font-size: 14px; font-weight: 300; color: {DS.colors.TEXT_SECONDARY};">
+            Your AI wallet assistant
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
-    # ========== TAB 2: LOG IN ==========
-    with tab2:
-        st.markdown("""
+    # Two tabs only - Log In first (most users are returning)
+    tab1, tab2 = st.tabs(["Log In", "Sign Up"])
+
+    # ========== TAB 1: LOG IN ==========
+    with tab1:
+        st.markdown(f"""
         <div style="margin-bottom: 20px;">
-            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Log In</div>
-            <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #555; line-height: 1.6;">Access your existing wallet.</div>
+            <div style="font-family: {DS.typography.FONT_SANS}; font-size: 13px; color: {DS.colors.TEXT_MUTED};">Welcome back</div>
         </div>
         """, unsafe_allow_html=True)
 
-        # Use form to prevent sidebar closing and enable password autofill
         with st.form(key="login_form", clear_on_submit=False):
             login_email = st.text_input(
                 "Email",
@@ -596,151 +612,117 @@ def wallet_setup_ui():
             submit_login = st.form_submit_button("Log In", type="primary", use_container_width=True)
 
         if submit_login:
-            if not login_email or not login_password:
-                st.error("Please enter email and password")
-            else:
-                with st.spinner("Signing in..."):
-                    # Check rate limiting before any DB queries
-                    from rate_limiter import RateLimiter
+            _handle_login(login_email, login_password)
 
-                    allowed, lockout_msg = RateLimiter.check_login_allowed(login_email)
-                    if not allowed:
-                        st.error(lockout_msg)
-                    else:
-                        # OPTIMIZED: Fetch all user data in 2 queries instead of 5
-                        login_data = get_user_login_data(login_email)
+        # Import wallet link (not a full tab)
+        st.markdown(f"""
+        <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid {DS.colors.BORDER_HAIRLINE};">
+            <div style="font-family: {DS.typography.FONT_MONO}; font-size: 11px; color: {DS.colors.TEXT_MUTED};">
+                Have a recovery phrase?
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Import existing wallet", use_container_width=True, key="import_link"):
+            st.session_state._show_import = True
+            st.rerun()
 
-                        if not login_data:
-                            st.error("No account found with this email")
-                        else:
-                            user = login_data["user"]
-                            stored_hash = login_data["password_hash"]
-                            wallets = login_data["wallets"]
-                            encrypted_wallet = login_data["encrypted_wallet"]
-
-                            # Verify password
-                            if stored_hash and not WalletManager.verify_password(login_password, stored_hash):
-                                RateLimiter.record_login_attempt(login_email, success=False)
-                                remaining = RateLimiter.get_remaining_attempts(login_email)
-                                if remaining > 0:
-                                    st.error(f"Incorrect password. {remaining} attempt(s) remaining.")
-                                else:
-                                    st.error("Incorrect password. Account temporarily locked.")
-                            elif wallets and len(wallets) > 0:
-                                # Record successful login
-                                RateLimiter.record_login_attempt(login_email, success=True)
-
-                                wallet_address = wallets[0]["wallet_address"]
-
-                                st.session_state.wallet_address = wallet_address
-                                st.session_state.user_email = login_email
-                                st.session_state.user_id = user["id"]
-                                st.session_state.show_auth_modal = False
-
-                                # Create persistent session (cookie)
-                                SessionManager.login(user["id"], login_email, wallet_address)
-
-                                # If no password hash stored (legacy), update it now
-                                if not stored_hash:
-                                    new_hash = WalletManager.hash_password(login_password)
-                                    update_user_password_hash(user["id"], new_hash)
-
-                                # Restore encrypted wallet from batched data
-                                if encrypted_wallet:
-                                    st.session_state.wallet_encrypted = encrypted_wallet["encrypted_data"]
-                                    st.session_state.wallet_salt = encrypted_wallet["salt"]
-
-                                    # Decrypt with password
-                                    if WalletManager.unlock_wallet_with_password(login_password):
-                                        st.session_state.wallet_locked = False
-                                        st.success("Signed in. Wallet restored.")
-
-                                        # Update session with Solana address from decrypted wallet
-                                        wallet_data = WalletManager.get_wallet_from_session()
-                                        if wallet_data and wallet_data.get("solana"):
-                                            sol_addr = wallet_data["solana"].get("address")
-                                            if sol_addr:
-                                                st.session_state.solana_address = sol_addr
-                                                # Save to wallets table for persistence
-                                                save_wallet_address(user["id"], sol_addr, chain="solana")
-                                    else:
-                                        st.session_state.wallet_locked = True
-                                        st.success("Signed in")
-                                        st.warning("Could not decrypt wallet. Enter your password to unlock.")
-                                else:
-                                    # No cloud backup - need manual import (legacy account)
-                                    st.session_state.wallet_locked = True
-                                    st.success("Signed in")
-                                    st.markdown("<div style='font-family: Inter; font-size: 12px; color: #666; margin-top: 8px;'>Import your wallet using your recovery phrase to access your funds.</div>", unsafe_allow_html=True)
-
-                                # Check if onboarding was completed
-                                from settings_manager import SettingsManager
-                                user_settings = SettingsManager.get_llm_config(user["id"])
-                                has_api_key = bool(user_settings.get("api_key"))
-
-                                if not has_api_key:
-                                    # Resume onboarding at API setup step
-                                    st.session_state.onboarding_step = 2
-                                    st.session_state.onboarding_complete = False
-                                    st.markdown("<div style='font-family: Inter; font-size: 12px; color: #666; margin-top: 8px;'>Connect an AI provider to start chatting.</div>", unsafe_allow_html=True)
-
-                                st.rerun()
-                            else:
-                                st.error("No wallet found for this account")
-
-    # ========== TAB 3: IMPORT WALLET ==========
-    with tab3:
-        st.markdown("""
+    # ========== TAB 2: SIGN UP ==========
+    with tab2:
+        st.markdown(f"""
         <div style="margin-bottom: 20px;">
-            <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 400; color: white; margin-bottom: 8px;">Import Wallet</div>
-            <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #555; line-height: 1.6;">Import an existing wallet using your recovery phrase or private key.</div>
+            <div style="font-family: {DS.typography.FONT_SANS}; font-size: 13px; color: {DS.colors.TEXT_MUTED};">Create your wallet</div>
         </div>
         """, unsafe_allow_html=True)
 
-        import_email = st.text_input("Email (optional)", key="import_email", placeholder="your@email.com")
+        with st.form(key="signup_form", clear_on_submit=False):
+            email = st.text_input(
+                "Email",
+                key="signup_email",
+                placeholder="your@email.com",
+                autocomplete="username"
+            )
+            password = st.text_input(
+                "Password",
+                type="password",
+                key="signup_pwd",
+                autocomplete="new-password",
+                help="Minimum 8 characters"
+            )
+
+            submit_signup = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+
+        if submit_signup:
+            if not email or not password:
+                st.error("Please enter both email and password")
+            elif len(password) < 8:
+                st.error("Password must be at least 8 characters")
+            elif "@" not in email:
+                st.error("Please enter a valid email address")
+            else:
+                _handle_signup(email, password)
+
+        st.markdown(f"""
+        <div style="font-family: {DS.typography.FONT_MONO}; font-size: 10px; color: {DS.colors.TEXT_GHOST}; margin-top: 16px; text-align: center;">
+            Encrypted backup syncs across devices
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ========== IMPORT WALLET MODAL ==========
+    if st.session_state.get("_show_import"):
+        # Back button
+        if st.button("← Back to login", key="back_from_import"):
+            st.session_state._show_import = False
+            st.rerun()
+
+        st.markdown(f"""
+        <div style="margin: 16px 0 20px 0;">
+            <div style="font-family: {DS.typography.FONT_SANS}; font-size: 16px; font-weight: 400; color: {DS.colors.TEXT_PRIMARY}; margin-bottom: 4px;">Import Wallet</div>
+            <div style="font-family: {DS.typography.FONT_SANS}; font-size: 12px; color: {DS.colors.TEXT_MUTED};">Use your 12-word recovery phrase or private key</div>
+        </div>
+        """, unsafe_allow_html=True)
+
         recovery_input = st.text_area(
             "Recovery phrase or private key",
             key="import_recovery",
-            placeholder="12-word phrase or 0x...",
-            help="Enter your 12-word seed phrase or private key",
-            height=100
+            placeholder="word1 word2 word3 ... or 0x...",
+            height=80,
+            label_visibility="collapsed"
         )
-        import_password = st.text_input("Password", type="password", key="import_pwd", help="This password will encrypt your wallet locally")
+        import_password = st.text_input(
+            "Encryption password",
+            type="password",
+            key="import_pwd",
+            placeholder="Password to encrypt wallet"
+        )
+        import_email = st.text_input(
+            "Email (optional)",
+            key="import_email",
+            placeholder="your@email.com",
+            help="Link to an account for cloud backup"
+        )
 
-        st.markdown("""
-        <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #444; margin-top: 8px;">
-            Your wallet is encrypted locally before storage.
-        </div>
-        """, unsafe_allow_html=True)
-
-        if st.button("Import Wallet", type="primary", disabled=not (recovery_input and import_password)):
-            with st.spinner("Importing wallet..."):
+        if st.button("Import Wallet", type="primary", use_container_width=True, disabled=not (recovery_input and import_password)):
+            with st.spinner("Importing..."):
                 wallet_info = WalletManager.import_wallet(recovery_input.strip())
 
                 if wallet_info:
-                    # Save to session
-                    WalletManager.save_wallet_to_session(
-                        wallet_info["wallet_data"],
-                        import_password
-                    )
-
+                    WalletManager.save_wallet_to_session(wallet_info["wallet_data"], import_password)
                     st.session_state.wallet_address = wallet_info["address"]
                     st.session_state.wallet_locked = False
                     st.session_state.show_auth_modal = False
+                    st.session_state._show_import = False
 
-                    # Optionally save to Supabase if email provided
                     if import_email and "@" in import_email:
                         user = get_user_by_email(import_email)
                         if not user:
                             user = create_user(import_email, wallet_info["address"])
-
                         if user:
                             save_wallet_address(user["id"], wallet_info["address"])
                             st.session_state.user_email = import_email
                             st.session_state.user_id = user["id"]
 
                     st.success("Wallet imported")
-                    time.sleep(1)
+                    time.sleep(0.5)
                     st.rerun()
                 else:
                     st.error("Invalid recovery phrase or private key")

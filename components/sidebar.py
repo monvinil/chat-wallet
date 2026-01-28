@@ -92,21 +92,14 @@ def render_sidebar_header():
 
 
 def render_status_card(is_active: bool):
-    """Render V12 floating status text"""
-    if is_active:
+    """Render V24 status indicator - only shown when locked"""
+    # Active state: no indicator needed (clean UI)
+    # Locked state: subtle indicator
+    if not is_active:
         st.markdown("""
-        <div style="margin-bottom: 1.5rem;">
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
-                         color: #fff; background: rgba(255,255,255,0.1); padding: 6px 12px;
-                         border-radius: 10px; letter-spacing: 0.05em;">ACTIVE</span>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div style="margin-bottom: 1.5rem;">
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
-                         color: #666; background: rgba(255,255,255,0.05); padding: 6px 12px;
-                         border-radius: 10px; letter-spacing: 0.05em;">LOCKED</span>
+        <div style="margin-bottom: 1rem;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
+                         color: #555; letter-spacing: 0.08em;">LOCKED</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -304,7 +297,7 @@ def sidebar():
 
         # Wallet exists and unlocked
         if st.session_state.wallet_address and not st.session_state.get("wallet_locked", True):
-            render_status_card(is_active=True)
+            # No status card for active wallet - clean UI
 
             # Balance display (with skeleton loading state)
             is_loading_balance = st.session_state.get("_balance_loading", False)
@@ -377,35 +370,43 @@ def sidebar():
                 </div>
                 """, unsafe_allow_html=True)
 
-            st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-            # Primary actions
-            if st.button("DEPOSIT", use_container_width=True, type="primary"):
-                RateLimiter.update_activity()  # Reset timeout on user action
-                st.session_state.show_deposit_modal = True
-                st.rerun()
+            # Primary actions - equal weight, side by side
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("↓ Deposit", use_container_width=True, key="sb_deposit"):
+                    RateLimiter.update_activity()
+                    st.session_state.show_deposit_modal = True
+                    st.rerun()
+            with col2:
+                if st.button("↑ Send", use_container_width=True, type="primary", key="sb_send"):
+                    RateLimiter.update_activity()
+                    st.session_state.show_send_modal = True
+                    st.rerun()
 
-            if st.button("SEND", use_container_width=True):
-                RateLimiter.update_activity()  # Reset timeout on user action
-                st.session_state.show_send_modal = True
-                st.rerun()
-
-            st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
             # Transaction history
             render_transaction_history()
 
-            st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
-            # Secondary actions
-            if st.button("SETTINGS", use_container_width=True):
-                RateLimiter.update_activity()  # Reset timeout on user action
-                st.session_state.show_settings = True
-                st.rerun()
+            # Footer actions - subtle, side by side
+            st.markdown("""
+            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; margin-top: 8px;"></div>
+            """, unsafe_allow_html=True)
 
-            if st.button("LOCK", use_container_width=True):
-                WalletManager.lock_wallet()
-                st.rerun()
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Settings", use_container_width=True, key="sb_settings"):
+                    RateLimiter.update_activity()
+                    st.session_state.show_settings = True
+                    st.rerun()
+            with col2:
+                if st.button("Lock", use_container_width=True, key="sb_lock"):
+                    WalletManager.lock_wallet()
+                    st.rerun()
 
             render_sidebar_footer()
 
@@ -442,15 +443,18 @@ def sidebar():
                         else:
                             st.error("Invalid credentials")
 
-                st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-                if st.button("SETTINGS", use_container_width=True):
-                    st.session_state.show_settings = True
-                    st.rerun()
-
-                if st.button("SIGN OUT", use_container_width=True):
-                    SessionManager.logout()
-                    st.rerun()
+                # Footer actions - side by side
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Settings", use_container_width=True, key="sb_settings_locked"):
+                        st.session_state.show_settings = True
+                        st.rerun()
+                with col2:
+                    if st.button("Sign out", use_container_width=True, key="sb_signout"):
+                        SessionManager.logout()
+                        st.rerun()
 
                 render_sidebar_footer()
 
