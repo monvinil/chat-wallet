@@ -590,7 +590,7 @@ def wallet_setup_ui():
     # ========== TAB 1: LOG IN ==========
     with tab1:
         st.markdown(f"""
-        <div style="margin-bottom: 20px;">
+        <div style="margin-bottom: 24px;">
             <div style="font-family: {DS.typography.FONT_SANS}; font-size: 13px; color: {DS.colors.TEXT_MUTED};">Welcome back</div>
         </div>
         """, unsafe_allow_html=True)
@@ -617,12 +617,12 @@ def wallet_setup_ui():
         # Import wallet link (not a full tab)
         st.markdown(f"""
         <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid {DS.colors.BORDER_HAIRLINE};">
-            <div style="font-family: {DS.typography.FONT_MONO}; font-size: 11px; color: {DS.colors.TEXT_MUTED};">
+            <div style="font-family: {DS.typography.FONT_SANS}; font-size: 12px; color: {DS.colors.TEXT_MUTED};">
                 Have a recovery phrase?
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("Import existing wallet", use_container_width=True, key="import_link"):
+        if st.button("Import Wallet", use_container_width=True, key="import_link"):
             st.session_state._show_import = True
             st.rerun()
 
@@ -670,14 +670,14 @@ def wallet_setup_ui():
     # ========== IMPORT WALLET MODAL ==========
     if st.session_state.get("_show_import"):
         # Back button
-        if st.button("← Back to login", key="back_from_import"):
+        if st.button("Back", key="back_from_import"):
             st.session_state._show_import = False
             st.rerun()
 
         st.markdown(f"""
-        <div style="margin: 16px 0 24px 0;">
-            <div style="font-family: {DS.typography.FONT_SANS}; font-size: 16px; font-weight: 400; color: {DS.colors.TEXT_PRIMARY}; margin-bottom: 4px;">Import Wallet</div>
-            <div style="font-family: {DS.typography.FONT_SANS}; font-size: 12px; color: {DS.colors.TEXT_MUTED};">Use your 12-word recovery phrase or private key</div>
+        <div style="margin: 24px 0;">
+            <div style="font-family: {DS.typography.FONT_SANS}; font-size: 16px; font-weight: 400; color: {DS.colors.TEXT_PRIMARY}; margin-bottom: 8px;">Import Wallet</div>
+            <div style="font-family: {DS.typography.FONT_SANS}; font-size: 13px; color: {DS.colors.TEXT_MUTED};">Enter your 12-word recovery phrase or private key</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -688,18 +688,26 @@ def wallet_setup_ui():
             height=80,
             label_visibility="collapsed"
         )
+
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+
         import_password = st.text_input(
             "Encryption password",
             type="password",
             key="import_pwd",
             placeholder="Password to encrypt wallet"
         )
+
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+
         import_email = st.text_input(
             "Email (optional)",
             key="import_email",
             placeholder="your@email.com",
             help="Link to an account for cloud backup"
         )
+
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
         if st.button("Import Wallet", type="primary", use_container_width=True, disabled=not (recovery_input and import_password)):
             with st.spinner("Importing..."):

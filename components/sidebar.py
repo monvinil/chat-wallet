@@ -375,12 +375,12 @@ def sidebar():
             # Primary actions - equal weight, side by side
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("↓ Deposit", use_container_width=True, key="sb_deposit"):
+                if st.button("Deposit", use_container_width=True, type="primary", key="sb_deposit"):
                     RateLimiter.update_activity()
                     st.session_state.show_deposit_modal = True
                     st.rerun()
             with col2:
-                if st.button("↑ Send", use_container_width=True, type="primary", key="sb_send"):
+                if st.button("Send", use_container_width=True, key="sb_send"):
                     RateLimiter.update_activity()
                     st.session_state.show_send_modal = True
                     st.rerun()
