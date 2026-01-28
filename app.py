@@ -267,9 +267,8 @@ def _get_cached_tools():
 
 def create_agent():
     """Create the LangChain agent (lazy import for faster initial load)"""
-    # Lazy import LangChain modules (saves 1-2s on app startup)
-    from langchain.agents import AgentExecutor, create_tool_calling_agent
-    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+    # Lazy import LangChain modules - using new langchain 1.2+ API
+    from langchain.agents import create_agent
     from settings_manager import SettingsManager
 
     # Get user's LLM config (custom API key if set, otherwise app default)
@@ -290,16 +289,15 @@ def create_agent():
             api_key=llm_config.get("api_key"),
             temperature=0.3,
             max_tokens=4096,
-            streaming=True  # Enable token streaming
+            streaming=True
         )
     elif provider == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
         llm = ChatGoogleGenerativeAI(
-            model=llm_config.get("model", "gemini-2.0-flash-exp"),
+            model=llm_config.get("model", "gemini-2.0-flash"),
             google_api_key=llm_config.get("api_key"),
             temperature=0.3,
             max_output_tokens=4096
-            # Note: Google GenAI streaming handled differently
         )
     else:  # Default to Anthropic
         from langchain_anthropic import ChatAnthropic
@@ -308,29 +306,20 @@ def create_agent():
             api_key=llm_config.get("api_key"),
             temperature=0.3,
             max_tokens=4096,
-            streaming=True  # Enable token streaming
+            streaming=True
         )
 
     # Get cached tools (only created once per session)
     custom_tools = _get_cached_tools()
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
-        MessagesPlaceholder(variable_name="chat_history"),
-        ("human", "{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-
-    agent = create_tool_calling_agent(llm, custom_tools, prompt)
-    executor = AgentExecutor(
-        agent=agent,
+    # Create agent using new langchain 1.2+ API
+    agent = create_agent(
+        model=llm,
         tools=custom_tools,
-        verbose=True,
-        handle_parsing_errors=True,
-        max_iterations=10
+        system_prompt=SYSTEM_PROMPT
     )
 
-    return executor
+    return agent
 
 
 # ============================================================================

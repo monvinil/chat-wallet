@@ -916,26 +916,36 @@ def chat_interface(create_agent_func):
                             if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
                                 st.session_state.messages.pop()
                 else:
-                    # Process with LangChain + Streaming
+                    # Process with LangChain 1.2+ API (graph-based agent)
                     from langchain_core.messages import HumanMessage, AIMessage
-                    history = []
+
+                    # Build message history for new agent format
+                    messages = []
                     for m in st.session_state.messages[:-1]:
                         if m["role"] == "user":
-                            history.append(HumanMessage(content=m["content"]))
+                            messages.append(HumanMessage(content=m["content"]))
                         else:
-                            history.append(AIMessage(content=m["content"]))
+                            messages.append(AIMessage(content=m["content"]))
+                    # Add current user message
+                    messages.append(HumanMessage(content=prompt))
 
                     # Create streaming callback handler
                     stream_handler = StreamlitTokenHandler(response_container)
 
-                    # Invoke with streaming callback
+                    # Invoke with new langchain 1.2+ format
                     result = st.session_state.agent.invoke(
-                        {"input": prompt, "chat_history": history},
+                        {"messages": messages},
                         config={"callbacks": [stream_handler]}
                     )
 
-                    # Get final response (prefer streamed text, fallback to result)
-                    response = stream_handler.get_final_text() or result.get("output", "Error processing request.")
+                    # Extract response from new format (messages list)
+                    result_messages = result.get("messages", [])
+                    if result_messages:
+                        # Get last AI message content
+                        last_msg = result_messages[-1]
+                        response = getattr(last_msg, 'content', '') or stream_handler.get_final_text() or "Error processing request."
+                    else:
+                        response = stream_handler.get_final_text() or "Error processing request."
                     message_success = True
 
                     # Final render without cursor
