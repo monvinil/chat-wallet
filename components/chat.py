@@ -346,6 +346,28 @@ def render_pulse_deck():
         /* Hide bottom text on tiny screens */
         .pulse-card-sub { display: none; }
     }
+    /* Hover states for cards */
+    .pulse-card-inner {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .pulse-card:hover .pulse-card-inner {
+        transform: translateY(-2px);
+    }
+    /* Spotlight card hover - subtle shadow lift */
+    .pulse-card:hover .pulse-card-inner[style*="background:#FFFFFF"],
+    .pulse-card:hover .pulse-card-inner[style*="background: #FFFFFF"] {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
+    }
+    /* Dark glass card hover - subtle border glow */
+    .pulse-card:hover .pulse-card-inner:not([style*="background:#FFFFFF"]):not([style*="background: #FFFFFF"]) {
+        box-shadow: 0 4px 16px rgba(255,255,255,0.05), inset 0 0 0 1px rgba(255,255,255,0.1);
+    }
+    /* No hover transform on mobile (touch devices) */
+    @media (hover: none) {
+        .pulse-card:hover .pulse-card-inner {
+            transform: none;
+        }
+    }
     </style>
     """, unsafe_allow_html=True)
 

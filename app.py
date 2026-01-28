@@ -697,6 +697,15 @@ def main():
     # V22 Design System CSS - loaded from cached module constant
     st.markdown(MAIN_CSS, unsafe_allow_html=True)
 
+    # PWA Meta Tags - mobile app-like experience
+    st.markdown("""
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#09090b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    """, unsafe_allow_html=True)
+
     init_state()
 
     # Initialize cookie manager and restore session from cookie
