@@ -227,6 +227,7 @@ def render_pulse_deck():
         "text_shadow": ai_brand["text_shadow"],
         "spotlight": False,
         "icon": ai_brand["icon"],
+        "brand_key": "ai",
     })
 
     # Slot 2: Priority Action or Stats fallback (SPOTLIGHT - White)
@@ -239,6 +240,7 @@ def render_pulse_deck():
             "sub": t["action"],
             "spotlight": True,
             "icon": "https://api.iconify.design/mdi/alert-circle.svg",
+            "brand_key": "system",
         })
     else:
         # TODO: Replace with real data from transactions table
@@ -253,6 +255,7 @@ def render_pulse_deck():
             "stats": f"{month_tx_count} txs · {scheduled_count} scheduled",
             "spotlight": True,
             "icon": BRANDS["system"]["icon"],
+            "brand_key": "system",
         })
 
     # Slots 3-4: Perks (Matte dark glass with glowing progress bars)
@@ -281,7 +284,7 @@ def render_pulse_deck():
         })
 
     # === RENDER: Mobile-First Responsive ===
-    # Inject mobile CSS once (V23 Prism upgrade)
+    # Inject mobile CSS once (V24 Ambient Glow upgrade)
     st.markdown("""
     <style>
     .pulse-deck-wrapper {
@@ -308,12 +311,20 @@ def render_pulse_deck():
         width: calc(25% - 9px);
     }
 
-    /* === PRISM CARD EFFECTS === */
+    /* === V24 AMBIENT GLOW SYSTEM === */
     .pulse-card-inner {
         position: relative;
         overflow: hidden;
         transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        /* Default glow color - overridden per card */
+        --glow-color: rgba(255, 255, 255, 0.15);
     }
+
+    /* Brand-specific glow colors */
+    .pulse-card[data-brand="spotify"] .pulse-card-inner { --glow-color: rgba(30, 215, 96, 0.25); }
+    .pulse-card[data-brand="netflix"] .pulse-card-inner { --glow-color: rgba(229, 9, 20, 0.25); }
+    .pulse-card[data-brand="ai"] .pulse-card-inner { --glow-color: rgba(30, 215, 96, 0.2); }
+    .pulse-card[data-brand="system"] .pulse-card-inner { --glow-color: rgba(255, 255, 255, 0.3); }
 
     /* Noise texture overlay (inline SVG - no external deps) */
     .pulse-card-inner::before {
@@ -327,6 +338,18 @@ def render_pulse_deck():
         border-radius: inherit;
     }
 
+    /* Ambient glow: radial gradient at bottom for "light pooling" effect */
+    .pulse-card-inner::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(80% 80% at 50% 120%, var(--glow-color) 0%, transparent 60%);
+        opacity: 0.6;
+        pointer-events: none;
+        border-radius: inherit;
+        transition: opacity 0.3s ease;
+    }
+
     /* Dark glass cards: specular highlight + base shadow */
     .pulse-card-inner:not([style*="background:#FFFFFF"]):not([style*="background: #FFFFFF"]) {
         box-shadow:
@@ -334,7 +357,7 @@ def render_pulse_deck():
             0 4px 12px rgba(0,0,0,0.2);
     }
 
-    /* Spotlight cards: keep clean white look */
+    /* Spotlight cards: keep clean white look, subtle glow */
     .pulse-card-inner[style*="background:#FFFFFF"],
     .pulse-card-inner[style*="background: #FFFFFF"] {
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -343,17 +366,24 @@ def render_pulse_deck():
     .pulse-card-inner[style*="background: #FFFFFF"]::before {
         opacity: 0.02;
     }
+    .pulse-card-inner[style*="background:#FFFFFF"]::after,
+    .pulse-card-inner[style*="background: #FFFFFF"]::after {
+        opacity: 0; /* No ambient glow on white cards */
+    }
 
-    /* Hover: lift with glow */
+    /* Hover: lift with brand-colored glow */
     .pulse-card:hover .pulse-card-inner {
         transform: translateY(-3px);
+    }
+    .pulse-card:hover .pulse-card-inner::after {
+        opacity: 1;
     }
     .pulse-card:hover .pulse-card-inner:not([style*="background:#FFFFFF"]):not([style*="background: #FFFFFF"]) {
         box-shadow:
             inset 0 1px 0 0 rgba(255,255,255,0.15),
             inset 0 0 0 1px rgba(255,255,255,0.08),
             0 8px 24px rgba(0,0,0,0.3),
-            0 0 20px rgba(255,255,255,0.03);
+            0 0 24px var(--glow-color);
     }
     .pulse-card:hover .pulse-card-inner[style*="background:#FFFFFF"],
     .pulse-card:hover .pulse-card-inner[style*="background: #FFFFFF"] {
@@ -364,6 +394,9 @@ def render_pulse_deck():
     @media (hover: none) {
         .pulse-card:hover .pulse-card-inner {
             transform: none;
+        }
+        .pulse-card:hover .pulse-card-inner::after {
+            opacity: 0.6;
         }
     }
 
@@ -423,6 +456,8 @@ def _render_pulse_card_html(slot: dict) -> str:
     is_spotlight = slot.get("spotlight", False)
     pct = slot.get("pct", 0)
     spent = slot.get("spent", 0)
+    # Brand key for ambient glow targeting
+    brand_key = slot.get("brand_key", mode)  # Default to mode (ai, stat, etc.)
 
     # === THEME: Spotlight vs Vibrant Mesh ===
     if is_spotlight:
@@ -483,7 +518,8 @@ def _render_pulse_card_html(slot: dict) -> str:
 
     title_style = f"font-family:Inter;font-size:10px;color:{sub_color};letter-spacing:0.02em;font-weight:700;text-transform:uppercase;text-shadow:{text_shadow};"
 
-    return f'<div class="pulse-card"><div class="pulse-card-inner" style="{card_style}"><div style="display:flex;justify-content:space-between;align-items:center;"><span class="pulse-card-title" style="{title_style}">{slot["title"]}</span>{icon_html}</div>{main_html}{bottom}{progress_bar}</div></div>'
+    # V24: Add data-brand attribute for ambient glow targeting
+    return f'<div class="pulse-card" data-brand="{brand_key}"><div class="pulse-card-inner" style="{card_style}"><div style="display:flex;justify-content:space-between;align-items:center;"><span class="pulse-card-title" style="{title_style}">{slot["title"]}</span>{icon_html}</div>{main_html}{bottom}{progress_bar}</div></div>'
 
 
 def _render_pulse_card(slot: dict):
