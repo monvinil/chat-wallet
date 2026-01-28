@@ -882,14 +882,21 @@ def chat_interface(create_agent_func):
                         pass
 
                 if not st.session_state.get("agent"):
-                    # Handle missing agent
+                    # Handle missing agent - don't save to history, just show and retry
                     from api_key_setup import check_api_key_status
                     has_key, provider = check_api_key_status()
                     if not has_key:
                         response = "**System Offline:** API Key required in Settings."
+                        response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
                     else:
-                        response = "**Initializing:** Please wait..."
-                    response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+                        # Show initializing and retry - remove user message so they can resend
+                        response_container.markdown("<div style='color: #666; font-family: Inter; font-size: 14px;'>Initializing... please try again.</div>", unsafe_allow_html=True)
+                        import time
+                        time.sleep(1)
+                        # Remove the user message that couldn't be processed
+                        if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+                            st.session_state.messages.pop()
+                        st.rerun()
                 else:
                     # Process with LangChain + Streaming
                     from langchain_core.messages import HumanMessage, AIMessage
