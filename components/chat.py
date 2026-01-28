@@ -323,7 +323,7 @@ def render_pulse_deck():
     /* Brand-specific glow colors */
     .pulse-card[data-brand="spotify"] .pulse-card-inner { --glow-color: rgba(30, 215, 96, 0.25); }
     .pulse-card[data-brand="netflix"] .pulse-card-inner { --glow-color: rgba(229, 9, 20, 0.25); }
-    .pulse-card[data-brand="ai"] .pulse-card-inner { --glow-color: rgba(255, 255, 255, 0.25); }
+    .pulse-card[data-brand="ai"] .pulse-card-inner { --glow-color: transparent; }
     .pulse-card[data-brand="system"] .pulse-card-inner { --glow-color: rgba(255, 255, 255, 0.3); }
 
     /* Noise texture overlay (inline SVG - no external deps) */
