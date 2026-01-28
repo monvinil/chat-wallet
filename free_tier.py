@@ -12,8 +12,8 @@ from datetime import datetime
 
 # Free tier configuration
 FREE_TIER_MESSAGES = 50  # Messages per user
-FREE_TIER_PROVIDER = "anthropic"
-FREE_TIER_MODEL = "claude-sonnet-4-20250514"
+FREE_TIER_PROVIDER = "google"
+FREE_TIER_MODEL = "gemini-2.5-flash"  # Latest stable free model (2.0 retired Mar 2026)
 
 
 class FreeTier:
@@ -21,8 +21,8 @@ class FreeTier:
 
     @staticmethod
     def get_app_api_key() -> Optional[str]:
-        """Get the app's API key for free tier users"""
-        return os.getenv("ANTHROPIC_API_KEY")
+        """Get the app's API key for free tier users (Gemini - free)"""
+        return os.getenv("GOOGLE_API_KEY")
 
     @staticmethod
     def is_available() -> bool:
@@ -139,7 +139,8 @@ class FreeTier:
         st.markdown("""
 **To continue chatting, add your own API key:**
 
-1. **Google Gemini (Free)** - Get a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+1. **Google Gemini (Recommended - Free)** - Get a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+   - No credit card required, 1,500 requests/day
 2. **Anthropic Claude** - Sign up at [console.anthropic.com](https://console.anthropic.com)
 3. **OpenAI GPT** - Sign up at [platform.openai.com](https://platform.openai.com)
 

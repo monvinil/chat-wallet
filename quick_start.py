@@ -86,7 +86,7 @@ def setup_demo_gemini_key():
             user_id,
             provider="google",
             api_key="DEMO_KEY_HERE",  # Replace with actual demo key
-            model="gemini-2.0-flash"
+            model="gemini-2.5-flash"
         )
         st.session_state.using_demo_key = True
         return True

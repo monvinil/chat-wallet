@@ -294,7 +294,7 @@ def create_agent():
     elif provider == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
         llm = ChatGoogleGenerativeAI(
-            model=llm_config.get("model", "gemini-2.0-flash"),
+            model=llm_config.get("model", "gemini-2.5-flash"),
             google_api_key=llm_config.get("api_key"),
             temperature=0.3,
             max_output_tokens=4096
@@ -674,6 +674,79 @@ def wallet_setup_ui():
                     st.error("Invalid recovery phrase or private key")
 
 
+def _show_loading_skeleton():
+    """Show loading skeleton while session restores"""
+    st.markdown("""
+    <style>
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    .loading-skeleton {
+        background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s ease-in-out infinite;
+        border-radius: 8px;
+    }
+    .loading-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    .loading-header {
+        height: 24px;
+        width: 120px;
+        margin-bottom: 24px;
+    }
+    .loading-cards {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 32px;
+    }
+    .loading-card {
+        flex: 1;
+        height: 96px;
+        border-radius: 14px;
+    }
+    .loading-tabs {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 16px;
+    }
+    .loading-tab {
+        height: 14px;
+        width: 60px;
+    }
+    .loading-chat {
+        height: 200px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+    }
+    .loading-input {
+        height: 48px;
+        border-radius: 24px;
+    }
+    </style>
+    <div class="loading-container">
+        <div class="loading-skeleton loading-header"></div>
+        <div class="loading-cards">
+            <div class="loading-skeleton loading-card"></div>
+            <div class="loading-skeleton loading-card"></div>
+            <div class="loading-skeleton loading-card"></div>
+            <div class="loading-skeleton loading-card"></div>
+        </div>
+        <div class="loading-tabs">
+            <div class="loading-skeleton loading-tab"></div>
+            <div class="loading-skeleton loading-tab"></div>
+            <div class="loading-skeleton loading-tab"></div>
+            <div class="loading-skeleton loading-tab"></div>
+        </div>
+        <div class="loading-skeleton loading-chat"></div>
+        <div class="loading-skeleton loading-input"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def main():
     """Main app entry point"""
     st.set_page_config(
@@ -700,22 +773,31 @@ def main():
     # Initialize cookie manager and restore session from cookie
     # This handles page refresh - session state is cleared but cookies persist
     if not st.session_state.get("wallet_address"):
-        try:
-            SessionManager.get_cookie_manager()
-            restored = SessionManager.restore_session()
+        # First run: show skeleton while we attempt restore
+        if not st.session_state.get("_session_restore_attempted"):
+            _show_loading_skeleton()
 
-            if restored:
-                # Load user theme preference if logged in
-                user_id = st.session_state.get("user_id")
-                if user_id and not st.session_state.get("user_theme"):
-                    from settings_manager import SettingsManager
-                    user_settings = SettingsManager.get_user_settings(user_id)
-                    if user_settings and user_settings.get("theme"):
-                        st.session_state.user_theme = user_settings["theme"]
-        except Exception as e:
-            # Log session restore errors server-side only
-            from utils.logger import logger
-            logger.warning(f"Session restore error: {e}")
+            try:
+                SessionManager.get_cookie_manager()
+                restored = SessionManager.restore_session()
+                st.session_state._session_restore_attempted = True
+
+                if restored:
+                    # Load user theme preference if logged in
+                    user_id = st.session_state.get("user_id")
+                    if user_id and not st.session_state.get("user_theme"):
+                        from settings_manager import SettingsManager
+                        user_settings = SettingsManager.get_user_settings(user_id)
+                        if user_settings and user_settings.get("theme"):
+                            st.session_state.user_theme = user_settings["theme"]
+            except Exception as e:
+                # Log session restore errors server-side only
+                from utils.logger import logger
+                logger.warning(f"Session restore error: {e}")
+                st.session_state._session_restore_attempted = True
+
+            # Rerun to show proper UI (either restored session or auth modal)
+            st.rerun()
 
     # SECURITY: Removed wallet key cookie saving
     # Wallet key is only stored in session state (memory)

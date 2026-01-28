@@ -543,6 +543,16 @@ details:hover {
    MOBILE OPTIMIZATION: < 768px
    ======================================== */
 @media (max-width: 768px) {
+    /* 0. PREVENT HORIZONTAL SCROLL / WIGGLE */
+    html, body, .stApp {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
+
+    .block-container {
+        overflow-x: hidden !important;
+    }
+
     /* 1. BUTTONS - 48px touch target minimum */
     .stButton > button {
         padding: 14px 20px !important;
@@ -554,12 +564,12 @@ details:hover {
         transform: none !important; /* No scale on touch */
     }
 
-    /* 2. INPUTS - 48px height, 16px font prevents iOS zoom */
+    /* 2. INPUTS - 48px height, 16px font prevents iOS zoom, proper padding */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stNumberInput > div > div > input {
         font-size: 16px !important;
-        padding: 14px 0 !important;
+        padding: 14px 16px !important;
         min-height: 48px !important;
     }
 
@@ -678,6 +688,15 @@ details:hover {
 
     .block-container {
         padding: 0.75rem 0.75rem !important;
+    }
+
+    /* Stack 3-column layouts vertically on very small screens */
+    .stHorizontalBlock {
+        flex-wrap: wrap !important;
+    }
+    .stHorizontalBlock > div {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
     }
 }
 </style>

@@ -123,7 +123,7 @@ def show_api_key_setup_modal():
                         user_id,
                         provider="google",
                         api_key=gemini_key,
-                        model="gemini-2.0-flash"
+                        model="gemini-2.5-flash"
                     )
 
                     st.session_state.api_key_configured = True

@@ -101,9 +101,9 @@ def settings_page():
         st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 8px;'>Which version?</div>", unsafe_allow_html=True)
         if provider == "google":
             model_options = {
-                "gemini-2.0-flash": "Gemini 2.0 Flash - Fast & free (Recommended)",
-                "gemini-1.5-pro": "Gemini 1.5 Pro - More capable",
-                "gemini-1.5-flash": "Gemini 1.5 Flash - Balanced"
+                "gemini-2.5-flash": "Gemini 2.5 Flash - Fast & free (Recommended)",
+                "gemini-2.5-pro": "Gemini 2.5 Pro - More capable",
+                "gemini-2.5-flash-lite": "Gemini 2.5 Flash Lite - Cheapest"
             }
         elif provider == "anthropic":
             model_options = {

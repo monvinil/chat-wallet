@@ -224,10 +224,10 @@ def render_pulse_deck():
         ai_tier = "Setup"
         ai_sub = "Add API key"
     elif llm_config.get("using_free_tier"):
-        # Using app's free tier (Anthropic Claude)
+        # Using app's free tier (Google Gemini - free)
         remaining = FreeTier.get_remaining(user_id) if user_id else 0
         total = 50  # FREE_TIER_MESSAGES
-        ai_provider = "Claude"  # Free tier is always Claude
+        ai_provider = "Gemini"  # Free tier uses Gemini
         ai_tier = "Free"
         ai_sub = f"{remaining}/{total} msgs"
     else:
@@ -313,6 +313,7 @@ def render_pulse_deck():
     <style>
     .pulse-deck-wrapper {
         position: relative;
+        overflow: hidden;
     }
     .pulse-deck {
         display: flex;
@@ -323,9 +324,6 @@ def render_pulse_deck():
         scrollbar-width: none;
         -ms-overflow-style: none;
         padding: 4px 0 8px 0;
-        margin: 0 -16px;
-        padding-left: 16px;
-        padding-right: 16px;
     }
     .pulse-deck::-webkit-scrollbar { display: none; }
     .pulse-card {
@@ -333,6 +331,15 @@ def render_pulse_deck():
         scroll-snap-align: start;
         min-width: 140px;
         width: calc(25% - 9px);
+    }
+
+    /* Mobile: remove edge bleed, use natural padding */
+    @media (max-width: 768px) {
+        .pulse-deck {
+            margin: 0;
+            padding-left: 0;
+            padding-right: 0;
+        }
     }
 
     /* === V24 AMBIENT GLOW SYSTEM === */
@@ -655,21 +662,23 @@ def render_modules():
         color: #888 !important;
     }
 
-    /* Mobile: scrollable tabs */
+    /* Mobile: compact tabs, show first 5 only */
     @media (max-width: 768px) {
         .stTabs [data-baseweb="tab-list"] {
             gap: 0;
             overflow-x: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
-            mask-image: linear-gradient(to right, black 85%, transparent 100%);
         }
         .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none; }
         .stTabs [data-baseweb="tab"] {
-            font-size: 12px !important;
-            padding: 8px 12px !important;
+            font-size: 11px !important;
+            padding: 8px 10px !important;
             white-space: nowrap;
+        }
+        /* Hide tabs beyond first 5 on mobile */
+        .stTabs [data-baseweb="tab-list"] > button:nth-child(n+6) {
+            display: none !important;
         }
         [data-baseweb="tab-panel"] button {
             padding: 8px 10px !important;
@@ -677,11 +686,19 @@ def render_modules():
         [data-baseweb="tab-panel"] button p {
             font-size: 11px !important;
         }
+        /* Limit to 2 columns on mobile */
+        [data-baseweb="tab-panel"] .stHorizontalBlock {
+            flex-wrap: wrap !important;
+        }
+        [data-baseweb="tab-panel"] .stHorizontalBlock > div {
+            flex: 0 0 48% !important;
+            max-width: 48% !important;
+        }
     }
     @media (max-width: 480px) {
         .stTabs [data-baseweb="tab"] {
-            font-size: 11px !important;
-            padding: 6px 10px !important;
+            font-size: 10px !important;
+            padding: 6px 8px !important;
         }
         [data-baseweb="tab-panel"] button {
             padding: 6px 8px !important;
