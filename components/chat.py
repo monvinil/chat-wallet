@@ -205,18 +205,37 @@ def render_pulse_deck():
     # === SLOT BUILDER ===
     slots = []
 
-    # Slot 1: AI Data card (first)
-    # TODO: Pull real data from llm_config / free tier usage
+    # Slot 1: AI Data card - connected to real user settings
+    from settings_manager import SettingsManager
+    from free_tier import FreeTier
+
+    user_id = st.session_state.get("user_id")
+    llm_config = SettingsManager.get_llm_config(user_id) if user_id else {}
+
     ai_brand = BRANDS["ai"]
-    ai_provider = "Claude"  # TODO: Get from user's LLM config
-    ai_tier = "Free"  # TODO: Get from subscription status
-    ai_remaining = "8/10"  # TODO: Get from FreeTier.get_remaining_messages()
+
+    # Get provider display name
+    provider_names = {"anthropic": "Claude", "google": "Gemini", "openai": "GPT-4o"}
+    ai_provider = provider_names.get(llm_config.get("provider", ""), "Not Set")
+
+    # Get tier and usage info
+    if not llm_config.get("api_key"):
+        ai_tier = "Setup"
+        ai_sub = "Add API key"
+    elif llm_config.get("using_free_tier"):
+        remaining = FreeTier.get_remaining(user_id) if user_id else 0
+        total = 50  # FREE_TIER_MESSAGES
+        ai_tier = "Free"
+        ai_sub = f"{remaining}/{total} msgs"
+    else:
+        ai_tier = "Pro"
+        ai_sub = "Your key"
 
     slots.append({
         "mode": "ai",
         "title": "YOUR AI",
         "main": ai_provider,
-        "sub": f"{ai_tier} · {ai_remaining} msgs",
+        "sub": f"{ai_tier} · {ai_sub}",
         "bg": ai_brand["bg"],
         "border": ai_brand.get("border", "none"),
         "shadow": ai_brand["shadow"],
