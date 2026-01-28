@@ -1059,89 +1059,23 @@ def chat_interface(create_agent_func):
     # 5. PULSE DECK
     render_pulse_deck()
 
-    # 6. CHAT SECTION - Hairline divider
-    st.markdown("<div style='height: 40px; border-bottom: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    # 6. MODULES - Show categories/actions first (before chat)
+    st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
+    render_modules()
 
-    # Welcome state (if no messages yet)
+    # 7. CHAT SECTION - Hairline divider
+    st.markdown("<div style='height: 32px; border-bottom: 1px solid rgba(255,255,255,0.05);'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+    # Welcome state (if no messages yet) - simple text prompt
     if not st.session_state.messages:
-        from design_system import enhanced_ui, DS
-
-        # Quick action prompts
-        prompts = [
-            ("💸", "Send Money", "Transfer USDC instantly", "Help me send USDC to someone"),
-            ("🎁", "Gift Cards", "Amazon, Netflix & more", "I want to buy a gift card"),
-            ("📧", "Email 2FA", "Auto-read verification codes", "Get my latest verification code"),
-            ("📅", "Scheduled Pay", "Set up recurring payments", "Set up a weekly payment"),
-        ]
-
-        st.markdown(f"""
-        <style>
-        .empty-chat {{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            gap: 24px;
-        }}
-        .empty-chat-subtitle {{
-            font-family: {DS.typography.FONT_MONO};
-            font-size: {DS.typography.SIZE_XS};
-            color: {DS.colors.TEXT_MUTED};
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }}
-        .prompts-grid {{
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            width: 100%;
-            max-width: 500px;
-            margin-top: 8px;
-        }}
-        @media (max-width: 480px) {{
-            .prompts-grid {{ grid-template-columns: 1fr; }}
-        }}
-        </style>
-        <div class="empty-chat">
-            <div class="empty-chat-subtitle">What can I help you with?</div>
+        st.markdown("""
+        <div style="text-align: center; padding: 24px 0 16px 0;">
+            <div style="font-family: 'Inter', sans-serif; font-size: 15px; color: #71717a; font-weight: 300;">
+                Select an action above, or type your own request below
+            </div>
         </div>
         """, unsafe_allow_html=True)
-
-        # Render prompts as clickable buttons (2x2 grid)
-        col1, col2 = st.columns(2)
-        for i, (emoji, title, desc, prompt) in enumerate(prompts):
-            with col1 if i % 2 == 0 else col2:
-                # Custom styled button
-                st.markdown(f"""
-                <style>
-                .prompt-btn-{i} {{
-                    display: flex;
-                    align-items: flex-start;
-                    gap: 12px;
-                    padding: 16px;
-                    background: rgba(255,255,255,0.03);
-                    border: 1px solid rgba(255,255,255,0.06);
-                    border-radius: 8px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    margin-bottom: 8px;
-                }}
-                .prompt-btn-{i}:hover {{
-                    background: rgba(255,255,255,0.06);
-                    border-color: rgba(255,255,255,0.12);
-                    transform: translateY(-2px);
-                }}
-                </style>
-                """, unsafe_allow_html=True)
-                if st.button(f"{emoji} {title}", key=f"prompt_{i}", use_container_width=True, help=desc):
-                    st.session_state.messages.append({"role": "user", "content": prompt})
-                    st.session_state._quick_action_triggered = True
-                    st.rerun()
-
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-        # Show modules below prompts
-        render_modules()
 
     # Render chat history - pure text, minimal
     for msg in st.session_state.messages:
