@@ -244,34 +244,48 @@ input:focus, button:focus, textarea:focus {
     display: none;
 }
 
-/* 7. TABS */
+/* 7. TABS - Floating Pills */
 .stTabs [data-baseweb="tab-list"] {
     gap: 8px;
     border: none !important;
     background: transparent;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
+.stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none; }
+
+/* Hide default highlight bar */
+.stTabs [data-baseweb="tab-highlight"],
+.stTabs [data-baseweb="tab-border"] { display: none !important; }
 
 .stTabs [data-baseweb="tab"] {
-    height: 40px;
-    border-radius: 8px;
-    border: none !important;
-    background: transparent;
-    color: #666;
+    height: auto;
+    border-radius: 100px;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    background: rgba(255,255,255,0.03);
+    color: #888;
     font-family: 'Inter', sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
-    padding: 0 16px;
-    transition: all 0.2s ease;
+    padding: 8px 18px;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .stTabs [data-baseweb="tab"]:hover {
-    color: #999;
-    background: transparent;
+    color: white;
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.12) !important;
 }
 
 .stTabs [data-baseweb="tab"][aria-selected="true"] {
-    background: transparent;
-    color: white;
+    background: white;
+    color: black;
+    border-color: white !important;
+    box-shadow: 0 2px 12px rgba(255,255,255,0.15);
 }
 
 /* 8. LAYOUT - Comfortable Width for Cards + Chat */
@@ -555,14 +569,14 @@ details:hover {
         min-height: 48px !important;
     }
 
-    /* 3. TABS - Better touch targets */
+    /* 3. TABS - Pill touch targets */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 16px !important;
+        gap: 8px !important;
     }
 
     .stTabs [data-baseweb="tab"] {
-        font-size: 12px !important;
-        padding: 12px 8px !important;
+        font-size: 11px !important;
+        padding: 10px 14px !important;
     }
 
     /* 4. CHAT - Reduce excess spacing */
@@ -655,8 +669,8 @@ details:hover {
     }
 
     .stTabs [data-baseweb="tab"] {
-        font-size: 11px !important;
-        padding: 10px 6px !important;
+        font-size: 10px !important;
+        padding: 8px 12px !important;
     }
 
     code, [data-testid="stCode"] code {

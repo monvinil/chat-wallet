@@ -281,7 +281,7 @@ def render_pulse_deck():
         })
 
     # === RENDER: Mobile-First Responsive ===
-    # Inject mobile CSS once
+    # Inject mobile CSS once (V23 Prism upgrade)
     st.markdown("""
     <style>
     .pulse-deck-wrapper {
@@ -307,6 +307,66 @@ def render_pulse_deck():
         min-width: 140px;
         width: calc(25% - 9px);
     }
+
+    /* === PRISM CARD EFFECTS === */
+    .pulse-card-inner {
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* Noise texture overlay (inline SVG - no external deps) */
+    .pulse-card-inner::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        opacity: 0.03;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+        border-radius: inherit;
+    }
+
+    /* Dark glass cards: specular highlight + base shadow */
+    .pulse-card-inner:not([style*="background:#FFFFFF"]):not([style*="background: #FFFFFF"]) {
+        box-shadow:
+            inset 0 1px 0 0 rgba(255,255,255,0.08),
+            0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* Spotlight cards: keep clean white look */
+    .pulse-card-inner[style*="background:#FFFFFF"],
+    .pulse-card-inner[style*="background: #FFFFFF"] {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .pulse-card-inner[style*="background:#FFFFFF"]::before,
+    .pulse-card-inner[style*="background: #FFFFFF"]::before {
+        opacity: 0.02;
+    }
+
+    /* Hover: lift with glow */
+    .pulse-card:hover .pulse-card-inner {
+        transform: translateY(-3px);
+    }
+    .pulse-card:hover .pulse-card-inner:not([style*="background:#FFFFFF"]):not([style*="background: #FFFFFF"]) {
+        box-shadow:
+            inset 0 1px 0 0 rgba(255,255,255,0.15),
+            inset 0 0 0 1px rgba(255,255,255,0.08),
+            0 8px 24px rgba(0,0,0,0.3),
+            0 0 20px rgba(255,255,255,0.03);
+    }
+    .pulse-card:hover .pulse-card-inner[style*="background:#FFFFFF"],
+    .pulse-card:hover .pulse-card-inner[style*="background: #FFFFFF"] {
+        box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+    }
+
+    /* No hover on touch devices */
+    @media (hover: none) {
+        .pulse-card:hover .pulse-card-inner {
+            transform: none;
+        }
+    }
+
     /* Mobile: 2 cards visible, scroll for more */
     @media (max-width: 768px) {
         .pulse-card {
@@ -334,7 +394,6 @@ def render_pulse_deck():
         .pulse-card-title { font-size: 9px !important; }
         .pulse-card-main { font-size: 14px !important; }
         .pulse-card-sub { font-size: 10px !important; }
-        /* Hide secondary label on small screens for cleaner look */
         .pulse-card-main .usdc-label { display: none; }
     }
     /* Extra small: iPhone SE, Mini */
@@ -343,30 +402,7 @@ def render_pulse_deck():
         .pulse-card-inner { padding: 12px !important; height: 82px !important; }
         .pulse-card-title { font-size: 8px !important; }
         .pulse-card-main { font-size: 13px !important; }
-        /* Hide bottom text on tiny screens */
         .pulse-card-sub { display: none; }
-    }
-    /* Hover states for cards */
-    .pulse-card-inner {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .pulse-card:hover .pulse-card-inner {
-        transform: translateY(-2px);
-    }
-    /* Spotlight card hover - subtle shadow lift */
-    .pulse-card:hover .pulse-card-inner[style*="background:#FFFFFF"],
-    .pulse-card:hover .pulse-card-inner[style*="background: #FFFFFF"] {
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
-    }
-    /* Dark glass card hover - subtle border glow */
-    .pulse-card:hover .pulse-card-inner:not([style*="background:#FFFFFF"]):not([style*="background: #FFFFFF"]) {
-        box-shadow: 0 4px 16px rgba(255,255,255,0.05), inset 0 0 0 1px rgba(255,255,255,0.1);
-    }
-    /* No hover transform on mobile (touch devices) */
-    @media (hover: none) {
-        .pulse-card:hover .pulse-card-inner {
-            transform: none;
-        }
     }
     </style>
     """, unsafe_allow_html=True)
