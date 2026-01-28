@@ -289,7 +289,8 @@ def create_agent():
             model=llm_config.get("model", "gpt-4o"),
             api_key=llm_config.get("api_key"),
             temperature=0.3,
-            max_tokens=4096
+            max_tokens=4096,
+            streaming=True  # Enable token streaming
         )
     elif provider == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
@@ -298,6 +299,7 @@ def create_agent():
             google_api_key=llm_config.get("api_key"),
             temperature=0.3,
             max_output_tokens=4096
+            # Note: Google GenAI streaming handled differently
         )
     else:  # Default to Anthropic
         from langchain_anthropic import ChatAnthropic
@@ -305,7 +307,8 @@ def create_agent():
             model=llm_config.get("model", "claude-sonnet-4-20250514"),
             api_key=llm_config.get("api_key"),
             temperature=0.3,
-            max_tokens=4096
+            max_tokens=4096,
+            streaming=True  # Enable token streaming
         )
 
     # Get cached tools (only created once per session)

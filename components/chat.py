@@ -6,6 +6,51 @@ V12 Design: "Liquid Silver" - Floating Void Aesthetic
 import html
 import streamlit as st
 from chain_utils import ChainUtils
+from langchain_core.callbacks import BaseCallbackHandler
+
+
+# === STREAMING CALLBACK HANDLER ===
+class StreamlitTokenHandler(BaseCallbackHandler):
+    """Callback handler that streams tokens to a Streamlit container in real-time."""
+
+    def __init__(self, container):
+        self.container = container
+        self.text = ""
+        self.tool_status = ""
+
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        """Called when LLM produces a new token."""
+        self.text += token
+        # Update container with current text + cursor
+        self._render()
+
+    def on_tool_start(self, serialized, input_str, **kwargs) -> None:
+        """Called when a tool starts executing."""
+        tool_name = serialized.get("name", "tool")
+        self.tool_status = f"⚡ {tool_name}..."
+        self._render()
+
+    def on_tool_end(self, output, **kwargs) -> None:
+        """Called when a tool finishes."""
+        self.tool_status = ""
+        self._render()
+
+    def _render(self):
+        """Render current state to the container."""
+        # Show tool status if active
+        status_html = ""
+        if self.tool_status:
+            status_html = f'<div style="font-size: 12px; color: #666; margin-bottom: 8px;">{self.tool_status}</div>'
+
+        # Show text with blinking cursor
+        cursor = "▌" if not self.tool_status else ""
+        text_html = f'<div style="color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;">{html.escape(self.text)}{cursor}</div>'
+
+        self.container.markdown(status_html + text_html, unsafe_allow_html=True)
+
+    def get_final_text(self) -> str:
+        """Get the complete text without cursor."""
+        return self.text
 
 
 # === SKELETON LOADING STATES ===
@@ -654,51 +699,65 @@ def chat_interface(create_agent_func):
             with st.chat_message("user"):
                 st.markdown(f"<div style='color: white; font-family: Inter; font-size: 15px;'>{html.escape(prompt)}</div>", unsafe_allow_html=True)
 
-    # 9. PROCESS MESSAGE
+    # 9. PROCESS MESSAGE (Streaming)
     if prompt:
         with st.chat_message("assistant"):
-            with st.spinner("Processing..."):
-                message_success = False
-                try:
-                    # Agent initialization logic
-                    if not st.session_state.get("agent"):
-                        try:
-                            agent = create_agent_func()
-                            if agent:
-                                st.session_state.agent = agent
-                        except Exception:
-                            pass
+            # Create empty container for streaming output
+            response_container = st.empty()
+            message_success = False
+            response = ""
 
-                    if not st.session_state.get("agent"):
-                        # Handle missing agent
-                        from api_key_setup import check_api_key_status
-                        has_key, provider = check_api_key_status()
-                        if not has_key:
-                            response = "**System Offline:** API Key required in Settings."
-                        else:
-                            response = "**Initializing:** Please wait..."
+            try:
+                # Agent initialization logic
+                if not st.session_state.get("agent"):
+                    try:
+                        agent = create_agent_func()
+                        if agent:
+                            st.session_state.agent = agent
+                    except Exception:
+                        pass
+
+                if not st.session_state.get("agent"):
+                    # Handle missing agent
+                    from api_key_setup import check_api_key_status
+                    has_key, provider = check_api_key_status()
+                    if not has_key:
+                        response = "**System Offline:** API Key required in Settings."
                     else:
-                        # Process with LangChain
-                        from langchain_core.messages import HumanMessage, AIMessage
-                        history = []
-                        for m in st.session_state.messages[:-1]:
-                            if m["role"] == "user":
-                                history.append(HumanMessage(content=m["content"]))
-                            else:
-                                history.append(AIMessage(content=m["content"]))
+                        response = "**Initializing:** Please wait..."
+                    response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+                else:
+                    # Process with LangChain + Streaming
+                    from langchain_core.messages import HumanMessage, AIMessage
+                    history = []
+                    for m in st.session_state.messages[:-1]:
+                        if m["role"] == "user":
+                            history.append(HumanMessage(content=m["content"]))
+                        else:
+                            history.append(AIMessage(content=m["content"]))
 
-                        result = st.session_state.agent.invoke({
-                            "input": prompt,
-                            "chat_history": history
-                        })
-                        response = result.get("output", "Error processing request.")
-                        message_success = True
+                    # Create streaming callback handler
+                    stream_handler = StreamlitTokenHandler(response_container)
 
-                except Exception as e:
-                    response = f"**System Error:** {str(e)}"
+                    # Invoke with streaming callback
+                    result = st.session_state.agent.invoke(
+                        {"input": prompt, "chat_history": history},
+                        config={"callbacks": [stream_handler]}
+                    )
 
-                st.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
-                st.session_state.messages.append({"role": "assistant", "content": response})
+                    # Get final response (prefer streamed text, fallback to result)
+                    response = stream_handler.get_final_text() or result.get("output", "Error processing request.")
+                    message_success = True
 
-                if message_success and llm_config.get("using_free_tier"):
-                    FreeTier.increment_usage(user_id)
+                    # Final render without cursor
+                    response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+
+            except Exception as e:
+                response = f"**System Error:** {str(e)}"
+                response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+
+            # Save to history
+            st.session_state.messages.append({"role": "assistant", "content": response})
+
+            if message_success and llm_config.get("using_free_tier"):
+                FreeTier.increment_usage(user_id)
