@@ -293,41 +293,36 @@ def render_header():
     c1, c2 = st.columns([1, 1])
     with c1:
         st.markdown("""
-        <div style="margin-top: 30px;">
+        <div style="margin-top: 24px;">
             <h1 style="font-size: 28px; margin: 0; font-weight: 500; letter-spacing: -0.04em; text-transform: none !important;">USDChat</h1>
-            <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; margin: 8px 0 0 0; letter-spacing: 0.1em;">
-                Make your AI chat ideas real with digital USD. Powered by USDC.
-            </p>
         </div>
         """, unsafe_allow_html=True)
     with c2:
         # Show balance if wallet connected, otherwise show status
         if st.session_state.get("wallet_address") and not st.session_state.get("wallet_locked", False):
-            # Get USDC balance
             try:
                 from direct_tx import get_direct_executor
                 executor = get_direct_executor("arc-testnet")
                 balance = float(executor.get_usdc_balance(st.session_state.wallet_address))
-                # Subtle balance display in header
                 st.markdown(f"""
-                <div style="text-align: right; margin-top: 32px;">
+                <div style="text-align: right; margin-top: 24px;">
                     <div style="font-family: Inter; font-size: 24px; font-weight: 300; color: #f4f4f5; letter-spacing: -0.02em;">${balance:,.2f}</div>
-                    <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #52525b; text-transform: uppercase; letter-spacing: 0.05em;">USDC Balance</div>
+                    <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #52525b; text-transform: uppercase; letter-spacing: 0.05em;">USDC</div>
                 </div>
                 """, unsafe_allow_html=True)
             except Exception:
                 st.markdown("""
-                <div style="text-align: right; margin-top: 40px;">
+                <div style="text-align: right; margin-top: 28px;">
                     <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #22c55e; background: rgba(34,197,94,0.1); padding: 6px 12px; border-radius: 10px;">● ONLINE</span>
                 </div>
                 """, unsafe_allow_html=True)
         else:
             st.markdown("""
-            <div style="text-align: right; margin-top: 40px;">
+            <div style="text-align: right; margin-top: 28px;">
                 <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #fff; background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 10px;">ONLINE</span>
             </div>
             """, unsafe_allow_html=True)
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
 
 # --- THE PULSE DECK (V22: Cupertino White / True Apple Style) ---
