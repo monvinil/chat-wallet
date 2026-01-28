@@ -149,7 +149,7 @@ def render_pulse_deck():
         "spotify": {
             "icon": "https://api.iconify.design/simple-icons/spotify.svg",
             # Matte dark glass - matches AI card
-            "bg": "rgba(255,255,255,0.03)",
+            "bg": "rgba(255,255,255,0.05)",
             "border": "none",
             "shadow": "none",
             "accent": "#1ed760",  # Spotify green for progress bar
@@ -161,7 +161,7 @@ def render_pulse_deck():
         "netflix": {
             "icon": "https://api.iconify.design/simple-icons/netflix.svg",
             # Matte dark glass - matches AI card
-            "bg": "rgba(255,255,255,0.03)",
+            "bg": "rgba(255,255,255,0.05)",
             "border": "none",
             "shadow": "none",
             "accent": "#e50914",  # Netflix red for progress bar
@@ -173,7 +173,7 @@ def render_pulse_deck():
         "ai": {
             "icon": "https://api.iconify.design/mdi/robot-outline.svg",
             # Matte dark glass - no border
-            "bg": "rgba(255,255,255,0.03)",
+            "bg": "rgba(255,255,255,0.05)",
             "border": "none",
             "shadow": "none",
             "accent": "#1ed760",  # Green accent for AI status
