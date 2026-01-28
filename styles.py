@@ -244,12 +244,12 @@ input:focus, button:focus, textarea:focus {
     display: none;
 }
 
-/* 7. TABS - Floating Pills */
+/* 7. TABS - Underline Style */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 8px;
+    gap: 24px;
     border: none !important;
     background: transparent;
-    padding-bottom: 4px;
+    padding-bottom: 0;
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -262,30 +262,29 @@ input:focus, button:focus, textarea:focus {
 
 .stTabs [data-baseweb="tab"] {
     height: auto;
-    border-radius: 100px;
-    border: 1px solid rgba(255,255,255,0.06) !important;
-    background: rgba(255,255,255,0.03);
-    color: #888;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 8px 18px;
-    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border-radius: 0;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    background: transparent;
+    color: #666;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    padding: 8px 0;
+    transition: all 0.15s ease;
     flex: 0 0 auto;
     white-space: nowrap;
 }
 
 .stTabs [data-baseweb="tab"]:hover {
-    color: white;
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(255,255,255,0.12) !important;
+    color: #aaa;
+    background: transparent;
 }
 
 .stTabs [data-baseweb="tab"][aria-selected="true"] {
-    background: white;
-    color: black;
-    border-color: white !important;
-    box-shadow: 0 2px 12px rgba(255,255,255,0.15);
+    background: transparent;
+    color: #fff;
+    border-bottom: 2px solid #fff !important;
 }
 
 /* 8. LAYOUT - Comfortable Width for Cards + Chat */
@@ -569,14 +568,14 @@ details:hover {
         min-height: 48px !important;
     }
 
-    /* 3. TABS - Pill touch targets */
+    /* 3. TABS - Underline touch targets */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px !important;
+        gap: 16px !important;
     }
 
     .stTabs [data-baseweb="tab"] {
-        font-size: 11px !important;
-        padding: 10px 14px !important;
+        font-size: 10px !important;
+        padding: 8px 0 !important;
     }
 
     /* 4. CHAT - Reduce excess spacing */
@@ -669,8 +668,8 @@ details:hover {
     }
 
     .stTabs [data-baseweb="tab"] {
-        font-size: 10px !important;
-        padding: 8px 12px !important;
+        font-size: 9px !important;
+        padding: 6px 0 !important;
     }
 
     code, [data-testid="stCode"] code {
