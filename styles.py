@@ -244,6 +244,16 @@ input:focus, button:focus, textarea:focus {
     display: none;
 }
 
+/* Chat avatars - neutral white/gray */
+[data-testid="stChatMessageAvatarUser"],
+[data-testid="stChatMessageAvatarAssistant"] {
+    background: rgba(255,255,255,0.1) !important;
+}
+[data-testid="stChatMessageAvatarUser"] svg,
+[data-testid="stChatMessageAvatarAssistant"] svg {
+    fill: rgba(255,255,255,0.7) !important;
+}
+
 /* 7. TABS - Underline Style */
 .stTabs [data-baseweb="tab-list"] {
     gap: 24px;
