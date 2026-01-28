@@ -536,9 +536,9 @@ def render_action_deck():
 def render_modules():
     """
     Render full capability library with all categories.
-    V6 Frosted Glass Keycaps styling with 9 category tabs.
+    V7 Address Box styling (matches sidebar deposit address) with 9 category tabs.
     """
-    # V6 Frosted Glass Keycaps CSS
+    # V7 Address Box Style - matches sidebar deposit address styling
     st.markdown("""
     <style>
     /* Container padding */
@@ -546,66 +546,47 @@ def render_modules():
         padding-top: 16px !important;
     }
 
-    /* The Tile (Button) - Frosted Glass Keycap */
+    /* The Tile (Button) - Address Box Style */
     [data-baseweb="tab-panel"] button {
-        padding: 10px 16px !important;
-        border-radius: 14px !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        border-top: 1px solid rgba(255,255,255,0.15) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        box-shadow:
-            0 4px 12px rgba(0,0,0,0.2),
-            inset 0 1px 0 rgba(255,255,255,0.1)
-            !important;
-        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        padding: 10px 12px !important;
+        border-radius: 4px !important;
+        background: rgba(255,255,255,0.05) !important;
+        border: none !important;
+        box-shadow: none !important;
+        transition: all 0.15s ease !important;
     }
 
-    /* Hover State - Lift with scale */
+    /* Hover State - subtle brighten */
     [data-baseweb="tab-panel"] button:hover:not(:disabled) {
-        transform: translateY(-2px) scale(1.02) !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%) !important;
-        border-color: rgba(255,255,255,0.2) !important;
-        box-shadow:
-            0 8px 24px rgba(0,0,0,0.4),
-            0 0 20px rgba(255,255,255,0.08),
-            inset 0 1px 0 rgba(255,255,255,0.2)
-            !important;
+        background: rgba(255,255,255,0.1) !important;
     }
 
     /* Active/Press State */
     [data-baseweb="tab-panel"] button:active:not(:disabled) {
-        transform: scale(0.97) !important;
-        background: rgba(255,255,255,0.02) !important;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3) !important;
+        background: rgba(255,255,255,0.08) !important;
     }
 
-    /* Text Styling - Premium Typography */
+    /* Text Styling - JetBrains Mono like address */
     [data-baseweb="tab-panel"] button p {
-        font-family: 'Inter', sans-serif !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        color: rgba(255,255,255,0.7) !important;
-        letter-spacing: 0.05em !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 12px !important;
+        font-weight: 400 !important;
+        color: #888 !important;
+        letter-spacing: 0 !important;
     }
 
-    /* Light up text on hover */
+    /* Hover text brighten */
     [data-baseweb="tab-panel"] button:hover:not(:disabled) p {
         color: #fff !important;
-        text-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.4) !important;
     }
 
-    /* Disabled state */
+    /* Disabled state - same look, just not interactive */
     [data-baseweb="tab-panel"] button:disabled {
-        opacity: 0.35 !important;
+        opacity: 1 !important;
+        cursor: default !important;
     }
-
-    /* No hover transform on touch devices */
-    @media (hover: none) {
-        [data-baseweb="tab-panel"] button:hover:not(:disabled) {
-            transform: none !important;
-        }
+    [data-baseweb="tab-panel"] button:disabled p {
+        color: #888 !important;
     }
 
     /* Mobile: scrollable tabs */
@@ -625,10 +606,10 @@ def render_modules():
             white-space: nowrap;
         }
         [data-baseweb="tab-panel"] button {
-            padding: 8px 12px !important;
+            padding: 8px 10px !important;
         }
         [data-baseweb="tab-panel"] button p {
-            font-size: 12px !important;
+            font-size: 11px !important;
         }
     }
     @media (max-width: 480px) {
@@ -637,10 +618,10 @@ def render_modules():
             padding: 6px 10px !important;
         }
         [data-baseweb="tab-panel"] button {
-            padding: 6px 10px !important;
+            padding: 6px 8px !important;
         }
         [data-baseweb="tab-panel"] button p {
-            font-size: 11px !important;
+            font-size: 10px !important;
         }
     }
     </style>
@@ -725,30 +706,26 @@ def render_modules():
 def render_modules_preview():
     """
     Render capability preview for pre-login users (all disabled).
-    Uses same V6 Frosted Glass Keycaps styling as render_modules.
+    Uses same V7 Address Box styling as render_modules.
     """
-    # V6 Frosted Glass CSS (compact version)
+    # V7 Address Box CSS (compact version)
     st.markdown("""
     <style>
     [data-baseweb="tab-panel"] { padding-top: 16px !important; }
     [data-baseweb="tab-panel"] button {
-        padding: 10px 16px !important;
-        border-radius: 14px !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        border-top: 1px solid rgba(255,255,255,0.15) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+        padding: 10px 12px !important;
+        border-radius: 4px !important;
+        background: rgba(255,255,255,0.05) !important;
+        border: none !important;
+        box-shadow: none !important;
     }
     [data-baseweb="tab-panel"] button p {
-        font-family: 'Inter', sans-serif !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        color: rgba(255,255,255,0.7) !important;
-        letter-spacing: 0.05em !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 12px !important;
+        font-weight: 400 !important;
+        color: #888 !important;
     }
-    [data-baseweb="tab-panel"] button:disabled { opacity: 0.35 !important; }
+    [data-baseweb="tab-panel"] button:disabled { opacity: 1 !important; cursor: default !important; }
     </style>
     """, unsafe_allow_html=True)
 
