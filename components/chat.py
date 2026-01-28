@@ -11,6 +11,71 @@ from decision_logger import log_ai_decision, DecisionLogger
 from utils.logger import logger
 
 
+def _format_tool_action(tool_name: str) -> str:
+    """Convert tool name to human-readable action label."""
+    tool_labels = {
+        # Transactions
+        "preview_transaction": "Prepared transfer",
+        "execute_transaction": "Sent USDC",
+        "get_balance": "Checked balance",
+        # Yield
+        "get_yield_status": "Checked yield",
+        "preview_yield_deposit": "Prepared deposit",
+        "execute_yield_deposit": "Deposited to earn",
+        "preview_yield_withdrawal": "Prepared withdrawal",
+        "execute_yield_withdrawal": "Withdrew funds",
+        "get_current_apy": "Checked rates",
+        # Gift cards
+        "search_gift_cards": "Searched gift cards",
+        "get_gift_card_details": "Found gift card",
+        "purchase_gift_card": "Purchased gift card",
+        "pay_bill_with_giftcard": "Paid bill",
+        # Merchants
+        "search_crypto_merchants": "Found merchants",
+        "buy_domain_with_crypto": "Domain purchase",
+        "subscribe_vpn_with_crypto": "VPN subscription",
+        # Scheduler
+        "create_scheduled_transfer": "Created automation",
+        "list_scheduled_tasks": "Listed automations",
+        "cancel_scheduled_task": "Cancelled automation",
+        # Email
+        "check_email_connected": "Checked email",
+        "get_verification_code": "Got email code",
+        "search_recent_emails": "Searched emails",
+    }
+    return tool_labels.get(tool_name, tool_name.replace("_", " ").title())
+
+
+def _render_action_indicator(tool_calls: list) -> str:
+    """Render a subtle action indicator showing what the AI did."""
+    if not tool_calls:
+        return ""
+
+    # Get unique tool names (first occurrence only)
+    seen = set()
+    unique_tools = []
+    for tc in tool_calls:
+        tool_name = tc.get("tool", "")
+        if tool_name and tool_name not in seen:
+            seen.add(tool_name)
+            unique_tools.append(tool_name)
+
+    if not unique_tools:
+        return ""
+
+    # Format as human-readable actions
+    actions = [_format_tool_action(t) for t in unique_tools[:3]]  # Max 3
+    action_text = " → ".join(actions)
+
+    return f"""
+    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.04);">
+        <span style="font-family: 'Inter', sans-serif; font-size: 11px; color: #555;">
+            {action_text}
+        </span>
+    </div>
+    """
+
+
 def _ensure_string(content) -> str:
     """Convert message content to string, handling list format from LangChain."""
     if isinstance(content, str):
@@ -384,6 +449,28 @@ def render_pulse_deck():
             "icon_filter": "brightness(0)",
             "text_shadow": "none",
         },
+        "yield": {
+            "icon": "https://api.iconify.design/mdi/trending-up.svg",
+            "bg": "rgba(255,255,255,0.05)",
+            "border": "none",
+            "shadow": "none",
+            "accent": "#22c55e",  # Green for yield/growth
+            "text_color": "#FFFFFF",
+            "sub_color": "rgba(255,255,255,0.6)",
+            "icon_filter": "brightness(0) invert(1) opacity(0.8)",
+            "text_shadow": "none",
+        },
+        "automation": {
+            "icon": "https://api.iconify.design/mdi/robot-outline.svg",
+            "bg": "rgba(255,255,255,0.05)",
+            "border": "none",
+            "shadow": "none",
+            "accent": "#8b5cf6",  # Purple for automation
+            "text_color": "#FFFFFF",
+            "sub_color": "rgba(255,255,255,0.6)",
+            "icon_filter": "brightness(0) invert(1) opacity(0.8)",
+            "text_shadow": "none",
+        },
     }
 
     # === DATA SOURCES (mock - replace with real queries) ===
@@ -446,45 +533,85 @@ def render_pulse_deck():
         "brand_key": "ai",
     })
 
-    # Slot 2: Priority Action or Stats fallback (SPOTLIGHT - White)
-    if active_tasks:
-        t = active_tasks[0]
+    # Slot 2: Treasury card (SPOTLIGHT - shows balance + treasury health)
+    usdc_balance = 0.00
+    yield_earnings = 0.00
+    yield_apy = 0.0
+    active_automations = 0
+
+    if st.session_state.get("wallet_address"):
+        try:
+            from direct_tx import get_direct_executor
+            executor = get_direct_executor("arc-testnet")
+            usdc_balance = float(executor.get_usdc_balance(st.session_state.wallet_address))
+        except Exception:
+            pass
+
+        # Check yield deposits
+        try:
+            from aave_client import get_yield_summary
+            yield_info = get_yield_summary(st.session_state.wallet_address)
+            if yield_info:
+                yield_earnings = yield_info.get("estimated_earnings_30d", 0)
+                yield_apy = yield_info.get("current_apy", 0)
+        except Exception:
+            pass
+
+        # Count active automations (scheduled tasks)
+        try:
+            from scheduler_manager import SchedulerManager
+            if user_id:
+                tasks = SchedulerManager.get_user_tasks(user_id)
+                active_automations = len([t for t in tasks if t.get("status") == "active"])
+        except Exception:
+            pass
+
+    # Build treasury status line
+    treasury_parts = []
+    if yield_apy > 0:
+        treasury_parts.append(f"{yield_apy:.1f}% APY")
+    if active_automations > 0:
+        treasury_parts.append(f"{active_automations} auto")
+    treasury_status = " · ".join(treasury_parts) if treasury_parts else "Tap to earn"
+
+    slots.append({
+        "mode": "stat",
+        "title": "TREASURY",
+        "main": f"${usdc_balance:.2f}",
+        "stats": treasury_status,
+        "spotlight": True,
+        "icon": BRANDS["system"]["icon"],
+        "brand_key": "system",
+    })
+
+    # Slot 3: Yield card (if earning) OR first perk
+    if yield_apy > 0:
+        yield_brand = BRANDS["yield"]
         slots.append({
-            "mode": "task",
-            "title": t["label"],
-            "main": t["value"],
-            "sub": t["action"],
-            "spotlight": True,
-            "icon": "https://api.iconify.design/mdi/alert-circle.svg",
-            "brand_key": "system",
+            "mode": "yield",
+            "title": "EARNING",
+            "main": f"{yield_apy:.1f}%",
+            "sub": f"+${yield_earnings:.2f}/mo",
+            "bg": yield_brand["bg"],
+            "border": yield_brand.get("border", "none"),
+            "shadow": yield_brand["shadow"],
+            "accent": yield_brand["accent"],
+            "text_color": yield_brand["text_color"],
+            "sub_color": yield_brand["sub_color"],
+            "icon_filter": yield_brand["icon_filter"],
+            "text_shadow": yield_brand["text_shadow"],
+            "spotlight": False,
+            "icon": yield_brand["icon"],
+            "brand_key": "yield",
         })
+        # Only show 1 perk if yield card is shown
+        perks_to_show = perks[:1]
     else:
-        # Get real USDC balance for stats card
-        usdc_balance = 0.00
-        if st.session_state.get("wallet_address"):
-            try:
-                from direct_tx import get_direct_executor
-                executor = get_direct_executor("arc-testnet")
-                usdc_balance = float(executor.get_usdc_balance(st.session_state.wallet_address))
-            except Exception:
-                pass
+        # No yield, show both perks
+        perks_to_show = perks[:2]
 
-        # Check for connected services
-        email_connected = bool(SettingsManager.get_oauth_connection(user_id, "email")) if user_id else False
-        services_status = "Email ✓" if email_connected else "No services"
-
-        slots.append({
-            "mode": "stat",
-            "title": "BALANCE",
-            "main": f"${usdc_balance:.2f}",
-            "stats": f"USDC · {services_status}",
-            "spotlight": True,
-            "icon": BRANDS["system"]["icon"],
-            "brand_key": "system",
-        })
-
-    # Slots 3-4: Perks (Matte dark glass with glowing progress bars)
-    for p in perks[:2]:
+    # Slots 3-4 (or just 4): Perks
+    for p in perks_to_show:
         brand = BRANDS.get(p["brand"].lower(), BRANDS["system"])
         pct = int((p["progress"] / p["target"]) * 100) if p["target"] > 0 else 0
         spent = p.get("spent", 0)
@@ -557,6 +684,8 @@ def render_pulse_deck():
     .pulse-card[data-brand="netflix"] .pulse-card-inner { --glow-color: rgba(229, 9, 20, 0.25); }
     .pulse-card[data-brand="ai"] .pulse-card-inner { --glow-color: transparent; }
     .pulse-card[data-brand="system"] .pulse-card-inner { --glow-color: rgba(255, 255, 255, 0.3); }
+    .pulse-card[data-brand="yield"] .pulse-card-inner { --glow-color: rgba(34, 197, 94, 0.3); }
+    .pulse-card[data-brand="automation"] .pulse-card-inner { --glow-color: rgba(139, 92, 246, 0.3); }
 
     /* Spotify/Netflix: glow positioned at right-bottom corner */
     .pulse-card[data-brand="spotify"] .pulse-card-inner::after,
@@ -737,6 +866,9 @@ def _render_pulse_card_html(slot: dict) -> str:
         bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-shadow:{text_shadow};">{reward}</div>'
     elif mode == "ai":
         bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:{accent};">●</span> {slot["sub"]}</div>'
+    elif mode == "yield":
+        # Yield card - show estimated earnings with green indicator
+        bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:{accent};">↑</span> {slot["sub"]}</div>'
     elif mode == "stat" and slot.get("stats"):
         bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{slot["stats"]}</div>'
     elif is_spotlight:
@@ -885,16 +1017,24 @@ def render_modules():
 
     categories = {
         "Showcase": showcase_items,  # Demo-ready AI agents first
+        "Automate": [
+            ("Recurring Send", "Set up a recurring USDC payment to someone", True),
+            ("Auto-Savings", "Move a % of deposits to earn yield automatically", False),
+            ("Bill Autopay", "Automatically pay a bill when it's due", True),
+            ("Price Alert", "Alert me when ETH drops below $3000", False),
+            ("Low Balance", "Warn me if my balance drops below $50", False),
+        ],
         "Send & Pay": [
             ("Send USDC", "Help me send USDC to someone", True),
             ("Pay Bills", "Help me pay a bill with crypto", True),
             ("Phone Top-up", "I need to add minutes to my phone", True),
-            ("Schedule", "I want to set up a recurring payment", True),
+            ("Split Bill", "Split a payment between multiple people", False),
         ],
         "Earn": [
-            ("Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
-            ("Swap to ETH", "Swap USDC to ETH at best rates", False),
-            ("Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
+            ("Start Earning", "Put my idle USDC to work earning ~4% APY", True),
+            ("Check Yield", "How much am I earning on my deposits?", True),
+            ("Withdraw", "I want to withdraw from yield", True),
+            ("Best Rates", "Where can I get the best yield rates right now?", False),
         ],
         "Bot Trade": [
             ("Hyperliquid", "Trade perpetuals on Hyperliquid DEX", False),
@@ -909,7 +1049,7 @@ def render_modules():
             ("Get Domain", "I want to register a domain", True),
             ("VPN", "I want a Mullvad VPN subscription", True),
             ("eSIM", "I need an international eSIM", False),
-            ("Alerts", "Set up balance alerts and spending notifications", False),
+            ("My Rules", "Show me my active automations and rules", True),
         ],
         "Shopping": [
             ("Amazon", "I want to buy an Amazon gift card", True),
@@ -1272,8 +1412,16 @@ def chat_interface(create_agent_func):
                     except Exception as log_err:
                         logger.debug(f"Decision logging failed: {log_err}")
 
-                    # Final render without cursor
-                    response_container.markdown(f"<div style='color: #ccc; font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+                    # Build action indicator if tools were used
+                    action_indicator = _render_action_indicator(tool_calls)
+
+                    # Final render with action indicator
+                    response_container.markdown(f"""
+                    <div style='color: #ccc; font-family: \"Inter\", -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>
+                        {html.escape(response)}
+                    </div>
+                    {action_indicator}
+                    """, unsafe_allow_html=True)
 
             except Exception as e:
                 response = f"**System Error:** {str(e)}"

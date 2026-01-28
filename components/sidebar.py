@@ -106,16 +106,36 @@ def render_status_card(is_active: bool):
 
 def render_balance_display(total_usdc: float, balances: dict = None):
     """Render V12 balance display with optional breakdown"""
+
+    # Get active automations count
+    active_automations = 0
+    user_id = st.session_state.get("user_id")
+    if user_id:
+        try:
+            from scheduler_manager import SchedulerManager
+            tasks = SchedulerManager.get_user_tasks(user_id)
+            active_automations = len([t for t in tasks if t.get("status") == "active"])
+        except Exception:
+            pass
+
+    # Build status line (human readable)
+    status_parts = []
+    if active_automations > 0:
+        status_parts.append(f"{active_automations} active rule{'s' if active_automations != 1 else ''}")
+
+    status_line = " · ".join(status_parts) if status_parts else ""
+
     st.markdown(f"""
     <div style="margin-bottom: 1.5rem;">
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px;
-                    letter-spacing: 0.1em; color: #555; margin-bottom: 8px;">
-            EQUITY
+        <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 11px;
+                    color: #666; margin-bottom: 6px;">
+            Balance
         </div>
         <div style="font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 300;
                     color: white; letter-spacing: -0.04em;">
             ${total_usdc:,.2f}
         </div>
+        {f'<div style="font-family: Inter, sans-serif; font-size: 12px; color: #888; margin-top: 4px;">{status_line}</div>' if status_line else ''}
     </div>
     """, unsafe_allow_html=True)
 
@@ -127,8 +147,8 @@ def render_balance_display(total_usdc: float, balances: dict = None):
             "base-mainnet": "Base",
             "arbitrum-mainnet": "Arbitrum",
             "solana-mainnet": "Solana",
-            "eth-sepolia": "Ethereum ᵗ",
-            "arc-testnet": "Arc ᵗ",
+            "eth-sepolia": "Sepolia",
+            "arc-testnet": "Arc",
         }
 
         # Filter to networks with non-zero USDC
@@ -143,9 +163,9 @@ def render_balance_display(total_usdc: float, balances: dict = None):
             breakdown_html = "<div style='margin-bottom: 1.5rem;'>"
             for name, usdc in active_networks:
                 breakdown_html += f"""
-                <div style="display: flex; justify-content: space-between; padding: 6px 0;">
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444;">{name}</span>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666;">${usdc:,.2f}</span>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                    <span style="font-family: 'Inter', sans-serif; font-size: 12px; color: #666;">{name}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #888;">${usdc:,.2f}</span>
                 </div>
                 """
             breakdown_html += "</div>"
@@ -160,24 +180,28 @@ def render_yield_display(wallet_address: str):
         summary = get_yield_summary(wallet_address)
 
         if summary["total_deposited"] > 0:
+            # Human-readable format
+            deposited = summary['total_deposited']
+            monthly = summary['estimated_monthly_earnings']
+            apy = summary['average_apy']
+
             st.markdown(f"""
-            <div style="margin-bottom: 1.5rem; padding: 12px; background: rgba(34, 197, 94, 0.08); border-radius: 8px;">
+            <div style="margin-bottom: 1.5rem; padding: 12px; background: rgba(34, 197, 94, 0.06); border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.15);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
-                                    letter-spacing: 0.1em; color: #555; margin-bottom: 4px;">
-                            EARNING
+                        <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #666; margin-bottom: 2px;">
+                            Earning on ${deposited:,.0f}
                         </div>
-                        <div style="font-family: 'Inter', sans-serif; font-size: 14px; color: #22c55e;">
-                            +${summary['estimated_monthly_earnings']:.2f}/mo
+                        <div style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 500; color: #22c55e;">
+                            +${monthly:.2f}/mo
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666;">
-                            {summary['average_apy']:.1f}% APY
+                        <div style="font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; color: #22c55e;">
+                            {apy:.1f}%
                         </div>
-                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444;">
-                            ${summary['total_deposited']:,.0f} deposited
+                        <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666;">
+                            APY
                         </div>
                     </div>
                 </div>
@@ -355,33 +379,33 @@ def sidebar():
             # CSS for responsive middle-truncation (first 6 fixed, last 4 fixed)
             st.markdown("""
             <style>
-            .addr-section { margin-bottom: 16px; }
-            .addr-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #444; margin-bottom: 4px; }
+            .addr-section { margin-bottom: 12px; }
+            .addr-label { font-family: 'Inter', sans-serif; font-size: 11px; color: #666; margin-bottom: 4px; }
             .addr-box {
                 display: flex; align-items: center; gap: 8px;
-                background: rgba(255,255,255,0.05); padding: 10px 12px; border-radius: 4px;
+                background: rgba(255,255,255,0.04); padding: 10px 12px; border-radius: 6px;
             }
             .addr-text {
                 flex: 1; min-width: 0; display: flex; overflow: hidden;
-                font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #888;
+                font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #777;
             }
             .addr-start { flex-shrink: 0; white-space: nowrap; }
             .addr-mid { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .addr-end { flex-shrink: 0; white-space: nowrap; }
             .addr-copy {
                 flex-shrink: 0; cursor: pointer; opacity: 0.6; font-size: 11px;
-                padding: 8px 12px; border-radius: 4px; transition: all 0.15s;
-                background: rgba(255,255,255,0.08); color: #888;
-                font-family: 'JetBrains Mono', monospace;
+                padding: 6px 10px; border-radius: 4px; transition: all 0.15s;
+                background: rgba(255,255,255,0.06); color: #888;
+                font-family: 'Inter', sans-serif;
             }
-            .addr-copy:hover { opacity: 1; background: rgba(255,255,255,0.15); color: #fff; }
+            .addr-copy:hover { opacity: 1; background: rgba(255,255,255,0.12); color: #fff; }
             </style>
             """, unsafe_allow_html=True)
 
-            # EVM Address (first 6 fixed, last 4 fixed) - e.g. 0x1234...cdef
+            # EVM Address - human label
             st.markdown(f"""
             <div class="addr-section">
-                <div class="addr-label">EVM</div>
+                <div class="addr-label">Deposit address</div>
                 <div class="addr-box">
                     <div class="addr-text">
                         <span class="addr-start">{evm_addr[:6]}</span>
@@ -393,11 +417,11 @@ def sidebar():
             </div>
             """, unsafe_allow_html=True)
 
-            # Solana Address (if available) - first 6 fixed, last 4 fixed
+            # Solana Address (if available) - human label
             if solana_addr:
                 st.markdown(f"""
                 <div class="addr-section">
-                    <div class="addr-label">SOL</div>
+                    <div class="addr-label">Solana address</div>
                     <div class="addr-box">
                         <div class="addr-text">
                             <span class="addr-start">{solana_addr[:6]}</span>
