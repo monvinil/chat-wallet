@@ -97,9 +97,9 @@ class WalletManager:
             from eth_account import Account
             from mnemonic import Mnemonic
 
-            # Generate 12-word mnemonic
+            # Generate 24-word mnemonic (256-bit entropy for quantum resistance)
             mnemo = Mnemonic("english")
-            mnemonic_phrase = mnemo.generate(strength=128)  # 12 words
+            mnemonic_phrase = mnemo.generate(strength=256)  # 24 words
 
             # Enable HD wallet functionality
             Account.enable_unaudited_hdwallet_features()
@@ -208,8 +208,21 @@ class WalletManager:
                 if not private_key.startswith("0x"):
                     private_key = "0x" + private_key
 
+                # Validate private key format before using
+                import re
+                if len(private_key) != 66:  # 0x + 64 hex chars
+                    st.error("Invalid private key: must be 64 hex characters (with or without 0x prefix)")
+                    return None
+                if not re.match(r'^0x[0-9a-fA-F]{64}$', private_key):
+                    st.error("Invalid private key: contains non-hexadecimal characters")
+                    return None
+
                 # Create account from private key
-                account = Account.from_key(private_key)
+                try:
+                    account = Account.from_key(private_key)
+                except ValueError as e:
+                    st.error(f"Invalid private key: {str(e)}")
+                    return None
                 address = account.address
 
                 # Wallet data to encrypt (EVM only)

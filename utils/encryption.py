@@ -10,6 +10,7 @@ This module provides consistent encryption/decryption functionality across:
 import os
 import base64
 import hashlib
+import hmac
 import bcrypt
 import streamlit as st
 from cryptography.fernet import Fernet
@@ -139,8 +140,9 @@ class PasswordEncryption:
                 return bcrypt.checkpw(password.encode(), stored_hash.encode())
             else:
                 # Legacy SHA-256 hash (64 char hex string) - for backward compatibility
+                # Use constant-time comparison to prevent timing attacks
                 legacy_hash = hashlib.sha256(password.encode()).hexdigest()
-                return legacy_hash == stored_hash
+                return hmac.compare_digest(legacy_hash, stored_hash)
         except Exception:
             return False
 

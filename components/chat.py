@@ -26,7 +26,7 @@ class StreamlitTokenHandler(BaseCallbackHandler):
 
     def on_tool_start(self, serialized, input_str, **kwargs) -> None:
         """Called when a tool starts executing."""
-        tool_name = serialized.get("name", "tool")
+        tool_name = html.escape(serialized.get("name", "tool"))
         self.tool_status = f"⚡ {tool_name}..."
         self._render()
 
