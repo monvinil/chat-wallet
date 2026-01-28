@@ -502,3 +502,456 @@ def format_address(address: str, chars: int = 6) -> str:
 def format_amount(amount: float, decimals: int = 2, prefix: str = "$") -> str:
     """Format a monetary amount"""
     return f"{prefix}{amount:,.{decimals}f}"
+
+
+# =============================================================================
+# ENHANCED UI COMPONENTS - V2
+# =============================================================================
+
+class EnhancedUI:
+    """Enhanced UI components with animations and polish"""
+
+    @staticmethod
+    def hero_balance(balance: float, change_24h: float = 0.0, network: str = "Arc") -> None:
+        """
+        Subtle hero balance display - minimal, not clumsy.
+        Shows balance with optional 24h change indicator.
+        """
+        change_color = DS.colors.ACCENT_SUCCESS if change_24h >= 0 else DS.colors.ACCENT_ERROR
+        change_sign = "+" if change_24h >= 0 else ""
+        change_display = f"{change_sign}{change_24h:.2f}%" if change_24h != 0 else ""
+
+        st.markdown(f"""
+        <style>
+        .hero-balance {{
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            padding: 8px 0 16px 0;
+        }}
+        .hero-amount {{
+            font-family: {DS.typography.FONT_SANS};
+            font-size: 32px;
+            font-weight: 300;
+            color: {DS.colors.TEXT_PRIMARY};
+            letter-spacing: -0.03em;
+        }}
+        .hero-currency {{
+            font-family: {DS.typography.FONT_MONO};
+            font-size: 12px;
+            color: {DS.colors.TEXT_MUTED};
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }}
+        .hero-change {{
+            font-family: {DS.typography.FONT_MONO};
+            font-size: 11px;
+            color: {change_color};
+            padding: 2px 6px;
+            background: {change_color}15;
+            border-radius: {DS.radius.SM};
+        }}
+        @media (max-width: 480px) {{
+            .hero-amount {{ font-size: 28px; }}
+        }}
+        </style>
+        <div class="hero-balance">
+            <span class="hero-amount">${balance:,.2f}</span>
+            <span class="hero-currency">USDC</span>
+            {f'<span class="hero-change">{change_display}</span>' if change_display else ''}
+        </div>
+        """, unsafe_allow_html=True)
+
+    @staticmethod
+    def success_animation(message: str = "Success!", show_confetti: bool = False) -> None:
+        """
+        Animated success state with checkmark and optional confetti.
+        """
+        confetti_css = ""
+        confetti_html = ""
+        if show_confetti:
+            confetti_css = """
+            @keyframes confetti-fall {
+                0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+            .confetti-piece {
+                position: fixed;
+                width: 8px;
+                height: 8px;
+                top: -10px;
+                animation: confetti-fall 3s ease-out forwards;
+                z-index: 9999;
+                pointer-events: none;
+            }
+            """
+            # Generate confetti pieces
+            import random
+            colors = ["#22c55e", "#3b82f6", "#eab308", "#f472b6", "#8b5cf6"]
+            confetti_html = "".join([
+                f'<div class="confetti-piece" style="left: {random.randint(5, 95)}%; background: {random.choice(colors)}; animation-delay: {random.random() * 0.5}s; border-radius: {random.choice(["0", "50%"])};"></div>'
+                for _ in range(20)
+            ])
+
+        st.markdown(f"""
+        <style>
+        @keyframes success-pop {{
+            0% {{ transform: scale(0); opacity: 0; }}
+            50% {{ transform: scale(1.2); }}
+            100% {{ transform: scale(1); opacity: 1; }}
+        }}
+        @keyframes success-check {{
+            0% {{ stroke-dashoffset: 50; }}
+            100% {{ stroke-dashoffset: 0; }}
+        }}
+        .success-container {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 32px;
+            animation: success-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }}
+        .success-circle {{
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: {DS.colors.ACCENT_SUCCESS}20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .success-check {{
+            stroke: {DS.colors.ACCENT_SUCCESS};
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            stroke-dasharray: 50;
+            animation: success-check 0.5s ease-out 0.2s forwards;
+            stroke-dashoffset: 50;
+        }}
+        .success-text {{
+            font-family: {DS.typography.FONT_SANS};
+            font-size: {DS.typography.SIZE_LG};
+            color: {DS.colors.TEXT_PRIMARY};
+            font-weight: {DS.typography.WEIGHT_MEDIUM};
+        }}
+        {confetti_css}
+        </style>
+        {confetti_html}
+        <div class="success-container">
+            <div class="success-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24">
+                    <polyline class="success-check" points="4 12 9 17 20 6"></polyline>
+                </svg>
+            </div>
+            <span class="success-text">{message}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    @staticmethod
+    def glass_card(content_html: str, glow_color: str = None) -> None:
+        """
+        Glassmorphism card with optional brand glow.
+        """
+        glow_style = f"box-shadow: 0 8px 32px {glow_color}20;" if glow_color else ""
+
+        st.markdown(f"""
+        <style>
+        .glass-card {{
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: {DS.radius.LG};
+            padding: {DS.spacing.LG};
+            position: relative;
+            overflow: hidden;
+            {glow_style}
+        }}
+        .glass-card::before {{
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        }}
+        </style>
+        <div class="glass-card">
+            {content_html}
+        </div>
+        """, unsafe_allow_html=True)
+
+    @staticmethod
+    def empty_chat_prompts(prompts: list) -> str:
+        """
+        Return HTML for empty chat state with suggested prompts.
+        prompts: list of (emoji, title, description, prompt_text)
+        Returns HTML that can be used with st.markdown.
+        """
+        prompts_html = ""
+        for emoji, title, desc, prompt in prompts:
+            prompts_html += f"""
+            <div class="prompt-card" data-prompt="{prompt}">
+                <span class="prompt-emoji">{emoji}</span>
+                <div class="prompt-content">
+                    <div class="prompt-title">{title}</div>
+                    <div class="prompt-desc">{desc}</div>
+                </div>
+            </div>
+            """
+
+        return f"""
+        <style>
+        .empty-chat {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            gap: 24px;
+        }}
+        .empty-chat-title {{
+            font-family: {DS.typography.FONT_SANS};
+            font-size: {DS.typography.SIZE_XL};
+            color: {DS.colors.TEXT_PRIMARY};
+            font-weight: {DS.typography.WEIGHT_LIGHT};
+            letter-spacing: -0.02em;
+        }}
+        .empty-chat-subtitle {{
+            font-family: {DS.typography.FONT_MONO};
+            font-size: {DS.typography.SIZE_XS};
+            color: {DS.colors.TEXT_MUTED};
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }}
+        .prompts-grid {{
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 16px;
+        }}
+        @media (max-width: 480px) {{
+            .prompts-grid {{ grid-template-columns: 1fr; }}
+        }}
+        .prompt-card {{
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: {DS.radius.MD};
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }}
+        .prompt-card:hover {{
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.12);
+            transform: translateY(-2px);
+        }}
+        .prompt-emoji {{
+            font-size: 20px;
+            line-height: 1;
+        }}
+        .prompt-content {{
+            flex: 1;
+        }}
+        .prompt-title {{
+            font-family: {DS.typography.FONT_SANS};
+            font-size: {DS.typography.SIZE_SM};
+            color: {DS.colors.TEXT_PRIMARY};
+            font-weight: {DS.typography.WEIGHT_MEDIUM};
+            margin-bottom: 4px;
+        }}
+        .prompt-desc {{
+            font-family: {DS.typography.FONT_MONO};
+            font-size: {DS.typography.SIZE_XS};
+            color: {DS.colors.TEXT_MUTED};
+        }}
+        </style>
+        <div class="empty-chat">
+            <div class="empty-chat-subtitle">What can I help you with?</div>
+            <div class="prompts-grid">
+                {prompts_html}
+            </div>
+        </div>
+        """
+
+    @staticmethod
+    def inject_micro_interactions() -> None:
+        """
+        Inject global CSS for micro-interactions: button presses, hover states, etc.
+        Call once per page.
+        """
+        st.markdown("""
+        <style>
+        /* Button press effect */
+        .stButton > button {
+            transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+        }
+        .stButton > button:active {
+            transform: scale(0.97) !important;
+        }
+        .stButton > button:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        }
+
+        /* Primary button glow on hover */
+        .stButton > button[kind="primary"]:hover:not(:disabled),
+        .stButton > button[data-baseweb="button"][kind="primary"]:hover:not(:disabled) {
+            box-shadow: 0 4px 20px rgba(255,255,255,0.15) !important;
+        }
+
+        /* Input focus ring */
+        .stTextInput > div > div > input:focus,
+        .stTextArea > div > div > textarea:focus {
+            border-color: rgba(255,255,255,0.3) !important;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.1) !important;
+        }
+
+        /* Card hover lift */
+        .hoverable {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .hoverable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        /* Smooth fade-in for new elements */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        /* Pulse for live indicators */
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .live-indicator {
+            animation: livePulse 2s ease-in-out infinite;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    @staticmethod
+    def status_pill(text: str, status: str = "default", pulse: bool = False) -> str:
+        """
+        Return HTML for an enhanced status pill with optional pulse animation.
+        status: default, online, offline, pending, success, error
+        """
+        status_styles = {
+            "default": (DS.colors.TEXT_MUTED, "rgba(255,255,255,0.1)"),
+            "online": (DS.colors.ACCENT_SUCCESS, "rgba(34,197,94,0.15)"),
+            "offline": (DS.colors.TEXT_GHOST, "rgba(255,255,255,0.05)"),
+            "pending": (DS.colors.ACCENT_WARNING, "rgba(234,179,8,0.15)"),
+            "success": (DS.colors.ACCENT_SUCCESS, "rgba(34,197,94,0.15)"),
+            "error": (DS.colors.ACCENT_ERROR, "rgba(239,68,68,0.15)"),
+        }
+        color, bg = status_styles.get(status, status_styles["default"])
+        pulse_class = "live-indicator" if pulse else ""
+        dot_html = f'<span style="width: 6px; height: 6px; border-radius: 50%; background: {color}; margin-right: 6px;" class="{pulse_class}"></span>' if status in ["online", "pending"] else ""
+
+        return f"""<span style="
+            display: inline-flex;
+            align-items: center;
+            font-family: {DS.typography.FONT_MONO};
+            font-size: {DS.typography.SIZE_XS};
+            color: {color};
+            background: {bg};
+            padding: 4px 10px;
+            border-radius: {DS.radius.PILL};
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        ">{dot_html}{text}</span>"""
+
+    @staticmethod
+    def mobile_nav(active: str = "chat") -> None:
+        """
+        Render mobile bottom navigation bar.
+        Only shows on mobile (<768px).
+        active: chat, wallet, history, settings
+        """
+        items = [
+            ("chat", "💬", "Chat"),
+            ("wallet", "💰", "Wallet"),
+            ("history", "📋", "History"),
+            ("settings", "⚙️", "Settings"),
+        ]
+
+        nav_items_html = ""
+        for key, icon, label in items:
+            is_active = key == active
+            active_style = f"color: {DS.colors.TEXT_PRIMARY};" if is_active else f"color: {DS.colors.TEXT_MUTED};"
+            indicator = f'<div style="width: 4px; height: 4px; border-radius: 50%; background: {DS.colors.ACCENT_SUCCESS}; margin-top: 4px;"></div>' if is_active else ""
+            nav_items_html += f"""
+            <div class="mobile-nav-item" data-nav="{key}">
+                <span style="font-size: 20px; {active_style}">{icon}</span>
+                <span style="font-size: 10px; {active_style}">{label}</span>
+                {indicator}
+            </div>
+            """
+
+        st.markdown(f"""
+        <style>
+        .mobile-nav {{
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(9, 9, 11, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding: 8px 0 env(safe-area-inset-bottom, 8px) 0;
+            z-index: 9999;
+        }}
+        .mobile-nav-inner {{
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 400px;
+            margin: 0 auto;
+        }}
+        .mobile-nav-item {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }}
+        .mobile-nav-item:active {{
+            transform: scale(0.95);
+        }}
+        @media (max-width: 768px) {{
+            .mobile-nav {{
+                display: block;
+            }}
+            /* Add padding to main content to prevent overlap */
+            .main .block-container {{
+                padding-bottom: 80px !important;
+            }}
+        }}
+        </style>
+        <div class="mobile-nav">
+            <div class="mobile-nav-inner">
+                {nav_items_html}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+# Shorthand for enhanced UI
+enhanced_ui = EnhancedUI()

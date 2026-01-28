@@ -268,7 +268,12 @@ def render_fashion_card(label, value, tag=None, tag_color=None):
 
 # --- HEADER: MAGAZINE ---
 def render_header():
-    """Magazine-style minimal header."""
+    """Magazine-style minimal header with optional balance display."""
+    from design_system import enhanced_ui
+
+    # Inject micro-interactions CSS globally
+    enhanced_ui.inject_micro_interactions()
+
     c1, c2 = st.columns([1, 1])
     with c1:
         st.markdown("""
@@ -280,11 +285,32 @@ def render_header():
         </div>
         """, unsafe_allow_html=True)
     with c2:
-        st.markdown("""
-        <div style="text-align: right; margin-top: 40px;">
-            <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #fff; background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 10px;">ONLINE</span>
-        </div>
-        """, unsafe_allow_html=True)
+        # Show balance if wallet connected, otherwise show status
+        if st.session_state.get("wallet_address") and not st.session_state.get("wallet_locked", False):
+            # Get USDC balance
+            try:
+                from direct_tx import get_direct_executor
+                executor = get_direct_executor("arc-testnet")
+                balance = float(executor.get_usdc_balance(st.session_state.wallet_address))
+                # Subtle balance display in header
+                st.markdown(f"""
+                <div style="text-align: right; margin-top: 32px;">
+                    <div style="font-family: Inter; font-size: 24px; font-weight: 300; color: #f4f4f5; letter-spacing: -0.02em;">${balance:,.2f}</div>
+                    <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #52525b; text-transform: uppercase; letter-spacing: 0.05em;">USDC Balance</div>
+                </div>
+                """, unsafe_allow_html=True)
+            except Exception:
+                st.markdown("""
+                <div style="text-align: right; margin-top: 40px;">
+                    <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #22c55e; background: rgba(34,197,94,0.1); padding: 6px 12px; border-radius: 10px;">● ONLINE</span>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style="text-align: right; margin-top: 40px;">
+                <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #fff; background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 10px;">ONLINE</span>
+            </div>
+            """, unsafe_allow_html=True)
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
 
 
@@ -1022,18 +1048,82 @@ def chat_interface(create_agent_func):
 
     # Welcome state (if no messages yet)
     if not st.session_state.messages:
-        wallet_short = ChainUtils.format_address(st.session_state.wallet_address) if st.session_state.wallet_address else "..."
-        # Floating data points
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            render_fashion_card("Wallet", wallet_short)
-        with c2:
-            render_fashion_card("Network", "Arc")
-        with c3:
-            render_fashion_card("Status", "Active", "●", "#22c55e")
+        from design_system import enhanced_ui, DS
+
+        # Quick action prompts
+        prompts = [
+            ("💸", "Send Money", "Transfer USDC instantly", "Help me send USDC to someone"),
+            ("🎁", "Gift Cards", "Amazon, Netflix & more", "I want to buy a gift card"),
+            ("📧", "Email 2FA", "Auto-read verification codes", "Get my latest verification code"),
+            ("📅", "Scheduled Pay", "Set up recurring payments", "Set up a weekly payment"),
+        ]
+
+        st.markdown(f"""
+        <style>
+        .empty-chat {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            gap: 24px;
+        }}
+        .empty-chat-subtitle {{
+            font-family: {DS.typography.FONT_MONO};
+            font-size: {DS.typography.SIZE_XS};
+            color: {DS.colors.TEXT_MUTED};
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }}
+        .prompts-grid {{
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 8px;
+        }}
+        @media (max-width: 480px) {{
+            .prompts-grid {{ grid-template-columns: 1fr; }}
+        }}
+        </style>
+        <div class="empty-chat">
+            <div class="empty-chat-subtitle">What can I help you with?</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Render prompts as clickable buttons (2x2 grid)
+        col1, col2 = st.columns(2)
+        for i, (emoji, title, desc, prompt) in enumerate(prompts):
+            with col1 if i % 2 == 0 else col2:
+                # Custom styled button
+                st.markdown(f"""
+                <style>
+                .prompt-btn-{i} {{
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    padding: 16px;
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid rgba(255,255,255,0.06);
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    margin-bottom: 8px;
+                }}
+                .prompt-btn-{i}:hover {{
+                    background: rgba(255,255,255,0.06);
+                    border-color: rgba(255,255,255,0.12);
+                    transform: translateY(-2px);
+                }}
+                </style>
+                """, unsafe_allow_html=True)
+                if st.button(f"{emoji} {title}", key=f"prompt_{i}", use_container_width=True, help=desc):
+                    st.session_state.messages.append({"role": "user", "content": prompt})
+                    st.session_state._quick_action_triggered = True
+                    st.rerun()
 
         st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-        # Show modules when no messages
+        # Show modules below prompts
         render_modules()
 
     # Render chat history - pure text, minimal
@@ -1204,3 +1294,103 @@ def chat_interface(create_agent_func):
 
             # Rerun to show chat input after processing
             st.rerun()
+
+    # Mobile bottom navigation (only shows on mobile via CSS)
+    _render_mobile_nav()
+
+
+def _render_mobile_nav():
+    """Render mobile bottom navigation bar (CSS hides on desktop)."""
+    st.markdown("""
+    <style>
+    .mobile-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(9, 9, 11, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)) 0;
+        z-index: 9999;
+    }
+    .mobile-nav-inner {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: transform 0.1s ease;
+        text-decoration: none;
+    }
+    .mobile-nav-item:active {
+        transform: scale(0.92);
+    }
+    .mobile-nav-icon {
+        font-size: 20px;
+        line-height: 1;
+    }
+    .mobile-nav-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .mobile-nav-item.active .mobile-nav-icon,
+    .mobile-nav-item.active .mobile-nav-label {
+        color: #f4f4f5;
+    }
+    .mobile-nav-item:not(.active) .mobile-nav-icon,
+    .mobile-nav-item:not(.active) .mobile-nav-label {
+        color: #52525b;
+    }
+    .mobile-nav-indicator {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #22c55e;
+        margin-top: 2px;
+    }
+    @media (max-width: 768px) {
+        .mobile-nav {
+            display: block;
+        }
+        /* Add padding to main content to prevent overlap */
+        .main .block-container,
+        section.main .block-container {
+            padding-bottom: 90px !important;
+        }
+    }
+    </style>
+    <div class="mobile-nav">
+        <div class="mobile-nav-inner">
+            <div class="mobile-nav-item active">
+                <span class="mobile-nav-icon">💬</span>
+                <span class="mobile-nav-label">Chat</span>
+                <div class="mobile-nav-indicator"></div>
+            </div>
+            <div class="mobile-nav-item">
+                <span class="mobile-nav-icon">💰</span>
+                <span class="mobile-nav-label">Wallet</span>
+            </div>
+            <div class="mobile-nav-item">
+                <span class="mobile-nav-icon">📋</span>
+                <span class="mobile-nav-label">History</span>
+            </div>
+            <div class="mobile-nav-item">
+                <span class="mobile-nav-icon">⚙️</span>
+                <span class="mobile-nav-label">Settings</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
