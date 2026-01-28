@@ -214,20 +214,25 @@ def render_pulse_deck():
 
     ai_brand = BRANDS["ai"]
 
-    # Get provider display name
+    # Get provider display name - only show if user has configured a key
     provider_names = {"anthropic": "Claude", "google": "Gemini", "openai": "GPT-4o"}
-    ai_provider = provider_names.get(llm_config.get("provider", ""), "Not Set")
 
     # Get tier and usage info
     if not llm_config.get("api_key"):
+        # No key at all - show setup needed
+        ai_provider = "Not Set"
         ai_tier = "Setup"
         ai_sub = "Add API key"
     elif llm_config.get("using_free_tier"):
+        # Using app's free tier (Anthropic Claude)
         remaining = FreeTier.get_remaining(user_id) if user_id else 0
         total = 50  # FREE_TIER_MESSAGES
+        ai_provider = "Claude"  # Free tier is always Claude
         ai_tier = "Free"
         ai_sub = f"{remaining}/{total} msgs"
     else:
+        # User has their own key - show their provider
+        ai_provider = provider_names.get(llm_config.get("provider", ""), "AI")
         ai_tier = "Pro"
         ai_sub = "Your key"
 
@@ -470,7 +475,43 @@ def render_pulse_deck():
     for slot in slots:
         cards_html += _render_pulse_card_html(slot)
 
+    # Add cursor pointer to AI card CSS
+    st.markdown("""
+    <style>
+    .pulse-card[data-brand="ai"] { cursor: pointer; }
+    .pulse-card[data-brand="ai"]:active .pulse-card-inner { transform: scale(0.98); }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.markdown(f'<div class="pulse-deck-wrapper"><div class="pulse-deck">{cards_html}</div></div>', unsafe_allow_html=True)
+
+    # Invisible button overlaying AI card - triggers settings modal
+    # Using columns to position a clickable element for the AI card
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        # Style the button to be invisible but clickable
+        st.markdown("""
+        <style>
+        [data-testid="stButton"][data-key="ai_card_click"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 25%;
+            height: 120px;
+            opacity: 0;
+            z-index: 10;
+        }
+        [data-testid="stButton"][data-key="ai_card_click"] button {
+            width: 100% !important;
+            height: 100% !important;
+            background: transparent !important;
+            border: none !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        if st.button("Configure AI", key="ai_card_click", help="Configure your AI provider"):
+            from api_key_setup import show_api_key_setup_modal
+            show_api_key_setup_modal()
 
 
 def _render_pulse_card_html(slot: dict) -> str:
