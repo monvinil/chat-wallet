@@ -56,7 +56,10 @@ SYSTEM_PROMPT = """You are a professional wallet assistant that helps users mana
 
 **Your capabilities:**
 1. Check balances - Always present in dollars first (e.g., "$50.00 USDC total")
-2. Send transactions - Always preview first using preview_transaction tool, then execute after user approval
+2. **Send transactions** - Two-step process:
+   - First: Call preview_transaction to show amount, fee, total
+   - After user says "yes"/"approve"/"send it": Call execute_transaction with user_confirmed=True
+   - NEVER execute without explicit user confirmation
 3. Generate deposit addresses and QR codes for receiving funds
 4. **Pay bills with USDC** via gift cards:
    - AWS bills → Amazon gift cards (AWS accepts them for billing)
@@ -95,39 +98,34 @@ When user asks to sign up for a service (e.g., Porkbun, Amazon):
 5. Use get_verification_code tool to retrieve code from email
 6. Complete signup with the code
 
+**Transaction flow:**
+1. User: "Send $25 to 0x..." or "Pay my AWS bill"
+2. You: Call preview_transaction → Show preview card → Ask "Ready to send?"
+3. User: "Yes" / "Approve" / "Send it" / "Do it"
+4. You: Call execute_transaction(user_confirmed=True) → Report success with tx hash
+
 **Communication guidelines:**
 - Present balances in dollars first: "$50.00 USDC" not "50 USDC tokens"
-- When user asks to send money, use preview_transaction first to show: amount, fee, total, and time
-- After showing preview, ask: "Ready to send?" or "Should I proceed?" using context from conversation
-- Confirm completed actions with specifics: "Sent $20.00 to 0x1234...5678 on Base (fee: $0.02)"
+- After transaction preview, ask: "Ready to send?" or "Should I proceed?"
+- Confirm completed actions: "Sent $20.00 to 0x1234...5678 on Arc (tx: 0xabc...)"
 - Be direct and professional, not overly conversational
 
 **Important rules:**
 - User controls private keys (self-custodial)
-- User must approve every transaction
-- Never execute without explicit permission
+- ALWAYS preview before executing
+- NEVER execute without explicit user confirmation ("yes", "approve", etc.)
 - Email access: Only last 24 hours
 - Ask before signing up for external services
 
 **Supported networks:**
-Base, Arbitrum, Polygon (mainnet and testnets), Solana (coming soon)
+Arc (testnet - primary), Base, Arbitrum, Ethereum, Solana
 
-**Fees:** $0.005 + 0.2% (max $3)
+**Fees:** $0.005 + 0.2% (max $3) - Network fees free on testnet
 """
 
-# Mock data
-MOCK_GIFT_CARDS = [
-    {"id": "gc_001", "name": "Amazon Gift Card", "price_usd": 10},
-    {"id": "gc_002", "name": "Amazon Gift Card", "price_usd": 25},
-    {"id": "gc_003", "name": "Uber Gift Card", "price_usd": 25},
-    {"id": "gc_004", "name": "Spotify Premium", "price_usd": 10},
-    {"id": "gc_005", "name": "Netflix Gift Card", "price_usd": 15},
-]
-
-MOCK_EMAILS = [
-    {"id": "1", "from": "billing@aws.amazon.com", "subject": "AWS Invoice", "snippet": "Total: $127.43", "date": "2024-12-28"},
-    {"id": "2", "from": "noreply@coinbase.com", "subject": "Deposit confirmed", "snippet": "0.5 ETH", "date": "2024-12-27"},
-]
+# Note: Mock data removed - using real API clients with built-in mock mode
+# Gift cards: bitrefill_client.py has mock mode when API keys not configured
+# Emails: email_tools.py uses real EmailManager with IMAP
 
 # ============================================================================
 # TOOLS
@@ -198,10 +196,70 @@ def get_deposit_address(chain: str = "base-mainnet") -> str:
     }, indent=2)
 
 
-# Old mock tools removed - now using real Bitrefill API tools from bitrefill_tools.py
+def execute_transaction(to_address: str, amount_usd: float, chain: str = "arc-testnet", user_confirmed: bool = False) -> str:
+    """
+    Execute a USDC transfer after user confirmation.
+    IMPORTANT: Only call this AFTER the user has explicitly said 'yes', 'approve', 'send it', or similar.
+    Args: to_address, amount_usd, chain (network key), user_confirmed (must be True)
+    """
+    if not user_confirmed:
+        return json.dumps({
+            "error": "User confirmation required",
+            "message": "Please ask the user to confirm before executing. They must say 'yes', 'approve', or 'send it'."
+        })
+
+    if "wallet_address" not in st.session_state:
+        return json.dumps({"error": "No wallet connected"})
+
+    # Check if there's an approved transaction in session (from UI card)
+    approved_tx = st.session_state.get("_tx_approved")
+    if approved_tx:
+        to_address = approved_tx.get("to_full_address", to_address)
+        amount_usd = approved_tx.get("amount_raw", amount_usd)
+        chain = approved_tx.get("chain", chain)
+        st.session_state._tx_approved = None
+        st.session_state._pending_tx_preview = None
+
+    try:
+        from direct_tx import get_direct_executor
+        from wallet_manager import WalletManager
+
+        wallet_data = WalletManager.get_wallet_from_session()
+        if not wallet_data:
+            return json.dumps({"error": "Wallet is locked. Please unlock your wallet first."})
+
+        private_key = wallet_data.get("private_key") or wallet_data.get("evm", {}).get("private_key")
+        if not private_key:
+            return json.dumps({"error": "Could not access wallet keys"})
+
+        executor = get_direct_executor(chain)
+        user_id = st.session_state.get("user_id")
+
+        result = executor.execute_transfer(
+            private_key=private_key,
+            to_address=to_address,
+            amount_usdc=amount_usd,
+            user_id=user_id
+        )
+
+        if result["success"]:
+            return json.dumps({
+                "status": "success",
+                "message": f"Successfully sent ${amount_usd:.2f} USDC",
+                "tx_hash": result["tx_hash"],
+                "explorer_url": result["explorer_url"],
+                "amount": result["amount"],
+                "to": result["to"],
+                "network": result["network"]
+            }, indent=2)
+        else:
+            return json.dumps({"status": "failed", "error": result["error"]})
+
+    except Exception as e:
+        return json.dumps({"error": f"Transaction failed: {str(e)}"})
 
 
-def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-mainnet") -> str:
+def preview_transaction(to_address: str, amount_usd: float, chain: str = "arc-testnet") -> str:
     """
     Preview a transaction before execution. Shows exact amounts, fees, and timing.
     Args: to_address, amount_usd, chain (network key)
@@ -216,22 +274,36 @@ def preview_transaction(to_address: str, amount_usd: float, chain: str = "base-m
     preview = {
         "action": "Send USDC",
         "amount": f"${amount_usd:.2f}",
+        "amount_raw": amount_usd,
         "to": ChainUtils.format_address(to_address),
         "to_full_address": to_address,
         "network": network["name"],
+        "chain": chain,
         "fee": f"${fee:.3f}",
+        "fee_raw": fee,
         "total_cost": f"${total:.2f}",
+        "total_raw": total,
         "estimated_time": "~3-5 seconds",
         "from": ChainUtils.format_address(st.session_state.wallet_address),
-        "note": "User must confirm before execution"
+        "from_full_address": st.session_state.wallet_address,
+        "status": "pending_approval"
     }
 
-    return json.dumps(preview, indent=2)
+    # Store in session state for UI to render as card
+    st.session_state._pending_tx_preview = preview
+
+    return json.dumps({
+        "preview_generated": True,
+        "amount": preview["amount"],
+        "to": preview["to"],
+        "network": preview["network"],
+        "fee": preview["fee"],
+        "total": preview["total_cost"],
+        "message": "Transaction preview ready. Ask the user to confirm before proceeding."
+    }, indent=2)
 
 
-def read_latest_emails(count: int = 3) -> str:
-    """Read latest emails. Args: count - number of emails"""
-    return json.dumps({"status": "success", "emails": MOCK_EMAILS[:min(count, 10)], "note": "[SIMULATED]"}, indent=2)
+# read_latest_emails removed - use email_tools.search_recent_emails instead
 
 
 # ============================================================================
@@ -243,11 +315,11 @@ def _get_cached_tools():
     if "_cached_tools" not in st.session_state:
         from langchain_core.tools import tool
 
-        # Wrap tools with @tool decorator (only done once)
+        # Wrap core tools with @tool decorator (only done once)
         tool_get_wallet_balance = tool(get_wallet_balance)
         tool_get_deposit_address = tool(get_deposit_address)
         tool_preview_transaction = tool(preview_transaction)
-        tool_read_latest_emails = tool(read_latest_emails)
+        tool_execute_transaction = tool(execute_transaction)
 
         # Import and get external tools (only done once)
         from email_tools import get_email_tools
@@ -259,7 +331,7 @@ def _get_cached_tools():
             tool_get_wallet_balance,
             tool_get_deposit_address,
             tool_preview_transaction,
-            tool_read_latest_emails
+            tool_execute_transaction,
         ] + get_email_tools() + get_bitrefill_tools() + get_merchant_tools() + get_scheduler_tools()
 
     return st.session_state._cached_tools

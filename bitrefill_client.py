@@ -256,16 +256,21 @@ class BitrefillClient:
             }
 
         elif endpoint == "/v1/orders":
-            # Mock order creation
+            # Mock order creation - return completed immediately for demo
             import uuid
+            import random
+            import string
+            mock_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
+            mock_code = f"{mock_code[:4]}-{mock_code[4:8]}-{mock_code[8:12]}-{mock_code[12:]}"
             return {
                 "orderId": f"mock-{uuid.uuid4().hex[:8]}",
-                "status": "pending",
-                "paymentAddress": "0x1234567890abcdef1234567890abcdef12345678",
+                "status": "completed",  # Completed immediately for demo
+                "paymentAddress": None,
                 "paymentAmount": kwargs.get("json", {}).get("amount", 50),
                 "paymentCurrency": "USDC",
-                "expiresAt": "2024-12-31T23:59:59Z",
-                "giftCardCode": None  # Will be available after payment
+                "expiresAt": None,
+                "giftCardCode": mock_code,  # Code delivered immediately
+                "pin": None
             }
 
         elif "/orders/" in endpoint:

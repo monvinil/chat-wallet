@@ -37,10 +37,33 @@ class StreamlitTokenHandler(BaseCallbackHandler):
 
     def _render(self):
         """Render current state to the container."""
-        # Show tool status if active
+        # Show tool status if active - more prominent styling
         status_html = ""
         if self.tool_status:
-            status_html = f'<div style="font-size: 12px; color: #666; margin-bottom: 8px;">{self.tool_status}</div>'
+            status_html = f'''
+            <div style="
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 11px;
+                color: #22c55e;
+                background: rgba(34,197,94,0.1);
+                padding: 4px 10px;
+                border-radius: 4px;
+                margin-bottom: 12px;
+                letter-spacing: 0.02em;
+            ">
+                <span style="animation: pulse 1s ease-in-out infinite;">●</span>
+                {self.tool_status}
+            </div>
+            <style>
+            @keyframes pulse {{
+                0%, 100% {{ opacity: 1; }}
+                50% {{ opacity: 0.4; }}
+            }}
+            </style>
+            '''
 
         # Show text with blinking cursor
         cursor = "▌" if not self.tool_status else ""
@@ -51,6 +74,136 @@ class StreamlitTokenHandler(BaseCallbackHandler):
     def get_final_text(self) -> str:
         """Get the complete text without cursor."""
         return self.text
+
+
+# === PENDING TRANSACTION CARD ===
+def _render_pending_transaction_card():
+    """Render a transaction preview card if one is pending approval"""
+    preview = st.session_state.get("_pending_tx_preview")
+    if not preview or preview.get("status") != "pending_approval":
+        return
+
+    from design_system import DS
+
+    st.markdown(f"""
+    <style>
+    .tx-card {{
+        background: {DS.colors.BG_GLASS};
+        border: 1px solid {DS.colors.BORDER_GLASS};
+        border-radius: {DS.radius.LG};
+        padding: {DS.spacing.LG};
+        margin: {DS.spacing.MD} 0;
+    }}
+    .tx-header {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: {DS.spacing.MD};
+        padding-bottom: {DS.spacing.SM};
+        border-bottom: 1px solid {DS.colors.BORDER_HAIRLINE};
+    }}
+    .tx-action {{
+        font-family: {DS.typography.FONT_MONO};
+        font-size: {DS.typography.SIZE_XS};
+        color: {DS.colors.TEXT_MUTED};
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }}
+    .tx-network {{
+        font-family: {DS.typography.FONT_MONO};
+        font-size: {DS.typography.SIZE_XS};
+        color: {DS.colors.ACCENT_SUCCESS};
+        background: rgba(34,197,94,0.1);
+        padding: 4px 8px;
+        border-radius: {DS.radius.SM};
+    }}
+    .tx-amount {{
+        font-family: {DS.typography.FONT_SANS};
+        font-size: 28px;
+        font-weight: 300;
+        color: {DS.colors.TEXT_PRIMARY};
+        letter-spacing: -0.02em;
+        margin-bottom: {DS.spacing.MD};
+    }}
+    .tx-row {{
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+    }}
+    .tx-label {{
+        font-family: {DS.typography.FONT_MONO};
+        font-size: {DS.typography.SIZE_SM};
+        color: {DS.colors.TEXT_MUTED};
+    }}
+    .tx-value {{
+        font-family: {DS.typography.FONT_MONO};
+        font-size: {DS.typography.SIZE_SM};
+        color: {DS.colors.TEXT_SECONDARY};
+    }}
+    .tx-value.address {{
+        font-size: 11px;
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }}
+    .tx-divider {{
+        height: 1px;
+        background: {DS.colors.BORDER_HAIRLINE};
+        margin: {DS.spacing.SM} 0;
+    }}
+    .tx-total {{
+        font-family: {DS.typography.FONT_SANS};
+        font-size: {DS.typography.SIZE_LG};
+        font-weight: 600;
+        color: {DS.colors.TEXT_PRIMARY};
+    }}
+    </style>
+    <div class="tx-card">
+        <div class="tx-header">
+            <span class="tx-action">{preview.get('action', 'Send USDC')}</span>
+            <span class="tx-network">{preview.get('network', 'Base')}</span>
+        </div>
+        <div class="tx-amount">{preview.get('amount', '$0.00')}</div>
+        <div class="tx-row">
+            <span class="tx-label">To</span>
+            <span class="tx-value address">{preview.get('to_full_address', preview.get('to', ''))}</span>
+        </div>
+        <div class="tx-row">
+            <span class="tx-label">Fee</span>
+            <span class="tx-value">{preview.get('fee', '$0.00')}</span>
+        </div>
+        <div class="tx-row">
+            <span class="tx-label">Time</span>
+            <span class="tx-value">{preview.get('estimated_time', '~3-5 sec')}</span>
+        </div>
+        <div class="tx-divider"></div>
+        <div class="tx-row">
+            <span class="tx-label">Total</span>
+            <span class="tx-value tx-total">{preview.get('total_cost', '$0.00')}</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Approval buttons
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("CANCEL", key="tx_cancel", use_container_width=True):
+            st.session_state._pending_tx_preview = None
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": "Transaction cancelled."
+            })
+            st.rerun()
+    with col2:
+        if st.button("APPROVE", key="tx_approve", type="primary", use_container_width=True):
+            # Store approval and let user confirm via chat
+            st.session_state._tx_approved = preview
+            st.session_state._pending_tx_preview = None
+            st.session_state.messages.append({
+                "role": "user",
+                "content": "Yes, send it."
+            })
+            st.rerun()
 
 
 # === SKELETON LOADING STATES ===
@@ -894,6 +1047,9 @@ def chat_interface(create_agent_func):
                 # User: White, clean
                 st.markdown(f"<div style='color: white; font-family: Inter; font-size: 15px; line-height: 1.6;'>{safe_content}</div>", unsafe_allow_html=True)
 
+    # Render pending transaction card if exists
+    _render_pending_transaction_card()
+
     # 7. HANDLE INPUT LOGIC
     prompt = None
     if st.session_state.get("_quick_action_triggered"):
@@ -917,6 +1073,50 @@ def chat_interface(create_agent_func):
             response_container = st.empty()
             message_success = False
             response = ""
+
+            # Show thinking indicator while initializing
+            from design_system import ui
+            response_container.markdown("""
+            <style>
+            @keyframes thinking-pulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 1; }
+            }
+            .thinking-container {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px 0;
+            }
+            .thinking-text {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 12px;
+                color: #52525b;
+                letter-spacing: 0.05em;
+            }
+            .thinking-dots {
+                display: flex;
+                gap: 4px;
+            }
+            .thinking-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: #52525b;
+                animation: thinking-pulse 1.4s ease-in-out infinite;
+            }
+            .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+            .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+            </style>
+            <div class="thinking-container">
+                <span class="thinking-text">Thinking</span>
+                <div class="thinking-dots">
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             try:
                 # Agent initialization logic

@@ -318,10 +318,8 @@ def deposit_modal():
 
 def _render_send_confirmation():
     """Render V12 send confirmation - centered void"""
-    from transaction_relayer import TransactionRelayer
-    from meta_tx import MetaTransaction
+    from direct_tx import get_direct_executor
     from spending_limits import SpendingLimits
-    import time
 
     details = st.session_state.get("_send_details", {})
 
@@ -335,15 +333,20 @@ def _render_send_confirmation():
     st.markdown(f"""
     <div style="text-align: center; margin-bottom: 24px;">
         <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #555; margin-bottom: 8px;">SENDING</div>
-        <div style="font-family: 'Inter'; font-size: 32px; font-weight: 300; color: white;">${details.get('total', 0):.2f}</div>
+        <div style="font-family: 'Inter'; font-size: 32px; font-weight: 300; color: white;">${details.get('amount', 0):.2f}</div>
     </div>
     <div style="text-align: center;">
         <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #555; margin-bottom: 8px;">TO</div>
         <div style="font-family: 'Inter'; font-size: 18px; font-weight: 300; color: white;">{recipient_short}</div>
     </div>
+    <div style="text-align: center; margin-top: 16px;">
+        <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #444;">
+            on {details.get('network_name', 'Arc Testnet')}
+        </div>
+    </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
 
     # Confirm checkbox
     confirmed = st.checkbox("I confirm the recipient address is correct", key="send_confirm_checkbox")
@@ -359,7 +362,7 @@ def _render_send_confirmation():
 
     with col2:
         if st.button("EXECUTE", type="primary", use_container_width=True, disabled=not confirmed):
-            with st.spinner("Processing..."):
+            with st.spinner("Signing & broadcasting..."):
                 try:
                     # Get stored transaction details
                     recipient = details.get("recipient")
@@ -367,57 +370,43 @@ def _render_send_confirmation():
                     network_key = details.get("network_key")
                     total = details.get("total")
 
-                    # Get wallet data
+                    # Get wallet data with private key
                     wallet_data = WalletManager.get_wallet_from_session()
 
                     if not wallet_data:
-                        st.error("Wallet load failed")
+                        st.error("Wallet locked. Please unlock to send.")
                         return
 
-                    # Get chain ID for signing
-                    network = NETWORKS[network_key]
-                    chain_id = network["chain_id"]
+                    private_key = wallet_data.get("private_key") or wallet_data.get("evm", {}).get("private_key")
+                    if not private_key:
+                        st.error("Could not access private key")
+                        return
 
-                    # Create meta-transaction message
-                    message = MetaTransaction.create_message(
-                        from_address=st.session_state.wallet_address,
+                    # Execute direct transfer (user signs, user pays gas)
+                    executor = get_direct_executor(network_key)
+                    user_id = st.session_state.get("user_id")
+
+                    result = executor.execute_transfer(
+                        private_key=private_key,
                         to_address=recipient,
-                        amount=amount,
-                        currency="USDC",
-                        nonce=int(time.time() * 1000)
-                    )
-
-                    # Sign message (user's signature, no gas!)
-                    signature = MetaTransaction.sign_message(
-                        message,
-                        wallet_data["private_key"],
-                        chain_id=chain_id
-                    )
-
-                    # Execute via relayer
-                    relayer = TransactionRelayer(network_key)
-                    result = relayer.execute_transfer(
-                        message=message,
-                        signature=signature,
-                        user_address=st.session_state.wallet_address
+                        amount_usdc=amount,
+                        user_id=user_id
                     )
 
                     if result["success"]:
-                        # Record spend for daily tracking
-                        user_id = st.session_state.get("user_id")
-                        if user_id:
-                            SpendingLimits.record_spend(user_id, total)
-
                         show_success_animation()
                         st.markdown(f"""
 <div style="text-align: center; padding: 30px 0;">
-    <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #666; margin-bottom: 12px;">{result['tx_hash'][:20]}...</div>
-    <div style="font-family: 'Inter'; font-size: 24px; font-weight: 300; color: white;">${result['amount']:.2f}</div>
+    <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #22c55e; margin-bottom: 8px;">SENT</div>
+    <div style="font-family: 'Inter'; font-size: 28px; font-weight: 300; color: white; margin-bottom: 16px;">${result['amount']:.2f} USDC</div>
+    <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #555;">{result['tx_hash'][:16]}...{result['tx_hash'][-8:]}</div>
 </div>
 """, unsafe_allow_html=True)
                         st.link_button("VIEW ON EXPLORER", result["explorer_url"], use_container_width=True)
 
-                        # Clean up and close modal
+                        # Clean up and close modal after delay
+                        import time
+                        time.sleep(2)
                         st.session_state._send_confirm_step = False
                         st.session_state._send_details = None
                         st.session_state.show_send_modal = False
@@ -427,13 +416,13 @@ def _render_send_confirmation():
                 except Exception as e:
                     from utils.logger import logger
                     logger.error(f"Send transaction failed: {str(e)}")
-                    st.error("Transaction aborted")
+                    st.error(f"Transaction failed: {str(e)}")
 
 
 def send_modal():
     """V12 send modal - void transfer"""
     RateLimiter.update_activity()  # Keep session active during modal
-    from transaction_relayer import TransactionRelayer
+    from direct_tx import get_direct_executor
     from spending_limits import check_spending_limit
 
     # Check if we're in confirmation step
@@ -444,17 +433,17 @@ def send_modal():
     st.markdown("<h2 style='text-align: center; font-weight: 300;'>Transfer</h2>", unsafe_allow_html=True)
     st.markdown("""
     <div style="color: #555; font-size: 12px; text-align: center; margin-bottom: 30px;">
-        Gas fees covered
+        Send USDC to any address
     </div>
     """, unsafe_allow_html=True)
 
-    # Network selector
+    # Network selector - Arc testnet first for MVP
     network_options = {
-        "Ethereum": "eth-mainnet",
-        "Base": "base-mainnet",
-        "Arbitrum": "arbitrum-mainnet",
-        "Ethereum Sepolia (Testnet)": "eth-sepolia",
         "Arc (Testnet)": "arc-testnet",
+        "Ethereum Sepolia (Testnet)": "eth-sepolia",
+        "Base": "base-mainnet",
+        "Ethereum": "eth-mainnet",
+        "Arbitrum": "arbitrum-mainnet",
     }
     selected_network = st.selectbox("Network", list(network_options.keys()), label_visibility="collapsed")
     network_key = network_options[selected_network]
@@ -467,15 +456,25 @@ def send_modal():
     # Amount
     amount = st.number_input("Amount USDC", min_value=0.01, step=0.01, format="%.2f", label_visibility="collapsed")
 
-    # Estimate fees
+    # Estimate fees using direct executor
     total = amount
-    gas_cost = 0
-    app_fee = 0
-    if amount > 0:
+    gas_cost = 0.0
+    app_fee = 0.0
+    if amount > 0 and st.session_state.get("wallet_address"):
         try:
-            relayer = TransactionRelayer(network_key)
-            gas_cost, app_fee = relayer.estimate_gas_cost(amount)
-            total = amount + gas_cost + app_fee
+            executor = get_direct_executor(network_key)
+            fees = executor.estimate_fee_usd(
+                st.session_state.wallet_address,
+                recipient or "0x0000000000000000000000000000000000000000",
+                amount
+            )
+            gas_cost = fees["gas_cost_usd"]
+            app_fee = fees["app_fee"]
+            total = amount + app_fee  # Gas shown separately
+
+            # Check if testnet (free gas)
+            is_testnet = NETWORKS.get(network_key, {}).get("testnet", False)
+            gas_label = "free" if is_testnet else f"${gas_cost:.3f}"
 
             st.markdown(f"""
 <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
@@ -484,11 +483,11 @@ def send_modal():
         <span style="color: #aaa;">${amount:.2f}</span>
     </div>
     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-        <span style="color: #555;">Gas</span>
-        <span style="color: #444;">${gas_cost:.3f} <span style="color: #888;">free</span></span>
+        <span style="color: #555;">Network fee</span>
+        <span style="color: #22c55e;">{gas_label}</span>
     </div>
     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-        <span style="color: #555;">Fee</span>
+        <span style="color: #555;">Service fee</span>
         <span style="color: #aaa;">${app_fee:.3f}</span>
     </div>
     <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
@@ -497,8 +496,9 @@ def send_modal():
     </div>
 </div>
 """, unsafe_allow_html=True)
-        except Exception:
-            pass
+        except Exception as e:
+            from utils.logger import logger
+            logger.warning(f"Fee estimation failed: {e}")
 
     # Validate inputs with EIP-55 checksum
     valid_recipient = False

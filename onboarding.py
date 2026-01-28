@@ -12,7 +12,9 @@ def show_onboarding():
     Check if onboarding is complete.
     Returns True if ready to chat, False if needs setup.
 
-    With free tier, users can chat immediately after signup.
+    SIMPLIFIED FLOW (v2):
+    - If user has API key (own or free tier) -> ready to chat
+    - If no API key -> show API setup directly (no intermediate steps)
     """
     user_id = st.session_state.get("user_id")
     if not user_id:
@@ -30,21 +32,8 @@ def show_onboarding():
             st.session_state._welcome_shown = True
         return True
 
-    # No API access - show setup flow
-    # Quick start mode - skip welcome, go straight to API setup
-    if st.session_state.get("quick_start_active"):
-        st.session_state.onboarding_step = 2
-
-    # Initialize step if not set
-    if "onboarding_step" not in st.session_state:
-        st.session_state.onboarding_step = 1
-
-    # Step 1: Welcome (only for regular signups, not quick start)
-    if st.session_state.onboarding_step == 1:
-        show_step_1_welcome()
-        return False
-
-    # Step 2: API Key Setup
+    # No API access - go directly to API setup (skip intermediate welcome)
+    # This reduces onboarding from 2 steps to 1
     return show_step_2_connect_ai(user_id)
 
 
@@ -65,37 +54,8 @@ def show_welcome_message(llm_config: dict):
         """, unsafe_allow_html=True)
 
 
-def show_step_1_welcome():
-    """Step 1: V12 wallet confirmation - centered void"""
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
-        st.markdown("""
-        <div style="text-align: center;">
-            <h2 style="font-weight: 300; margin-bottom: 16px;">Wallet Secured</h2>
-            <div style="color: #555; font-size: 13px; line-height: 1.6;">
-                One more step — connect an AI to start chatting.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Show wallet address
-        address = st.session_state.get("wallet_address", "")
-        if address:
-            st.markdown(f"""
-            <div style="text-align: center; margin: 30px 0; font-family: 'JetBrains Mono'; font-size: 11px; color: #444;">
-                {address[:8]}...{address[-6:]}
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
-
-        if st.button("CONTINUE", type="primary", use_container_width=True):
-            st.session_state.onboarding_step = 2
-
-
 def show_step_2_connect_ai(user_id: str):
-    """Step 2: V12 Connect AI - centered void"""
+    """Connect AI - streamlined single-step setup"""
     from api_key_setup import show_api_key_setup_modal, check_api_key_status
 
     # Check if already configured
@@ -103,7 +63,7 @@ def show_step_2_connect_ai(user_id: str):
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
 
         if has_key:
             provider_labels = {
@@ -115,52 +75,62 @@ def show_step_2_connect_ai(user_id: str):
 
             st.markdown(f"""
             <div style="text-align: center;">
-                <h2 style="font-weight: 300; margin-bottom: 16px;">Connected</h2>
-                <div style="color: #888; font-size: 13px;">{model_name}</div>
+                <div style="font-size: 40px; margin-bottom: 16px;">✓</div>
+                <h2 style="font-weight: 300; margin-bottom: 8px;">Ready</h2>
+                <div style="color: #666; font-size: 12px;">{model_name} connected</div>
             </div>
             """, unsafe_allow_html=True)
 
-            # Celebration
-            if not st.session_state.get("_api_setup_celebration_shown"):
-                st.balloons()
-                st.session_state._api_setup_celebration_shown = True
+            st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
 
-            st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+            if st.button("START CHATTING", type="primary", use_container_width=True):
+                st.session_state.onboarding_complete = True
+                st.session_state.just_signed_up = False
+                st.rerun()
 
-            col_a, col_b = st.columns([1, 1])
-            with col_a:
-                if st.button("CHANGE", use_container_width=True):
-                    st.session_state._api_setup_celebration_shown = False
-                    show_api_key_setup_modal()
-            with col_b:
-                if st.button("START", type="primary", use_container_width=True):
-                    st.session_state.onboarding_complete = True
+            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+
+            if st.button("Change provider", use_container_width=True):
+                show_api_key_setup_modal()
 
             return True
 
+        # Not configured yet - show simple setup
         st.markdown("""
         <div style="text-align: center;">
-            <h2 style="font-weight: 300; margin-bottom: 16px;">Intelligence</h2>
-            <div style="color: #555; font-size: 13px; line-height: 1.8;">
-                Connect an AI to activate chat commands.<br>
-                <a href="https://aistudio.google.com/apikey" target="_blank" style="color: #888;">Get a free key from Google →</a>
+            <h2 style="font-weight: 300; margin-bottom: 12px;">Last step</h2>
+            <div style="color: #555; font-size: 13px; line-height: 1.6; max-width: 280px; margin: 0 auto;">
+                Connect an AI to power your wallet assistant
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
 
-        if st.button("CONNECT", type="primary", use_container_width=True, key="connect_ai_main"):
+        # Primary CTA - Google (free)
+        if st.button("CONNECT FREE AI", type="primary", use_container_width=True, key="connect_ai_main"):
             show_api_key_setup_modal()
 
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="text-align: center; margin-top: 12px;">
+            <a href="https://aistudio.google.com/apikey" target="_blank"
+               style="color: #666; font-size: 11px; text-decoration: none;">
+                Get a free Google API key →
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
 
-        with st.expander("Other options"):
+        st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
+
+        # Secondary options collapsed
+        with st.expander("Use Claude or GPT instead"):
             st.markdown("""
-            <div style="font-size: 12px; color: #555; line-height: 1.8;">
-                <strong style="color: #888;">Claude</strong> — Best quality (paid)<br>
-                <strong style="color: #888;">GPT</strong> — Popular choice (paid)
+            <div style="font-size: 12px; color: #555; line-height: 1.8; padding: 8px 0;">
+                <strong style="color: #888;">Claude</strong> — Best reasoning (paid)<br>
+                <strong style="color: #888;">GPT-4</strong> — Popular choice (paid)
             </div>
             """, unsafe_allow_html=True)
+            if st.button("Configure paid provider", use_container_width=True):
+                show_api_key_setup_modal()
 
     return False
