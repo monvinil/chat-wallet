@@ -83,7 +83,7 @@ class StreamlitTokenHandler(BaseCallbackHandler):
 
         # Show text with blinking cursor
         cursor = "▌" if not self.tool_status else ""
-        text_html = f'<div style="color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;">{html.escape(self.text)}{cursor}</div>'
+        text_html = f'<div style="color: #ccc; font-family: \'Inter\', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;">{html.escape(self.text)}{cursor}</div>'
 
         self.container.markdown(status_html + text_html, unsafe_allow_html=True)
 
@@ -275,7 +275,7 @@ def render_fashion_card(label, value, tag=None, tag_color=None):
     st.markdown(f"""
     <div style="padding: 12px 0;">
         <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #444; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.1em;">{label}</div>
-        <div style="font-family: 'Inter'; font-size: 18px; font-weight: 400; color: white; letter-spacing: -0.02em;">
+        <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 18px; font-weight: 400; color: white; letter-spacing: -0.02em;">
             {value} {f'<span style="font-size: 12px; color: {color}; margin-left: 4px;">{tag}</span>' if tag else ''}
         </div>
     </div>
@@ -306,7 +306,7 @@ def render_header():
                 balance = float(executor.get_usdc_balance(st.session_state.wallet_address))
                 st.markdown(f"""
                 <div style="text-align: right; margin-top: 24px;">
-                    <div style="font-family: Inter; font-size: 24px; font-weight: 300; color: #f4f4f5; letter-spacing: -0.02em;">${balance:,.2f}</div>
+                    <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 24px; font-weight: 300; color: #f4f4f5; letter-spacing: -0.02em;">${balance:,.2f}</div>
                     <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #52525b; text-transform: uppercase; letter-spacing: 0.05em;">USDC</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1022,7 +1022,7 @@ def chat_interface(create_agent_func):
             margin: 20px 0;
             text-align: center;
         ">
-            <div style="font-family: 'Inter'; font-weight: 300; color: white; font-size: 20px; letter-spacing: -0.02em;">Authentication Required</div>
+            <div style="font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; color: white; font-size: 20px; letter-spacing: -0.02em;">Authentication Required</div>
             <div style="color: #444; font-size: 12px; margin-top: 12px; font-family: 'JetBrains Mono'; letter-spacing: 0.05em;">INITIALIZE SESSION TO PROCEED</div>
         </div>
         """, unsafe_allow_html=True)
@@ -1094,10 +1094,10 @@ def chat_interface(create_agent_func):
             safe_content = html.escape(_ensure_string(msg['content']))
             if msg["role"] == "assistant":
                 # AI: Light gray, thin weight
-                st.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{safe_content}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: #ccc; font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>{safe_content}</div>", unsafe_allow_html=True)
             else:
                 # User: White, clean
-                st.markdown(f"<div style='color: white; font-family: Inter; font-size: 15px; line-height: 1.6;'>{safe_content}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: white; font-family: 'Inter', -apple-system, sans-serif; font-size: 15px; line-height: 1.6;'>{safe_content}</div>", unsafe_allow_html=True)
 
     # Render pending transaction card if exists
     _render_pending_transaction_card()
@@ -1116,7 +1116,7 @@ def chat_interface(create_agent_func):
         if prompt:
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
-                st.markdown(f"<div style='color: white; font-family: Inter; font-size: 15px;'>{html.escape(prompt)}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: white; font-family: 'Inter', -apple-system, sans-serif; font-size: 15px;'>{html.escape(prompt)}</div>", unsafe_allow_html=True)
 
     # 9. PROCESS MESSAGE (Streaming)
     if prompt:
@@ -1189,13 +1189,13 @@ def chat_interface(create_agent_func):
                     has_key, provider = check_api_key_status()
                     if not has_key:
                         response = "**Setup Required:** Please configure your API key in Settings to enable AI."
-                        response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{response}</div>", unsafe_allow_html=True)
+                        response_container.markdown(f"<div style='color: #ccc; font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>{response}</div>", unsafe_allow_html=True)
                     else:
                         # Has key but agent still failed - show error and retry once
                         retry_count = st.session_state.get("_agent_retry_count", 0)
                         if retry_count < 2:
                             st.session_state._agent_retry_count = retry_count + 1
-                            response_container.markdown("<div style='color: #888; font-family: Inter; font-size: 14px;'>Connecting to AI... please wait.</div>", unsafe_allow_html=True)
+                            response_container.markdown("<div style='color: #888; font-family: 'Inter', -apple-system, sans-serif; font-size: 14px;'>Connecting to AI... please wait.</div>", unsafe_allow_html=True)
                             import time
                             time.sleep(0.5)
                             # Keep the message, just retry
@@ -1204,7 +1204,7 @@ def chat_interface(create_agent_func):
                             # Failed after retries - show error
                             st.session_state._agent_retry_count = 0
                             response = f"**Connection Error:** Unable to connect to {provider or 'AI provider'}. Check your API key in Settings."
-                            response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{response}</div>", unsafe_allow_html=True)
+                            response_container.markdown(f"<div style='color: #ccc; font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>{response}</div>", unsafe_allow_html=True)
                             # Remove the user message that couldn't be processed
                             if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
                                 st.session_state.messages.pop()
@@ -1243,11 +1243,11 @@ def chat_interface(create_agent_func):
                     message_success = True
 
                     # Final render without cursor
-                    response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+                    response_container.markdown(f"<div style='color: #ccc; font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
 
             except Exception as e:
                 response = f"**System Error:** {str(e)}"
-                response_container.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+                response_container.markdown(f"<div style='color: #ccc; font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
 
             # Save to history
             st.session_state.messages.append({"role": "assistant", "content": response})

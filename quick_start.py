@@ -248,11 +248,11 @@ def save_guest_wallet_modal():
 
                                 # Show recovery phrase
                                 if st.session_state.get("guest_mnemonic"):
-                                    st.markdown("<div style='font-family: Inter; font-size: 13px; color: #a85; margin: 16px 0 8px;'>Save your recovery phrase</div>", unsafe_allow_html=True)
+                                    st.markdown("<div style='font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; color: #a85; margin: 16px 0 8px;'>Save your recovery phrase</div>", unsafe_allow_html=True)
                                     st.code(st.session_state.guest_mnemonic, language=None)
-                                    st.markdown("<div style='font-family: Inter; font-size: 11px; color: #555;'>Write this down. It's the only way to recover your wallet if you forget your password.</div>", unsafe_allow_html=True)
+                                    st.markdown("<div style='font-family: 'Inter', -apple-system, sans-serif; font-size: 11px; color: #555;'>Write this down. It's the only way to recover your wallet if you forget your password.</div>", unsafe_allow_html=True)
 
-                                st.markdown("<div style='font-family: Inter; font-size: 11px; color: #444; margin-top: 16px;'>Close this dialog to continue.</div>", unsafe_allow_html=True)
+                                st.markdown("<div style='font-family: 'Inter', -apple-system, sans-serif; font-size: 11px; color: #444; margin-top: 16px;'>Close this dialog to continue.</div>", unsafe_allow_html=True)
                                 st.session_state.show_save_account_modal = False
                             else:
                                 st.error("Could not find wallet data. Please try again.")

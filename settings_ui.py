@@ -16,8 +16,8 @@ def settings_page():
 
     # V12 header
     st.markdown("""
-    <div style="margin: 30px 0 40px 0;">
-        <h1 style="font-family: 'Inter'; font-size: 24px; font-weight: 300; letter-spacing: -0.02em; margin: 0;">Settings</h1>
+    <div style="margin: 24px 0 40px 0;">
+        <h1 style="font-family: 'Inter', -apple-system, sans-serif; font-size: 24px; font-weight: 300; letter-spacing: -0.02em; margin: 0;">Settings</h1>
     </div>
     """, unsafe_allow_html=True)
 
@@ -63,8 +63,8 @@ def settings_page():
     with tab1:
         st.markdown("""
         <div style="margin-bottom: 24px;">
-            <div style="font-family: 'Inter'; font-size: 16px; font-weight: 400; color: white;">Connect Your AI</div>
-            <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #555; margin-top: 4px;">Choose which AI powers your assistant</div>
+            <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 16px; font-weight: 400; color: white;">Connect Your AI</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; margin-top: 4px;">Choose which AI powers your assistant</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -76,7 +76,7 @@ def settings_page():
         else:
             st.success(f"Connected: {llm_config['provider'].title()} - {llm_config['model']}")
 
-        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
 
         # LLM Provider selection with friendly descriptions
         st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 8px;'>Which AI do you want to use?</div>", unsafe_allow_html=True)
@@ -127,7 +127,7 @@ def settings_page():
             label_visibility="collapsed"
         )
 
-        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
 
         # API Key input - always shown, required for production
         st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 4px;'>Your API Key</div>", unsafe_allow_html=True)
@@ -137,7 +137,7 @@ def settings_page():
         has_existing_key = bool(existing_settings and existing_settings.get("llm_api_key_encrypted"))
         if has_existing_key:
             st.success("Key saved securely")
-            st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Paste a new key below to change it</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;'>Paste a new key below to change it</div>", unsafe_allow_html=True)
 
         api_key = st.text_input(
             "API Key",
@@ -170,7 +170,7 @@ def settings_page():
 *New users typically get free credits to try it out!*
 """)
         else:
-            st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Need a new key? <a href='{provider_urls[provider]}' target='_blank' style='color: #888;'>{provider_urls[provider].replace('https://', '')}</a></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;'>Need a new key? <a href='{provider_urls[provider]}' target='_blank' style='color: #888;'>{provider_urls[provider].replace('https://', '')}</a></div>", unsafe_allow_html=True)
 
         if not has_existing_key and not api_key:
             st.info("Your key is encrypted and never shared. You only pay for the messages you send.")
@@ -197,7 +197,7 @@ def settings_page():
     with tab2:
         st.markdown("""
         <div style="margin-bottom: 24px;">
-            <div style="font-family: 'Inter'; font-size: 16px; font-weight: 400; color: white;">Connected Accounts</div>
+            <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 16px; font-weight: 400; color: white;">Connected Accounts</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -211,13 +211,13 @@ def settings_page():
                     status = "Connected" if conn['is_active'] else "Disconnected"
                     account = conn.get('provider_user_id', '')
                     st.markdown(f"**{conn['provider'].title()}** {f'({account})' if account else ''}")
-                    st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>{status}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;'>{status}</div>", unsafe_allow_html=True)
                 with col2:
                     if conn['is_active']:
                         if st.button("DISCONNECT", key=f"disconnect_{conn['provider']}", use_container_width=True):
                             if SettingsManager.disconnect_account(user_id, conn['provider']):
                                 st.rerun()
-            st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
 
         # Email connection
         st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 4px;'>Email</div>", unsafe_allow_html=True)
@@ -226,7 +226,7 @@ def settings_page():
         from email_manager import show_email_connection_ui
         show_email_connection_ui(user_id)
 
-        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
 
         # Other providers
         st.markdown("<div style='font-size: 13px; color: #555; margin-bottom: 12px;'>Coming Soon</div>", unsafe_allow_html=True)
@@ -242,7 +242,7 @@ def settings_page():
     with tab3:
         st.markdown("""
         <div style="margin-bottom: 24px;">
-            <div style="font-family: 'Inter'; font-size: 16px; font-weight: 400; color: white;">Spending Limits</div>
+            <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 16px; font-weight: 400; color: white;">Spending Limits</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -268,7 +268,7 @@ def settings_page():
             )
             st.markdown("<div style='font-size: 11px; color: #555;'>Require approval above this amount</div>", unsafe_allow_html=True)
 
-        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
 
         st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 12px;'>Permissions</div>", unsafe_allow_html=True)
 
@@ -282,7 +282,7 @@ def settings_page():
             value=existing_settings.get("allow_account_access", False) if existing_settings else False
         )
 
-        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
 
         if st.button("SAVE", type="primary", key="save_limits"):
             success = SettingsManager.save_user_settings(
@@ -305,7 +305,7 @@ def settings_page():
     with tab4:
         st.markdown("""
         <div style="margin-bottom: 24px;">
-            <div style="font-family: 'Inter'; font-size: 16px; font-weight: 400; color: white;">Security</div>
+            <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 16px; font-weight: 400; color: white;">Security</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -372,7 +372,7 @@ def settings_page():
                     st.session_state._export_key_step = None
                     st.rerun()
 
-        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
 
         # Data info
         st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 8px;'>Data Storage</div>", unsafe_allow_html=True)
@@ -384,7 +384,7 @@ def settings_page():
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
 
         # Danger zone - these actions are available
         st.markdown("<div style='font-size: 13px; color: #666; margin-bottom: 12px;'>Danger Zone</div>", unsafe_allow_html=True)

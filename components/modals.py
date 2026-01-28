@@ -73,7 +73,7 @@ def show_success_animation():
     }
 
     .success-label {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', -apple-system, sans-serif;
         font-size: 14px;
         font-weight: 300;
         color: white;
@@ -124,11 +124,11 @@ def seed_phrase_modal():
 
     indices = st.session_state._seed_verify_indices
 
-    st.markdown("<h2 style='text-align: center; font-weight: 300; margin-bottom: 40px;'>Private Key</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; font-weight: 300; margin-bottom: 24px;'>Private Key</h2>", unsafe_allow_html=True)
 
     if st.session_state.get("_seed_verify_step") == "show":
         st.markdown("""
-        <div style="color: #666; font-size: 13px; text-align: center; margin-bottom: 30px;">
+        <div style="color: #666; font-size: 13px; text-align: center; margin-bottom: 24px;">
             Write these words down. Never share them.
         </div>
         """, unsafe_allow_html=True)
@@ -140,17 +140,17 @@ def seed_phrase_modal():
                 st.markdown(f"""
                 <div style="margin-bottom: 16px; text-align: center;">
                     <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444; margin-bottom: 4px;">{i+1:02d}</div>
-                    <div style="font-family: 'Inter', sans-serif; font-weight: 400; font-size: 15px; color: white;">{word}</div>
+                    <div style="font-family: 'Inter', -apple-system, sans-serif; font-weight: 400; font-size: 15px; color: white;">{word}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
-        st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
 
         # Copyable text
         with st.expander("Copy as text"):
             st.code(mnemonic, language=None)
 
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
@@ -160,7 +160,7 @@ def seed_phrase_modal():
 
     elif st.session_state.get("_seed_verify_step") == "verify":
         st.markdown("""
-        <div style="color: #666; font-size: 13px; text-align: center; margin-bottom: 30px;">
+        <div style="color: #666; font-size: 13px; text-align: center; margin-bottom: 24px;">
             Verify your backup by entering 3 words
         </div>
         """, unsafe_allow_html=True)
@@ -182,7 +182,7 @@ def seed_phrase_modal():
 
         all_filled = all(u for u in user_inputs)
 
-        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
         col1, col2 = st.columns([1, 1])
 
@@ -231,7 +231,7 @@ def deposit_modal():
 
     # === EVM ADDRESS SECTION ===
     st.markdown("""
-    <div style="font-family: JetBrains Mono; font-size: 11px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
         EVM ADDRESS <span style="color: #444;">(Base, Arbitrum, Polygon)</span>
     </div>
     """, unsafe_allow_html=True)
@@ -241,7 +241,7 @@ def deposit_modal():
     if solana_address:
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
         st.markdown("""
-        <div style="font-family: JetBrains Mono; font-size: 11px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;">
             SOLANA ADDRESS
         </div>
         """, unsafe_allow_html=True)
@@ -323,7 +323,7 @@ def _render_send_confirmation():
 
     details = st.session_state.get("_send_details", {})
 
-    st.markdown("<h2 style='text-align: center; font-weight: 300; margin-bottom: 50px;'>Confirm</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; font-weight: 300; margin-bottom: 40px;'>Confirm</h2>", unsafe_allow_html=True)
 
     # V12 split display
     recipient = details.get('recipient', '')
@@ -333,11 +333,11 @@ def _render_send_confirmation():
     st.markdown(f"""
     <div style="text-align: center; margin-bottom: 24px;">
         <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #555; margin-bottom: 8px;">SENDING</div>
-        <div style="font-family: 'Inter'; font-size: 32px; font-weight: 300; color: white;">${details.get('amount', 0):.2f}</div>
+        <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 32px; font-weight: 300; color: white;">${details.get('amount', 0):.2f}</div>
     </div>
     <div style="text-align: center;">
         <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #555; margin-bottom: 8px;">TO</div>
-        <div style="font-family: 'Inter'; font-size: 18px; font-weight: 300; color: white;">{recipient_short}</div>
+        <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 18px; font-weight: 300; color: white;">{recipient_short}</div>
     </div>
     <div style="text-align: center; margin-top: 16px;">
         <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #444;">
@@ -346,12 +346,12 @@ def _render_send_confirmation():
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
 
     # Confirm checkbox
     confirmed = st.checkbox("I confirm the recipient address is correct", key="send_confirm_checkbox")
 
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([1, 1])
 
@@ -398,7 +398,7 @@ def _render_send_confirmation():
                         st.markdown(f"""
 <div style="text-align: center; padding: 30px 0;">
     <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #22c55e; margin-bottom: 8px;">SENT</div>
-    <div style="font-family: 'Inter'; font-size: 28px; font-weight: 300; color: white; margin-bottom: 16px;">${result['amount']:.2f} USDC</div>
+    <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 28px; font-weight: 300; color: white; margin-bottom: 16px;">${result['amount']:.2f} USDC</div>
     <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #555;">{result['tx_hash'][:16]}...{result['tx_hash'][-8:]}</div>
 </div>
 """, unsafe_allow_html=True)
@@ -432,7 +432,7 @@ def send_modal():
 
     st.markdown("<h2 style='text-align: center; font-weight: 300;'>Transfer</h2>", unsafe_allow_html=True)
     st.markdown("""
-    <div style="color: #555; font-size: 12px; text-align: center; margin-bottom: 30px;">
+    <div style="color: #555; font-size: 12px; text-align: center; margin-bottom: 24px;">
         Send USDC to any address
     </div>
     """, unsafe_allow_html=True)
@@ -448,7 +448,7 @@ def send_modal():
     selected_network = st.selectbox("Network", list(network_options.keys()), label_visibility="collapsed")
     network_key = network_options[selected_network]
 
-    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
     # Recipient address
     recipient = st.text_input("Destination", placeholder="0x...", label_visibility="collapsed")
@@ -542,7 +542,7 @@ def send_modal():
 
     can_send = valid_recipient and amount > 0 and not spending_blocked
 
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([1, 1])
 

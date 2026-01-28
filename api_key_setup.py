@@ -73,10 +73,10 @@ def show_api_key_setup_modal():
 
     st.markdown("""
     <div style="margin-bottom: 24px;">
-        <div style="font-family: 'Inter'; font-size: 14px; color: #888; line-height: 1.6;">
+        <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; color: #888; line-height: 1.6;">
             Chat Wallet uses your own AI provider to power the assistant. Your conversations stay private—we never see them.
         </div>
-        <div style="font-family: 'Inter'; font-size: 13px; color: #666; margin-top: 12px;">
+        <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; color: #666; margin-top: 12px;">
             <strong style="color: #888;">Recommended:</strong> Google Gemini is free and includes 1,500 requests per day.
         </div>
     </div>
@@ -88,7 +88,7 @@ def show_api_key_setup_modal():
     with tab1:
         st.markdown("""
         <div style="margin-bottom: 20px;">
-            <div style="font-family: 'Inter'; font-size: 15px; font-weight: 400; color: white; margin-bottom: 8px;">Google Gemini</div>
+            <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 15px; font-weight: 400; color: white; margin-bottom: 8px;">Google Gemini</div>
             <div style="font-size: 12px; color: #666; line-height: 1.6;">Free tier with generous limits. No credit card required.</div>
         </div>
         <div style="font-size: 12px; color: #555; line-height: 1.8; margin-bottom: 16px;">
@@ -136,7 +136,7 @@ def show_api_key_setup_modal():
     with tab2:
         st.markdown("""
         <div style="margin-bottom: 20px;">
-            <div style="font-family: 'Inter'; font-size: 15px; font-weight: 400; color: white; margin-bottom: 8px;">Anthropic Claude</div>
+            <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 15px; font-weight: 400; color: white; margin-bottom: 8px;">Anthropic Claude</div>
             <div style="font-size: 12px; color: #666; line-height: 1.6;">Strong reasoning capabilities. Requires prepaid credits.</div>
         </div>
         <div style="font-size: 12px; color: #555; line-height: 1.8; margin-bottom: 16px;">
@@ -193,7 +193,7 @@ def show_api_key_setup_modal():
     with tab3:
         st.markdown("""
         <div style="margin-bottom: 20px;">
-            <div style="font-family: 'Inter'; font-size: 15px; font-weight: 400; color: white; margin-bottom: 8px;">OpenAI GPT</div>
+            <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 15px; font-weight: 400; color: white; margin-bottom: 8px;">OpenAI GPT</div>
             <div style="font-size: 12px; color: #666; line-height: 1.6;">General-purpose AI with broad capabilities. Requires prepaid credits.</div>
         </div>
         <div style="font-size: 12px; color: #555; line-height: 1.8; margin-bottom: 16px;">
@@ -268,7 +268,7 @@ def show_api_key_banner():
     """Show banner when API key is missing - V12 styling"""
     st.markdown("""
     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 20px; margin: 20px 0;">
-        <div style="font-family: 'Inter'; font-size: 14px; color: #888; margin-bottom: 8px;">AI provider required</div>
+        <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; color: #888; margin-bottom: 8px;">AI provider required</div>
         <div style="font-size: 13px; color: #555; line-height: 1.6;">
             To use the chat assistant, connect an AI provider. We recommend Google Gemini—it's free and takes 30 seconds to set up.
         </div>

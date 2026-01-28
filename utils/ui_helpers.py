@@ -36,7 +36,7 @@ def show_success(title: str, message: str, details: Optional[str] = None):
     """
     st.success(f"**{title}**  \n{message}")
     if details:
-        st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>{details}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;'>{details}</div>", unsafe_allow_html=True)
 
 
 def show_warning(message: str, suggestion: Optional[str] = None):
@@ -62,8 +62,8 @@ def show_empty_state(title: str, description: str, action_label: Optional[str] =
         description: How to populate it
         action_label: Optional action button text (returns True if clicked)
     """
-    st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>{title}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #444;'>{description}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;'>{title}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444;'>{description}</div>", unsafe_allow_html=True)
     if action_label:
         return st.button(action_label, type="primary")
     return False

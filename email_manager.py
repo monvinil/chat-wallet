@@ -302,7 +302,7 @@ def show_email_connection_ui(user_id: str):
 
     if connection and connection.get("is_active"):
         st.success(f"✅ Connected: {connection.get('provider_user_id')}")
-        st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>AI can use this email for automated signups and verification codes</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;'>AI can use this email for automated signups and verification codes</div>", unsafe_allow_html=True)
 
         if st.button("🔌 Disconnect Email"):
             if SettingsManager.disconnect_account(user_id, "email"):

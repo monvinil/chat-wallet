@@ -144,8 +144,8 @@ def render_balance_display(total_usdc: float, balances: dict = None):
             for name, usdc in active_networks:
                 breakdown_html += f"""
                 <div style="display: flex; justify-content: space-between; padding: 6px 0;">
-                    <span style="font-family: JetBrains Mono; font-size: 11px; color: #444;">{name}</span>
-                    <span style="font-family: JetBrains Mono; font-size: 11px; color: #666;">${usdc:,.2f}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444;">{name}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666;">${usdc:,.2f}</span>
                 </div>
                 """
             breakdown_html += "</div>"
@@ -165,13 +165,13 @@ def render_free_tier_indicator():
         remaining = llm_config.get("remaining_messages", 0)
         if remaining <= 10:
             st.markdown(f"""
-            <div style="font-family: JetBrains Mono; font-size: 11px; color: #a55; text-align: center; margin-bottom: 8px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a55; text-align: center; margin-bottom: 8px;">
                 {remaining} free messages left
             </div>
             """, unsafe_allow_html=True)
         elif remaining <= 25:
             st.markdown(f"""
-            <div style="font-family: JetBrains Mono; font-size: 11px; color: #555; text-align: center; margin-bottom: 8px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; text-align: center; margin-bottom: 8px;">
                 {remaining} free messages
             </div>
             """, unsafe_allow_html=True)
@@ -271,12 +271,12 @@ def render_transaction_history():
 
 
 def sidebar():
-    """Render V12 sidebar - The Spine"""
+    """Render V24 sidebar - The Spine"""
     with st.sidebar:
         # Inject skeleton CSS once
         _inject_skeleton_css()
 
-        st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
         render_sidebar_header()
 
         # No wallet - show login
@@ -370,7 +370,7 @@ def sidebar():
                 </div>
                 """, unsafe_allow_html=True)
 
-            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
             # Primary actions - equal weight, side by side
             col1, col2 = st.columns(2)
@@ -390,11 +390,11 @@ def sidebar():
             # Transaction history
             render_transaction_history()
 
-            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
 
             # Footer actions - subtle, side by side
             st.markdown("""
-            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; margin-top: 8px;"></div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;"></div>
             """, unsafe_allow_html=True)
 
             col1, col2 = st.columns(2)
@@ -443,7 +443,7 @@ def sidebar():
                         else:
                             st.error("Invalid credentials")
 
-                st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
                 # Footer actions - side by side
                 col1, col2 = st.columns(2)
@@ -471,7 +471,7 @@ def sidebar():
                 </div>
                 """, unsafe_allow_html=True)
 
-                st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
                 if st.button("IMPORT", use_container_width=True, type="primary"):
                     st.session_state.show_auth_modal = True

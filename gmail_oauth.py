@@ -259,7 +259,7 @@ def show_gmail_connection_ui(user_id: str):
 
     if connection and connection.get("is_active"):
         st.success(f"✅ Connected: {connection.get('provider_user_id')}")
-        st.markdown(f"<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>Connected on {connection.get('created_at', '')[:10]}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;'>Connected on {connection.get('created_at', '')[:10]}</div>", unsafe_allow_html=True)
 
         if st.button("🔌 Disconnect Gmail"):
             if SettingsManager.disconnect_account(user_id, "gmail"):
@@ -279,4 +279,4 @@ def show_gmail_connection_ui(user_id: str):
 
             if auth_url:
                 st.markdown(f"[Click here to authorize Gmail →]({auth_url})")
-                st.markdown("<div style='font-family: JetBrains Mono; font-size: 11px; color: #555;'>You'll be redirected back after authorization</div>", unsafe_allow_html=True)
+                st.markdown("<div style='font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555;'>You'll be redirected back after authorization</div>", unsafe_allow_html=True)

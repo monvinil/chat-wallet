@@ -629,7 +629,7 @@ def wallet_setup_ui():
     # ========== TAB 2: SIGN UP ==========
     with tab2:
         st.markdown(f"""
-        <div style="margin-bottom: 20px;">
+        <div style="margin-bottom: 24px;">
             <div style="font-family: {DS.typography.FONT_SANS}; font-size: 13px; color: {DS.colors.TEXT_MUTED};">Create your wallet</div>
         </div>
         """, unsafe_allow_html=True)
@@ -675,7 +675,7 @@ def wallet_setup_ui():
             st.rerun()
 
         st.markdown(f"""
-        <div style="margin: 16px 0 20px 0;">
+        <div style="margin: 16px 0 24px 0;">
             <div style="font-family: {DS.typography.FONT_SANS}; font-size: 16px; font-weight: 400; color: {DS.colors.TEXT_PRIMARY}; margin-bottom: 4px;">Import Wallet</div>
             <div style="font-family: {DS.typography.FONT_SANS}; font-size: 12px; color: {DS.colors.TEXT_MUTED};">Use your 12-word recovery phrase or private key</div>
         </div>
