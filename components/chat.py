@@ -1001,3 +1001,6 @@ def chat_interface(create_agent_func):
 
             if message_success and llm_config.get("using_free_tier"):
                 FreeTier.increment_usage(user_id)
+
+            # Rerun to show chat input after processing
+            st.rerun()
