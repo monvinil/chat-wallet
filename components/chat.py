@@ -536,9 +536,9 @@ def render_action_deck():
 def render_modules():
     """
     Render full capability library with all categories.
-    V5 Deep Glass Tiles styling with 9 category tabs.
+    V6 Frosted Glass Keycaps styling with 9 category tabs.
     """
-    # Deep Glass Tiles CSS
+    # V6 Frosted Glass Keycaps CSS
     st.markdown("""
     <style>
     /* Container padding */
@@ -546,12 +546,15 @@ def render_modules():
         padding-top: 16px !important;
     }
 
-    /* The Tile (Button) - Deep Glass Material */
+    /* The Tile (Button) - Frosted Glass Keycap */
     [data-baseweb="tab-panel"] button {
         padding: 10px 16px !important;
         border-radius: 14px !important;
         background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
+        border-top: 1px solid rgba(255,255,255,0.15) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
         box-shadow:
             0 4px 12px rgba(0,0,0,0.2),
             inset 0 1px 0 rgba(255,255,255,0.1)
@@ -559,9 +562,9 @@ def render_modules():
         transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
 
-    /* Hover State - Lift with glow */
+    /* Hover State - Lift with scale */
     [data-baseweb="tab-panel"] button:hover:not(:disabled) {
-        transform: translateY(-3px) !important;
+        transform: translateY(-2px) scale(1.02) !important;
         background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%) !important;
         border-color: rgba(255,255,255,0.2) !important;
         box-shadow:
@@ -578,19 +581,19 @@ def render_modules():
         box-shadow: inset 0 2px 4px rgba(0,0,0,0.3) !important;
     }
 
-    /* Text Styling */
+    /* Text Styling - Premium Typography */
     [data-baseweb="tab-panel"] button p {
         font-family: 'Inter', sans-serif !important;
         font-size: 13px !important;
         font-weight: 500 !important;
         color: rgba(255,255,255,0.7) !important;
-        letter-spacing: 0.01em !important;
+        letter-spacing: 0.05em !important;
     }
 
     /* Light up text on hover */
     [data-baseweb="tab-panel"] button:hover:not(:disabled) p {
         color: #fff !important;
-        text-shadow: 0 0 8px rgba(255,255,255,0.4) !important;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.4) !important;
     }
 
     /* Disabled state */
@@ -722,9 +725,9 @@ def render_modules():
 def render_modules_preview():
     """
     Render capability preview for pre-login users (all disabled).
-    Uses same Deep Glass Tiles styling as render_modules.
+    Uses same V6 Frosted Glass Keycaps styling as render_modules.
     """
-    # Same Deep Glass CSS (compact version)
+    # V6 Frosted Glass CSS (compact version)
     st.markdown("""
     <style>
     [data-baseweb="tab-panel"] { padding-top: 16px !important; }
@@ -733,6 +736,9 @@ def render_modules_preview():
         border-radius: 14px !important;
         background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
+        border-top: 1px solid rgba(255,255,255,0.15) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1) !important;
     }
     [data-baseweb="tab-panel"] button p {
@@ -740,6 +746,7 @@ def render_modules_preview():
         font-size: 13px !important;
         font-weight: 500 !important;
         color: rgba(255,255,255,0.7) !important;
+        letter-spacing: 0.05em !important;
     }
     [data-baseweb="tab-panel"] button:disabled { opacity: 0.35 !important; }
     </style>
