@@ -9,6 +9,22 @@ from chain_utils import ChainUtils
 from langchain_core.callbacks import BaseCallbackHandler
 
 
+def _ensure_string(content) -> str:
+    """Convert message content to string, handling list format from LangChain."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        # Extract text from content blocks (multi-modal/tool responses)
+        text_parts = []
+        for block in content:
+            if isinstance(block, str):
+                text_parts.append(block)
+            elif isinstance(block, dict) and block.get('type') == 'text':
+                text_parts.append(block.get('text', ''))
+        return ''.join(text_parts)
+    return str(content) if content else ''
+
+
 # === STREAMING CALLBACK HANDLER ===
 class StreamlitTokenHandler(BaseCallbackHandler):
     """Callback handler that streams tokens to a Streamlit container in real-time."""
@@ -1080,7 +1096,7 @@ def chat_interface(create_agent_func):
     # Render chat history - pure text, minimal
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
-            safe_content = html.escape(msg['content'])
+            safe_content = html.escape(_ensure_string(msg['content']))
             if msg["role"] == "assistant":
                 # AI: Light gray, thin weight
                 st.markdown(f"<div style='color: #ccc; font-family: Inter; font-weight: 300; font-size: 15px; line-height: 1.7;'>{safe_content}</div>", unsafe_allow_html=True)
@@ -1223,9 +1239,10 @@ def chat_interface(create_agent_func):
                     # Extract response from new format (messages list)
                     result_messages = result.get("messages", [])
                     if result_messages:
-                        # Get last AI message content
+                        # Get last AI message content (may be string or list)
                         last_msg = result_messages[-1]
-                        response = getattr(last_msg, 'content', '') or stream_handler.get_final_text() or "Error processing request."
+                        content = getattr(last_msg, 'content', '')
+                        response = _ensure_string(content) or stream_handler.get_final_text() or "Error processing request."
                     else:
                         response = stream_handler.get_final_text() or "Error processing request."
                     message_success = True
