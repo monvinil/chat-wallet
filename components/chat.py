@@ -532,189 +532,154 @@ def render_action_deck():
     render_pulse_deck()
 
 
-# --- MODULES: DEEP GLASS TILES ---
+# --- MODULES: FULL CAPABILITY LIBRARY ---
 def render_modules():
     """
-    V5 Deep Glass Tiles: Condensed 4-category layout with icon + label format.
+    Render full capability library with all categories.
+    Desktop: 4 columns, Mobile: responsive with scrollable tabs
     """
-    # Deep Glass Tiles CSS
+    # Inject mobile-responsive CSS for modules
     st.markdown("""
     <style>
-    /* Container padding */
-    [data-baseweb="tab-panel"] {
-        padding-top: 16px !important;
+    /* Mobile-responsive tabs with scroll hint */
+    @media (max-width: 768px) {
+        .stTabs {
+            position: relative;
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+            mask-image: linear-gradient(to right, black 85%, transparent 100%);
+        }
+        .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none; }
+        .stTabs [data-baseweb="tab"] {
+            font-size: 12px !important;
+            padding: 8px 12px !important;
+            white-space: nowrap;
+        }
+        /* Compact buttons on mobile */
+        .stButton button {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+        }
     }
-
-    /* The Tile (Button) */
-    [data-baseweb="tab-panel"] button {
-        aspect-ratio: 1 / 1 !important;
-        height: auto !important;
-        padding: 12px 4px !important;
-        border-radius: 20px !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        box-shadow:
-            0 4px 12px rgba(0,0,0,0.2),
-            inset 0 1px 0 rgba(255,255,255,0.1)
-            !important;
-        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-    }
-
-    /* Hover State */
-    [data-baseweb="tab-panel"] button:hover:not(:disabled) {
-        transform: translateY(-4px) !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%) !important;
-        border-color: rgba(255,255,255,0.2) !important;
-        box-shadow:
-            0 8px 24px rgba(0,0,0,0.4),
-            inset 0 1px 0 rgba(255,255,255,0.2)
-            !important;
-    }
-
-    /* Active/Press State */
-    [data-baseweb="tab-panel"] button:active:not(:disabled) {
-        transform: scale(0.96) !important;
-        background: rgba(255,255,255,0.02) !important;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3) !important;
-    }
-
-    /* Text Styling */
-    [data-baseweb="tab-panel"] button p {
-        font-family: 'Inter', sans-serif !important;
-        line-height: 1.3 !important;
-    }
-
-    /* Icon (first line - large with glow) */
-    [data-baseweb="tab-panel"] button p::first-line {
-        font-size: 26px !important;
-        line-height: 1.8 !important;
-        filter: drop-shadow(0 0 12px rgba(255,255,255,0.3));
-    }
-
-    /* Label (small, uppercase) */
-    [data-baseweb="tab-panel"] button p {
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        color: rgba(255,255,255,0.6) !important;
-        letter-spacing: 0.02em !important;
-        text-transform: uppercase !important;
-    }
-
-    /* Light up label on hover */
-    [data-baseweb="tab-panel"] button:hover:not(:disabled) p {
-        color: #fff !important;
-        text-shadow: 0 0 8px rgba(255,255,255,0.5) !important;
-    }
-
-    /* Disabled state */
-    [data-baseweb="tab-panel"] button:disabled {
-        opacity: 0.4 !important;
-    }
-
-    /* No hover transform on touch devices */
-    @media (hover: none) {
-        [data-baseweb="tab-panel"] button:hover:not(:disabled) {
-            transform: none !important;
+    @media (max-width: 480px) {
+        .stTabs [data-baseweb="tab"] {
+            font-size: 11px !important;
+            padding: 6px 10px !important;
+        }
+        .stButton button {
+            padding: 6px 10px !important;
+            font-size: 12px !important;
         }
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Condensed 4 categories with (icon, label, prompt, is_live)
+    # Full categories with (label, prompt, is_live)
     categories = {
-        "Pay": [
-            ("💸", "Send", "Help me send USDC to someone", True),
-            ("🧾", "Bills", "Help me pay a bill with crypto", True),
-            ("📱", "TopUp", "I need to add minutes to my phone", True),
-            ("📅", "Sched", "I want to set up a recurring payment", True),
+        "Send & Pay": [
+            ("Send USDC", "Help me send USDC to someone", True),
+            ("Pay Bills", "Help me pay a bill with crypto", True),
+            ("Phone Top-up", "I need to add minutes to my phone", True),
+            ("Schedule", "I want to set up a recurring payment", True),
         ],
         "Earn": [
-            ("📈", "Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
-            ("⚡", "Swap", "Swap USDC to ETH at best rates", False),
-            ("🏦", "Sats", "Buy Bitcoin directly, no exchange needed", False),
-            ("🐷", "Save", "Set up a savings goal", False),
+            ("Earn Yield", "Lend idle USDC on Aave, earn ~4% APY", False),
+            ("Swap to ETH", "Swap USDC to ETH at best rates", False),
+            ("Stack Sats", "Buy Bitcoin directly, no exchange needed", False),
         ],
-        "Shop": [
-            ("🛒", "Amazon", "I want to buy an Amazon gift card", True),
-            ("🎯", "Target", "Show me Target gift cards", True),
-            ("☕", "Coffee", "Get me a Starbucks gift card", True),
-            ("🚗", "Uber", "I want Uber Eats gift card credits", True),
+        "Bot Trade": [
+            ("Hyperliquid", "Trade perpetuals on Hyperliquid DEX", False),
+            ("Polymarket", "Bet on prediction markets via Polymarket", False),
+            ("Pump.fun", "Launch or trade meme coins on Pump.fun", False),
+            ("Kalshi", "Trade event contracts on Kalshi", False),
         ],
-        "Apps": [
-            ("🍿", "Netflix", "I want a Netflix gift card", True),
-            ("🎵", "Spotify", "Get me a Spotify gift card", True),
-            ("🎮", "Steam", "Get me a Steam gift card", True),
-            ("🔒", "VPN", "I want a Mullvad VPN subscription", True),
+        "Content": [
+            ("New AI Character", "Create a custom AI character or persona", False),
+        ],
+        "Tools": [
+            ("Get Domain", "I want to register a domain", True),
+            ("VPN", "I want a Mullvad VPN subscription", True),
+            ("eSIM", "I need an international eSIM", False),
+            ("Alerts", "Set up balance alerts and spending notifications", False),
+        ],
+        "Shopping": [
+            ("Amazon", "I want to buy an Amazon gift card", True),
+            ("Target", "Show me Target gift cards", True),
+            ("Walmart", "I want a Walmart gift card", True),
+            ("Best Buy", "Show me Best Buy gift cards", True),
+            ("Sephora", "Get a Sephora gift card", True),
+        ],
+        "Food": [
+            ("DoorDash", "I want a DoorDash gift card", True),
+            ("Uber Eats", "I want Uber Eats gift card credits", True),
+            ("Starbucks", "Get me a Starbucks gift card", True),
+            ("Chipotle", "I want a Chipotle gift card", True),
+            ("Grubhub", "Show me Grubhub gift cards", True),
+        ],
+        "Streaming": [
+            ("Netflix", "I want a Netflix gift card", True),
+            ("Spotify", "Get me a Spotify gift card", True),
+            ("Disney+", "I want a Disney+ gift card", False),
+            ("Hulu", "Show me Hulu gift cards", False),
+            ("Apple TV+", "I want an Apple TV+ subscription", False),
+        ],
+        "Gaming": [
+            ("PlayStation", "Show me PlayStation gift cards", True),
+            ("Xbox", "I want an Xbox gift card", True),
+            ("Steam", "Get me a Steam gift card", True),
+            ("Nintendo", "I want a Nintendo eShop card", True),
+            ("Roblox", "Show me Roblox gift cards", True),
         ],
     }
 
     tabs = st.tabs(list(categories.keys()))
 
-    for tab, (cat, items) in zip(tabs, categories.items()):
-        with tab:
-            cols = st.columns(4)
-            for i, (icon, label, prompt, is_live) in enumerate(items):
-                with cols[i % 4]:
+    for tab_idx, (category_name, items) in enumerate(categories.items()):
+        with tabs[tab_idx]:
+            cols = st.columns(min(len(items), 4))
+            for i, (label, prompt, is_live) in enumerate(items):
+                col_idx = i % 4
+                with cols[col_idx]:
                     if is_live:
-                        if st.button(f"{icon}\n{label}", key=f"tile_{cat}_{i}", use_container_width=True):
+                        if st.button(label, key=f"mod_{tab_idx}_{i}", use_container_width=True):
                             st.session_state.messages.append({"role": "user", "content": prompt})
                             st.session_state._quick_action_triggered = True
                             st.rerun()
                     else:
-                        st.button(f"{icon}\n{label}", key=f"tile_{cat}_{i}", disabled=True,
+                        st.button(label, key=f"mod_{tab_idx}_{i}", disabled=True,
                                   use_container_width=True, help=prompt)
 
 
 def render_modules_preview():
     """
     Render capability preview for pre-login users (all disabled).
-    Uses same Deep Glass Tiles styling as render_modules.
     """
-    # Same CSS as render_modules
-    st.markdown("""
-    <style>
-    [data-baseweb="tab-panel"] { padding-top: 16px !important; }
-    [data-baseweb="tab-panel"] button {
-        aspect-ratio: 1 / 1 !important;
-        height: auto !important;
-        padding: 12px 4px !important;
-        border-radius: 20px !important;
-        background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1) !important;
-    }
-    [data-baseweb="tab-panel"] button p::first-line {
-        font-size: 26px !important;
-        line-height: 1.8 !important;
-    }
-    [data-baseweb="tab-panel"] button p {
-        font-family: 'Inter', sans-serif !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        color: rgba(255,255,255,0.6) !important;
-        letter-spacing: 0.02em !important;
-        text-transform: uppercase !important;
-    }
-    [data-baseweb="tab-panel"] button:disabled { opacity: 0.4 !important; }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # Same condensed categories (icon, label)
     categories = {
-        "Pay": [("💸", "Send"), ("🧾", "Bills"), ("📱", "TopUp"), ("📅", "Sched")],
-        "Earn": [("📈", "Yield"), ("⚡", "Swap"), ("🏦", "Sats"), ("🐷", "Save")],
-        "Shop": [("🛒", "Amazon"), ("🎯", "Target"), ("☕", "Coffee"), ("🚗", "Uber")],
-        "Apps": [("🍿", "Netflix"), ("🎵", "Spotify"), ("🎮", "Steam"), ("🔒", "VPN")],
+        "Send & Pay": ["Send USDC", "Pay Bills", "Phone Top-up", "Schedule"],
+        "Earn": ["Earn Yield", "Swap to ETH", "Stack Sats"],
+        "Bot Trade": ["Hyperliquid", "Polymarket", "Pump.fun", "Kalshi"],
+        "Content": ["New AI Character"],
+        "Tools": ["Get Domain", "VPN", "eSIM", "Alerts"],
+        "Shopping": ["Amazon", "Target", "Walmart", "Best Buy", "Sephora"],
+        "Food": ["DoorDash", "Uber Eats", "Starbucks", "Chipotle", "Grubhub"],
+        "Streaming": ["Netflix", "Spotify", "Disney+", "Hulu", "Apple TV+"],
+        "Gaming": ["PlayStation", "Xbox", "Steam", "Nintendo", "Roblox"],
     }
 
     tabs = st.tabs(list(categories.keys()))
 
-    for tab, (cat, items) in zip(tabs, categories.items()):
-        with tab:
-            cols = st.columns(4)
-            for i, (icon, label) in enumerate(items):
-                with cols[i % 4]:
-                    st.button(f"{icon}\n{label}", key=f"prev_{cat}_{i}", disabled=True,
+    for tab_idx, (category_name, items) in enumerate(categories.items()):
+        with tabs[tab_idx]:
+            cols = st.columns(min(len(items), 4))
+            for i, label in enumerate(items):
+                col_idx = i % 4
+                with cols[col_idx]:
+                    st.button(label, key=f"prev_{tab_idx}_{i}", disabled=True,
                               use_container_width=True, help="Sign up to use")
 
 
