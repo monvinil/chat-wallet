@@ -7,7 +7,7 @@ import time
 from typing import Dict, Optional
 from decimal import Decimal
 from web3 import Web3
-from config import NETWORKS
+from config import NETWORKS, get_rpc_url
 
 # ERC20 USDC ABI (minimal - just balanceOf)
 USDC_ABI = [
@@ -59,7 +59,9 @@ class ChainUtils:
             return None
 
         try:
-            w3 = Web3(Web3.HTTPProvider(network["rpc_url"]))
+            # Use RPC with automatic fallback
+            rpc_url = get_rpc_url(network_key)
+            w3 = Web3(Web3.HTTPProvider(rpc_url))
             if w3.is_connected():
                 _web3_cache[network_key] = w3
                 return w3
@@ -119,8 +121,9 @@ class ChainUtils:
             # Get cached Web3 instance
             w3 = ChainUtils._get_web3(network_key)
             if not w3:
-                # Fallback to creating new connection
-                w3 = Web3(Web3.HTTPProvider(network["rpc_url"]))
+                # Fallback to creating new connection with RPC fallback
+                rpc_url = get_rpc_url(network_key)
+                w3 = Web3(Web3.HTTPProvider(rpc_url))
 
             def check_connection():
                 if not w3.is_connected():
@@ -178,7 +181,8 @@ class ChainUtils:
             if not network or network["type"] != "solana":
                 return {"sol": 0.0, "usdc": 0.0}
 
-            client = Client(network["rpc_url"])
+            rpc_url = get_rpc_url(network_key)
+            client = Client(rpc_url)
 
             # Get SOL balance
             pubkey = Pubkey.from_string(address)

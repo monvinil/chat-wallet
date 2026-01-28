@@ -326,13 +326,14 @@ def _get_cached_tools():
         from bitrefill_tools import get_bitrefill_tools
         from merchant_tools import get_merchant_tools
         from scheduler_tools import get_scheduler_tools
+        from yield_tools import get_yield_tools
 
         st.session_state._cached_tools = [
             tool_get_wallet_balance,
             tool_get_deposit_address,
             tool_preview_transaction,
             tool_execute_transaction,
-        ] + get_email_tools() + get_bitrefill_tools() + get_merchant_tools() + get_scheduler_tools()
+        ] + get_email_tools() + get_bitrefill_tools() + get_merchant_tools() + get_scheduler_tools() + get_yield_tools()
 
     return st.session_state._cached_tools
 

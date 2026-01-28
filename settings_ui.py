@@ -309,6 +309,42 @@ def settings_page():
         </div>
         """, unsafe_allow_html=True)
 
+        # Auto-lock timeout setting
+        st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 12px;'>Auto-Lock</div>", unsafe_allow_html=True)
+
+        auto_lock_options = {
+            5: "5 minutes",
+            15: "15 minutes (default)",
+            30: "30 minutes",
+            60: "1 hour",
+            0: "Never (not recommended)"
+        }
+
+        current_timeout = existing_settings.get("auto_lock_minutes", 15) if existing_settings else 15
+        auto_lock_minutes = st.selectbox(
+            "Lock wallet after inactivity",
+            options=list(auto_lock_options.keys()),
+            format_func=lambda x: auto_lock_options[x],
+            index=list(auto_lock_options.keys()).index(current_timeout) if current_timeout in auto_lock_options else 1,
+            key="auto_lock_select",
+            label_visibility="collapsed"
+        )
+
+        st.markdown("<div style='font-size: 11px; color: #555;'>Automatically lock your wallet after this period of inactivity</div>", unsafe_allow_html=True)
+
+        if st.button("SAVE", type="primary", key="save_auto_lock"):
+            success = SettingsManager.save_user_settings(
+                user_id=user_id,
+                auto_lock_minutes=auto_lock_minutes
+            )
+            if success:
+                st.success("Auto-lock preference saved")
+                st.rerun()
+            else:
+                st.error("Failed to save")
+
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
+
         # Export wallet section
         st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 12px;'>Export Wallet</div>", unsafe_allow_html=True)
 

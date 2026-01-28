@@ -7,6 +7,8 @@ import html
 import streamlit as st
 from chain_utils import ChainUtils
 from langchain_core.callbacks import BaseCallbackHandler
+from decision_logger import log_ai_decision, DecisionLogger
+from utils.logger import logger
 
 
 def _ensure_string(content) -> str:
@@ -1242,12 +1244,50 @@ def chat_interface(create_agent_func):
                         response = stream_handler.get_final_text() or "Error processing request."
                     message_success = True
 
+                    # Extract tool calls from messages for logging
+                    tool_calls = []
+                    for msg in result_messages:
+                        msg_type = type(msg).__name__
+                        if msg_type == "AIMessage" and hasattr(msg, 'tool_calls') and msg.tool_calls:
+                            for tc in msg.tool_calls:
+                                tool_calls.append({
+                                    "tool": tc.get("name", "unknown"),
+                                    "input": tc.get("args", {}),
+                                })
+                        elif msg_type == "ToolMessage":
+                            # Match tool result with corresponding call
+                            tool_calls.append({
+                                "tool": getattr(msg, 'name', 'tool'),
+                                "output_preview": str(getattr(msg, 'content', ''))[:500]
+                            })
+
+                    # Log decision for AI training data
+                    try:
+                        log_ai_decision(
+                            user_message=prompt,
+                            ai_response=response,
+                            tool_calls=tool_calls if tool_calls else None,
+                            outcome="success"
+                        )
+                    except Exception as log_err:
+                        logger.debug(f"Decision logging failed: {log_err}")
+
                     # Final render without cursor
                     response_container.markdown(f"<div style='color: #ccc; font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
 
             except Exception as e:
                 response = f"**System Error:** {str(e)}"
                 response_container.markdown(f"<div style='color: #ccc; font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+
+                # Log failed decision
+                try:
+                    log_ai_decision(
+                        user_message=prompt,
+                        ai_response=response,
+                        outcome="failure"
+                    )
+                except Exception:
+                    pass  # Don't let logging failure affect user experience
 
             # Save to history
             st.session_state.messages.append({"role": "assistant", "content": response})

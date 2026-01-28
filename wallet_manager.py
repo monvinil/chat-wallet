@@ -5,12 +5,16 @@ Handles wallet creation, import, and encrypted storage
 
 import os
 import json
+import time
 import streamlit as st
 from typing import Optional, Dict, Any
 
 # Import centralized encryption utilities
 from utils.encryption import PasswordEncryption
 from utils.logger import logger
+
+# Default auto-lock timeout in minutes (can be overridden in user settings)
+DEFAULT_AUTO_LOCK_MINUTES = 15
 
 
 class WalletManager:
@@ -410,3 +414,61 @@ class WalletManager:
         except Exception as e:
             logger.error(f"unlock_wallet_with_password error: {e}")
             return False
+
+    @staticmethod
+    def record_activity():
+        """
+        Record user activity timestamp.
+        Call this when user interacts with the wallet (sends message, views balance, etc.)
+        """
+        st.session_state._last_wallet_activity = time.time()
+
+    @staticmethod
+    def get_auto_lock_timeout() -> int:
+        """
+        Get the auto-lock timeout in minutes from user settings.
+        Returns default if not configured.
+        """
+        user_id = st.session_state.get("user_id")
+        if user_id:
+            try:
+                from settings_manager import SettingsManager
+                settings = SettingsManager.get_user_settings(user_id)
+                if settings:
+                    return settings.get("auto_lock_minutes", DEFAULT_AUTO_LOCK_MINUTES)
+            except Exception:
+                pass
+        return DEFAULT_AUTO_LOCK_MINUTES
+
+    @staticmethod
+    def should_auto_lock() -> bool:
+        """
+        Check if wallet should be auto-locked due to inactivity.
+        Returns True if wallet is unlocked and has been idle longer than timeout.
+        """
+        if not WalletManager.is_wallet_unlocked():
+            return False
+
+        last_activity = st.session_state.get("_last_wallet_activity")
+        if not last_activity:
+            # No recorded activity, set it now and don't lock
+            WalletManager.record_activity()
+            return False
+
+        timeout_minutes = WalletManager.get_auto_lock_timeout()
+        timeout_seconds = timeout_minutes * 60
+
+        idle_time = time.time() - last_activity
+        return idle_time >= timeout_seconds
+
+    @staticmethod
+    def check_auto_lock() -> bool:
+        """
+        Check and perform auto-lock if necessary.
+        Returns True if wallet was auto-locked, False otherwise.
+        """
+        if WalletManager.should_auto_lock():
+            WalletManager.lock_wallet()
+            logger.info("Wallet auto-locked due to inactivity")
+            return True
+        return False

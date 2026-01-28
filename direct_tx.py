@@ -4,12 +4,16 @@ Signs and sends USDC transfers directly from user's wallet.
 No relayer needed - user pays gas (works with Arc testnet USDC-as-gas).
 """
 
+import time
 from typing import Dict, Any, Optional, Tuple
 from decimal import Decimal
 from web3 import Web3
 from eth_account import Account
-from config import NETWORKS, calculate_fee
+from config import NETWORKS, calculate_fee, get_rpc_url
 import streamlit as st
+
+# Balance cache TTL in seconds (matches chain_utils.py)
+BALANCE_CACHE_TTL = 60
 
 
 # Standard ERC20 ABI for transfer
@@ -50,29 +54,69 @@ class DirectTransactionExecutor:
         if not self.network:
             raise ValueError(f"Unknown network: {network_key}")
 
-        self.w3 = Web3(Web3.HTTPProvider(self.network["rpc_url"]))
+        # Use RPC with automatic fallback
+        rpc_url = get_rpc_url(network_key)
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
         self.chain_id = self.network["chain_id"]
         self.usdc_address = Web3.to_checksum_address(self.network["usdc_address"])
 
-    def get_usdc_balance(self, address: str) -> Decimal:
-        """Get USDC balance for an address"""
+    def _get_cached_balance(self, address: str, balance_type: str) -> Optional[Decimal]:
+        """Get balance from session cache if not expired"""
+        cache_key = f"_direct_tx_balance_{self.network_key}_{address}_{balance_type}"
+        cache_time_key = f"{cache_key}_time"
+
+        cached_time = st.session_state.get(cache_time_key)
+        if cached_time and (time.time() - cached_time) < BALANCE_CACHE_TTL:
+            return st.session_state.get(cache_key)
+        return None
+
+    def _set_cached_balance(self, address: str, balance_type: str, balance: Decimal) -> None:
+        """Cache balance in session state"""
+        cache_key = f"_direct_tx_balance_{self.network_key}_{address}_{balance_type}"
+        cache_time_key = f"{cache_key}_time"
+
+        st.session_state[cache_key] = balance
+        st.session_state[cache_time_key] = time.time()
+
+    def get_usdc_balance(self, address: str, use_cache: bool = True) -> Decimal:
+        """Get USDC balance for an address (with caching)"""
+        # Check cache first
+        if use_cache:
+            cached = self._get_cached_balance(address, "usdc")
+            if cached is not None:
+                return cached
+
         try:
             usdc = self.w3.eth.contract(address=self.usdc_address, abi=ERC20_ABI)
             balance_raw = usdc.functions.balanceOf(
                 Web3.to_checksum_address(address)
             ).call()
             # USDC has 6 decimals
-            return Decimal(balance_raw) / Decimal(1e6)
+            balance = Decimal(balance_raw) / Decimal(1e6)
+
+            # Cache the result
+            self._set_cached_balance(address, "usdc", balance)
+            return balance
         except Exception as e:
             from utils.logger import logger
             logger.error(f"Failed to get USDC balance: {e}")
             return Decimal(0)
 
-    def get_native_balance(self, address: str) -> Decimal:
-        """Get native token balance (ETH/etc) for gas"""
+    def get_native_balance(self, address: str, use_cache: bool = True) -> Decimal:
+        """Get native token balance (ETH/etc) for gas (with caching)"""
+        # Check cache first
+        if use_cache:
+            cached = self._get_cached_balance(address, "native")
+            if cached is not None:
+                return cached
+
         try:
             balance_wei = self.w3.eth.get_balance(Web3.to_checksum_address(address))
-            return Decimal(self.w3.from_wei(balance_wei, 'ether'))
+            balance = Decimal(self.w3.from_wei(balance_wei, 'ether'))
+
+            # Cache the result
+            self._set_cached_balance(address, "native", balance)
+            return balance
         except Exception as e:
             from utils.logger import logger
             logger.error(f"Failed to get native balance: {e}")

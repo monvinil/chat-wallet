@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional, Tuple
 from decimal import Decimal
 from web3 import Web3
 from eth_account import Account
-from config import NETWORKS, calculate_fee
+from config import NETWORKS, calculate_fee, get_rpc_url
 from meta_tx import MetaTransaction
 import streamlit as st
 
@@ -41,7 +41,9 @@ class TransactionRelayer:
     def __init__(self, network_key: str = "base-mainnet"):
         self.network_key = network_key
         self.network = NETWORKS[network_key]
-        self.w3 = Web3(Web3.HTTPProvider(self.network["rpc_url"]))
+        # Use RPC with automatic fallback
+        rpc_url = get_rpc_url(network_key)
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
 
         # Relayer wallet (your hot wallet that pays gas)
         relayer_key = os.getenv("RELAYER_PRIVATE_KEY")

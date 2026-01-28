@@ -81,7 +81,8 @@ class SettingsManager:
         require_approval_above: float = None,
         allow_recurring_payments: bool = None,
         allow_account_access: bool = None,
-        theme: str = None
+        theme: str = None,
+        auto_lock_minutes: int = None
     ) -> bool:
         """Save or update user settings (only updates provided fields)"""
         # Handle guest users - store in session state only
@@ -96,7 +97,8 @@ class SettingsManager:
                 "require_approval_above": require_approval_above if require_approval_above is not None else existing.get("require_approval_above", 50.0),
                 "allow_recurring_payments": allow_recurring_payments if allow_recurring_payments is not None else existing.get("allow_recurring_payments", False),
                 "allow_account_access": allow_account_access if allow_account_access is not None else existing.get("allow_account_access", False),
-                "theme": theme if theme is not None else existing.get("theme", "dark")
+                "theme": theme if theme is not None else existing.get("theme", "dark"),
+                "auto_lock_minutes": auto_lock_minutes if auto_lock_minutes is not None else existing.get("auto_lock_minutes", 15)
             }
             st.session_state[f"guest_settings_{user_id}"] = guest_settings
             return True
@@ -125,6 +127,8 @@ class SettingsManager:
                 data["allow_account_access"] = allow_account_access
             if theme is not None:
                 data["theme"] = theme
+            if auto_lock_minutes is not None:
+                data["auto_lock_minutes"] = auto_lock_minutes
 
             # Try to update first, insert if doesn't exist
             result = supabase.table("user_settings").upsert(data).execute()

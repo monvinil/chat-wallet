@@ -19,8 +19,23 @@ class RateLimiter:
     MAX_LOGIN_ATTEMPTS = 3
     LOGIN_LOCKOUT_SECONDS = 300  # 5 minutes
 
-    # Session activity timeout (SECURITY: 5 minutes for wallet protection)
-    SESSION_TIMEOUT_SECONDS = 300  # 5 minutes of inactivity
+    # Session activity timeout - default 15 minutes (configurable per user)
+    DEFAULT_TIMEOUT_MINUTES = 15
+    SESSION_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_MINUTES * 60
+
+    @staticmethod
+    def get_configured_timeout_seconds() -> int:
+        """Get the user's configured timeout in seconds, or default."""
+        user_id = st.session_state.get("user_id")
+        if user_id:
+            try:
+                from settings_manager import SettingsManager
+                settings = SettingsManager.get_user_settings(user_id)
+                if settings and settings.get("auto_lock_minutes"):
+                    return settings.get("auto_lock_minutes") * 60
+            except Exception:
+                pass
+        return RateLimiter.SESSION_TIMEOUT_SECONDS
 
     @staticmethod
     def _get_login_key(email: str) -> str:
@@ -103,14 +118,16 @@ class RateLimiter:
             return True
 
         elapsed = time.time() - last_activity
-        return elapsed < RateLimiter.SESSION_TIMEOUT_SECONDS
+        timeout_seconds = RateLimiter.get_configured_timeout_seconds()
+        return elapsed < timeout_seconds
 
     @staticmethod
     def get_time_until_timeout() -> int:
         """Get seconds remaining until session timeout"""
         last_activity = st.session_state.get("_last_activity", time.time())
         elapsed = time.time() - last_activity
-        remaining = RateLimiter.SESSION_TIMEOUT_SECONDS - elapsed
+        timeout_seconds = RateLimiter.get_configured_timeout_seconds()
+        remaining = timeout_seconds - elapsed
         return max(0, int(remaining))
 
 
@@ -128,9 +145,9 @@ def check_and_handle_timeout() -> bool:
         return True
 
     if not RateLimiter.check_session_timeout():
-        # Session timed out - lock wallet
-        st.session_state.wallet_locked = True
-        st.session_state.wallet_key = None  # Clear decryption key
+        # Session timed out - use WalletManager to properly lock
+        from wallet_manager import WalletManager
+        WalletManager.lock_wallet()
         return False
 
     return True

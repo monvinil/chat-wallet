@@ -152,6 +152,42 @@ def render_balance_display(total_usdc: float, balances: dict = None):
             st.markdown(breakdown_html, unsafe_allow_html=True)
 
 
+def render_yield_display(wallet_address: str):
+    """Render yield earnings display if user has deposits"""
+    try:
+        from aave_client import get_yield_summary
+
+        summary = get_yield_summary(wallet_address)
+
+        if summary["total_deposited"] > 0:
+            st.markdown(f"""
+            <div style="margin-bottom: 1.5rem; padding: 12px; background: rgba(34, 197, 94, 0.08); border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px;
+                                    letter-spacing: 0.1em; color: #555; margin-bottom: 4px;">
+                            EARNING
+                        </div>
+                        <div style="font-family: 'Inter', sans-serif; font-size: 14px; color: #22c55e;">
+                            +${summary['estimated_monthly_earnings']:.2f}/mo
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666;">
+                            {summary['average_apy']:.1f}% APY
+                        </div>
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444;">
+                            ${summary['total_deposited']:,.0f} deposited
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    except Exception:
+        # Silently fail - yield display is optional
+        pass
+
+
 def render_free_tier_indicator():
     """Show free tier usage if applicable"""
     from settings_manager import SettingsManager
@@ -276,7 +312,7 @@ def sidebar():
         # Inject skeleton CSS once
         _inject_skeleton_css()
 
-        st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
         render_sidebar_header()
 
         # No wallet - show login
@@ -309,6 +345,9 @@ def sidebar():
                 total_usdc = ChainUtils.calculate_total_usdc(balances) if balances else 0.0
                 render_balance_display(total_usdc, balances)
 
+            # Yield earnings display (if user has deposits)
+            render_yield_display(st.session_state.wallet_address)
+
             # Addresses - responsive middle-ellipsis with copy button
             solana_addr = _get_solana_address_from_session()
             evm_addr = st.session_state.wallet_address
@@ -316,7 +355,7 @@ def sidebar():
             # CSS for responsive middle-truncation (first 6 fixed, last 4 fixed)
             st.markdown("""
             <style>
-            .addr-section { margin-bottom: 12px; }
+            .addr-section { margin-bottom: 16px; }
             .addr-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #444; margin-bottom: 4px; }
             .addr-box {
                 display: flex; align-items: center; gap: 8px;
