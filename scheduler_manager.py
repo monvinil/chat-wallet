@@ -19,7 +19,7 @@ from typing import Optional, List, Dict, Any, Tuple
 from croniter import croniter
 
 # Check if we're in demo/mock mode (no Supabase connection)
-DEMO_MODE = True  # Set to False when Supabase is configured
+DEMO_MODE = False  # Using Supabase for persistent task storage
 
 
 class SchedulerManager:
@@ -220,14 +220,27 @@ class SchedulerManager:
         }
 
         if DEMO_MODE:
-            # Store in session state
+            # Store in session state (fallback)
             storage_key = SchedulerManager._get_storage_key(user_id)
             if storage_key not in st.session_state:
                 st.session_state[storage_key] = []
             st.session_state[storage_key].append(task)
         else:
-            # TODO: Store in Supabase
-            pass
+            # Store in Supabase
+            from supabase_client import get_supabase_client
+            try:
+                supabase = get_supabase_client(use_service_key=True)
+                if supabase:
+                    # Convert task_params to JSON string for storage
+                    db_task = task.copy()
+                    db_task["task_params"] = json.dumps(task_params)
+                    supabase.table("scheduled_tasks").insert(db_task).execute()
+            except Exception as e:
+                # Fallback to session state
+                storage_key = SchedulerManager._get_storage_key(user_id)
+                if storage_key not in st.session_state:
+                    st.session_state[storage_key] = []
+                st.session_state[storage_key].append(task)
 
         # Build response
         response = f"**Scheduled task created**\n\n"
@@ -246,8 +259,6 @@ class SchedulerManager:
         elif schedule_type == "conditional":
             response += f"- **Trigger:** {condition_asset} {condition_type.replace('_', ' ')} ${condition_value}\n"
 
-        response += "\n*[Demo mode: Task is stored locally and won't actually execute]*"
-
         return response
 
     @staticmethod
@@ -261,8 +272,30 @@ class SchedulerManager:
                 return tasks
             return [t for t in tasks if t.get("status") == status]
         else:
-            # TODO: Fetch from Supabase
-            return []
+            # Fetch from Supabase
+            from supabase_client import get_supabase_client
+            try:
+                supabase = get_supabase_client(use_service_key=True)
+                if not supabase:
+                    return []
+
+                query = supabase.table("scheduled_tasks").select("*").eq("user_id", user_id)
+                if status != "all":
+                    query = query.eq("status", status)
+
+                result = query.order("created_at", desc=True).execute()
+                tasks = result.data if result.data else []
+
+                # Parse task_params from JSON
+                for task in tasks:
+                    if isinstance(task.get("task_params"), str):
+                        try:
+                            task["task_params"] = json.loads(task["task_params"])
+                        except json.JSONDecodeError:
+                            pass
+                return tasks
+            except Exception:
+                return []
 
     @staticmethod
     def update_task_status(user_id: str, task_id: str, new_status: str) -> str:
@@ -277,7 +310,6 @@ class SchedulerManager:
                     task["status"] = new_status
                     task["updated_at"] = datetime.now().isoformat()
 
-                    # Recalculate next run if resuming
                     if new_status == "active" and task.get("cron_expression"):
                         try:
                             cron_iter = croniter(task["cron_expression"], datetime.now())
@@ -289,8 +321,42 @@ class SchedulerManager:
 
             return f"Task `{task_id}` not found"
         else:
-            # TODO: Update in Supabase
-            return "Not implemented"
+            # Update in Supabase
+            from supabase_client import get_supabase_client
+            try:
+                supabase = get_supabase_client(use_service_key=True)
+                if not supabase:
+                    return "Database connection failed"
+
+                # Find task by partial ID
+                result = supabase.table("scheduled_tasks").select("id, status, cron_expression").eq(
+                    "user_id", user_id
+                ).ilike("id", f"{task_id}%").execute()
+
+                if not result.data:
+                    return f"Task `{task_id}` not found"
+
+                task = result.data[0]
+                old_status = task["status"]
+
+                updates = {
+                    "status": new_status,
+                    "updated_at": datetime.now().isoformat()
+                }
+
+                # Recalculate next run if resuming
+                if new_status == "active" and task.get("cron_expression"):
+                    try:
+                        cron_iter = croniter(task["cron_expression"], datetime.now())
+                        updates["next_run_at"] = cron_iter.get_next(datetime).isoformat()
+                    except Exception:
+                        pass
+
+                supabase.table("scheduled_tasks").update(updates).eq("id", task["id"]).execute()
+                return f"Task `{task_id[:8]}` status changed from {old_status} to {new_status}"
+
+            except Exception as e:
+                return f"Failed to update task: {str(e)}"
 
     @staticmethod
     def delete_task(user_id: str, task_id: str) -> str:
@@ -307,8 +373,27 @@ class SchedulerManager:
 
             return f"Task `{task_id}` not found"
         else:
-            # TODO: Delete from Supabase
-            return "Not implemented"
+            # Delete from Supabase
+            from supabase_client import get_supabase_client
+            try:
+                supabase = get_supabase_client(use_service_key=True)
+                if not supabase:
+                    return "Database connection failed"
+
+                # Find task by partial ID
+                result = supabase.table("scheduled_tasks").select("id, description").eq(
+                    "user_id", user_id
+                ).ilike("id", f"{task_id}%").execute()
+
+                if not result.data:
+                    return f"Task `{task_id}` not found"
+
+                task = result.data[0]
+                supabase.table("scheduled_tasks").delete().eq("id", task["id"]).execute()
+                return f"Cancelled task `{task_id[:8]}`: {task.get('description', 'No description')}"
+
+            except Exception as e:
+                return f"Failed to delete task: {str(e)}"
 
     @staticmethod
     def get_task_runs(user_id: str, task_id: str, limit: int = 5) -> str:
@@ -317,7 +402,6 @@ class SchedulerManager:
             runs_key = SchedulerManager._get_runs_key(user_id)
             all_runs = st.session_state.get(runs_key, [])
 
-            # Filter runs for this task
             task_runs = [r for r in all_runs if r.get("task_id", "").startswith(task_id)]
             task_runs = sorted(task_runs, key=lambda x: x.get("started_at", ""), reverse=True)[:limit]
 
@@ -337,8 +421,40 @@ class SchedulerManager:
 
             return result
         else:
-            # TODO: Fetch from Supabase
-            return "Not implemented"
+            # Fetch from Supabase
+            from supabase_client import get_supabase_client
+            try:
+                supabase = get_supabase_client(use_service_key=True)
+                if not supabase:
+                    return "Database connection failed"
+
+                # Find task runs by partial task ID
+                result = supabase.table("task_runs").select("*").eq(
+                    "user_id", user_id
+                ).ilike("task_id", f"{task_id}%").order(
+                    "started_at", desc=True
+                ).limit(limit).execute()
+
+                task_runs = result.data if result.data else []
+
+                if not task_runs:
+                    return f"No execution history for task `{task_id[:8]}`. Task hasn't run yet."
+
+                output = f"**Execution history for task `{task_id[:8]}`:**\n\n"
+                for run in task_runs:
+                    status_emoji = {"success": "✅", "failed": "❌", "skipped": "⏭️"}.get(run.get("status"), "⚪")
+                    started = run.get("started_at", "Unknown")
+                    output += f"{status_emoji} {started}\n"
+                    if run.get("error_message"):
+                        output += f"   Error: {run['error_message']}\n"
+                    if run.get("tx_hash"):
+                        output += f"   TX: `{run['tx_hash'][:16]}...`\n"
+                    output += "\n"
+
+                return output
+
+            except Exception as e:
+                return f"Failed to fetch task history: {str(e)}"
 
     @staticmethod
     def simulate_task_execution(user_id: str, task_id: str) -> str:

@@ -496,6 +496,23 @@ def render_pulse_deck():
     # Get provider display name - only show if user has configured a key
     provider_names = {"anthropic": "Claude", "google": "Gemini", "openai": "GPT-4o"}
 
+    # Get last AI action from session (lightweight - no DB query)
+    last_action = None
+    messages = st.session_state.get("messages", [])
+    if messages:
+        # Find last assistant message with tool calls (reverse search)
+        for msg in reversed(messages[-10:]):  # Check last 10 messages
+            if msg.get("role") == "assistant":
+                content = msg.get("content", "")
+                # Simple heuristic: check for action keywords
+                if any(word in content.lower() for word in ["sent", "bought", "deposited", "checked", "scheduled"]):
+                    # Extract first sentence as action summary
+                    first_sentence = content.split('.')[0][:40]
+                    if len(first_sentence) > 35:
+                        first_sentence = first_sentence[:35] + "..."
+                    last_action = first_sentence
+                    break
+
     # Get tier and usage info
     if not llm_config.get("api_key"):
         # No key at all - show setup needed
@@ -508,18 +525,18 @@ def render_pulse_deck():
         total = 50  # FREE_TIER_MESSAGES
         ai_provider = "Gemini"  # Free tier uses Gemini
         ai_tier = "Free"
-        ai_sub = f"{remaining}/{total} msgs"
+        ai_sub = f"{remaining}/{total} msgs" if not last_action else last_action
     else:
         # User has their own key - show their provider
         ai_provider = provider_names.get(llm_config.get("provider", ""), "AI")
         ai_tier = "Pro"
-        ai_sub = "Your key"
+        ai_sub = "Your key" if not last_action else last_action
 
     slots.append({
         "mode": "ai",
         "title": "YOUR AI",
         "main": ai_provider,
-        "sub": f"{ai_tier} · {ai_sub}",
+        "sub": f"{ai_tier} · {ai_sub}" if not last_action else ai_sub,
         "bg": ai_brand["bg"],
         "border": ai_brand.get("border", "none"),
         "shadow": ai_brand["shadow"],
@@ -574,14 +591,17 @@ def render_pulse_deck():
         treasury_parts.append(f"{active_automations} auto")
     treasury_status = " · ".join(treasury_parts) if treasury_parts else "Tap to earn"
 
+    # Add action hint if not earning yet
+    balance_action = "earn" if yield_apy == 0 else None
     slots.append({
         "mode": "stat",
-        "title": "TREASURY",
+        "title": "BALANCE",
         "main": f"${usdc_balance:.2f}",
         "stats": treasury_status,
         "spotlight": True,
         "icon": BRANDS["system"]["icon"],
         "brand_key": "system",
+        "action": balance_action,
     })
 
     # Slot 3: Yield card (if earning) OR first perk
@@ -615,6 +635,7 @@ def render_pulse_deck():
         brand = BRANDS.get(p["brand"].lower(), BRANDS["system"])
         pct = int((p["progress"] / p["target"]) * 100) if p["target"] > 0 else 0
         spent = p.get("spent", 0)
+        remaining = max(0, p["target"] - p["progress"])
         slots.append({
             "mode": "perk",
             "title": p["brand"].upper(),
@@ -622,6 +643,7 @@ def render_pulse_deck():
             "sub": p["reward"],
             "pct": pct,
             "spent": spent,
+            "remaining": remaining,
             "brand_key": p["brand"].lower(),
             "bg": brand["bg"],
             "border": brand.get("border", "none"),
@@ -805,6 +827,32 @@ def render_pulse_deck():
         .pulse-card-sub { display: none; }
     }
     </style>
+    <script>
+    // V25: Pulse Deck card actions
+    document.addEventListener('click', function(e) {
+        const card = e.target.closest('.pulse-card[data-action]');
+        if (!card) return;
+
+        const action = card.getAttribute('data-action');
+        if (action === 'earn') {
+            // Find and click the Earn tab
+            const tabs = document.querySelectorAll('[data-baseweb="tab"]');
+            for (const tab of tabs) {
+                if (tab.textContent.trim() === 'Earn') {
+                    tab.click();
+                    // Scroll to modules section
+                    setTimeout(() => {
+                        const tabPanel = document.querySelector('[data-baseweb="tab-panel"]');
+                        if (tabPanel) {
+                            tabPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 100);
+                    break;
+                }
+            }
+        }
+    });
+    </script>
     """, unsafe_allow_html=True)
 
     # Build all cards as HTML for horizontal scroll container
@@ -861,9 +909,13 @@ def _render_pulse_card_html(slot: dict) -> str:
 
     # === BOTTOM SECTION ===
     if mode == "perk":
-        # Show reward text (no arrow)
+        # Show progress toward reward: "25 more → 1 Mo Free"
         reward = slot.get("sub", "")
-        bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-shadow:{text_shadow};">{reward}</div>'
+        remaining = slot.get("remaining", 0)
+        if remaining > 0:
+            bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};text-shadow:{text_shadow};"><span style="color:{accent};">{remaining} more</span> → {reward}</div>'
+        else:
+            bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{accent};text-shadow:{text_shadow};">Unlocked! {reward}</div>'
     elif mode == "ai":
         bottom = f'<div class="pulse-card-sub" style="font-family:JetBrains Mono;font-size:11px;color:{sub_color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:{accent};">●</span> {slot["sub"]}</div>'
     elif mode == "yield":
@@ -889,7 +941,12 @@ def _render_pulse_card_html(slot: dict) -> str:
     title_style = f"font-family:Inter;font-size:10px;color:{sub_color};letter-spacing:0.02em;font-weight:700;text-transform:uppercase;text-shadow:{text_shadow};"
 
     # V24: Add data-brand attribute for ambient glow targeting
-    return f'<div class="pulse-card" data-brand="{brand_key}"><div class="pulse-card-inner" style="{card_style}"><div style="display:flex;justify-content:space-between;align-items:center;"><span class="pulse-card-title" style="{title_style}">{slot["title"]}</span>{icon_html}</div>{main_html}{bottom}{progress_bar}</div></div>'
+    # V25: Add data-action for clickable cards
+    action = slot.get("action", "")
+    action_attr = f'data-action="{action}"' if action else ""
+    cursor_style = "cursor:pointer;" if action else ""
+
+    return f'<div class="pulse-card" data-brand="{brand_key}" {action_attr}><div class="pulse-card-inner" style="{card_style}{cursor_style}"><div style="display:flex;justify-content:space-between;align-items:center;"><span class="pulse-card-title" style="{title_style}">{slot["title"]}</span>{icon_html}</div>{main_html}{bottom}{progress_bar}</div></div>'
 
 
 def _render_pulse_card(slot: dict):
