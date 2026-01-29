@@ -98,10 +98,10 @@ A persistent todo list with context, so future sessions can pick up where we lef
 # B) PMF (Product-Market Fit)
 
 ### 11. Define User Journey
-**Status:** Not started
+**Status:** ✅ Done
 **What:** Document Day 1, Day 7, Day 30 experience for freelancer persona
 **Why:** Know what "success" looks like, align features to journey
-**Output:** Add to VISION_2026.md or separate JOURNEY.md
+**Output:** Added to VISION_2026.md as Part V-B
 
 ### 12. Add Analytics Events
 **Status:** Not started
@@ -203,9 +203,9 @@ A persistent todo list with context, so future sessions can pick up where we lef
 # Priority Stack (Recommended Order)
 
 ## Immediate (This Week)
-1. **Wire yield UI** — Core Horizon 2, backend ready
-2. **Pulse Deck improvements** — Psychological conversion
-3. **Document user journey** — Align all work to user goals
+1. ~~**Wire yield UI**~~ — ✅ Done (backend + UI connected)
+2. ~~**Pulse Deck improvements**~~ — ✅ Done (actionable cards, progress text, AI action)
+3. ~~**Document user journey**~~ — ✅ Done (Day 1/7/30/90 in VISION_2026.md)
 
 ## Next Sprint
 4. **Scheduler executor** — Recurring payments live
@@ -247,6 +247,10 @@ A persistent todo list with context, so future sessions can pick up where we lef
 6. ✅ Auto-lock functionality added
 7. ✅ Balance caching added
 8. ✅ Supabase migrations created (003, 004)
+9. ✅ Pulse Deck: Balance card triggers yield deposit flow
+10. ✅ Pulse Deck: Perk progress shows "X more → reward"
+11. ✅ Pulse Deck: AI card displays last agent action
+12. ✅ User journey documented (Day 1/7/30/90 for freelancer persona)
 
 ---
 

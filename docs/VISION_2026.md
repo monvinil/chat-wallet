@@ -517,6 +517,155 @@ Raising $[X] for:
 
 ---
 
+# Part V-B: User Journey (Freelancer Persona)
+
+## Who Is This User?
+
+**Name:** Maya, 28, UX Designer
+**Situation:** Freelances for international clients, gets paid via Wise/PayPal with 3-5% fees, pays for Figma/Notion/tools monthly
+**Pain points:**
+- Loses money on currency conversion and transfer fees
+- Manually tracks payments and invoices
+- Idle cash sits in checking account earning nothing
+- Wants to invest but doesn't trust herself to manage actively
+
+**What she wants:** "A financial assistant that handles the boring stuff so I can focus on design work."
+
+---
+
+## Day 1: First Deposit
+
+### What Happens
+1. Maya sees USDChat ad: "Get paid globally, skip the 4% fees"
+2. Signs up, creates wallet (30 seconds)
+3. Sees Pulse Deck with $0 balance, empty AI card
+4. Chats: "How do I get started?"
+5. AI explains: deposit USDC or receive payment from a client
+6. She deposits $100 from Coinbase to try it
+7. Pulse Deck updates: $100 balance, AI suggests "start earning yield"
+
+### Success Signals
+- [ ] Wallet created
+- [ ] First deposit completed
+- [ ] Saw yield suggestion (but didn't act yet)
+- [ ] Sent at least 2 messages to the AI
+
+### Emotional State
+"This is simple. Feels like texting a smart friend about money."
+
+### Features Used
+- Wallet creation
+- Deposit address/QR
+- Chat interface
+- Pulse Deck (balance display)
+
+---
+
+## Day 7: First Real Use
+
+### What Happens
+1. Maya returns after invoicing a client who can pay in USDC
+2. Client sends $1,500 directly to her wallet
+3. Pulse Deck shows $1,600 balance
+4. Maya notices the "Tap to earn" hint on her balance
+5. Chats: "What's this yield thing?"
+6. AI explains: "Your idle USDC can earn ~4% APY on Aave. Instant withdrawal anytime."
+7. Maya: "Deposit $1,000 to yield"
+8. AI previews: "$1,000 → ~$40/year, ~$3.33/month"
+9. Maya confirms. Done in 2 messages.
+10. She buys a Figma gift card to pay for her subscription ($15)
+
+### Success Signals
+- [ ] Received first real payment
+- [ ] Enabled yield on portion of balance
+- [ ] Made first purchase (gift card)
+- [ ] 3+ sessions in 7 days
+
+### Emotional State
+"Wait, I'm actually earning money on money that was just sitting there? And I didn't have to do anything complicated?"
+
+### Features Used
+- Receive payment
+- Yield deposit (Aave)
+- Gift card purchase (Bitrefill)
+- Pulse Deck (yield status)
+
+---
+
+## Day 30: Integrated Workflow
+
+### What Happens
+1. Maya has received 3 client payments (~$4,500 total)
+2. Her yield balance shows $3,000 earning 4.2% APY
+3. She set up recurring: "$15 Figma card on the 1st" and "$12 Notion on the 15th"
+4. Pulse Deck shows:
+   - Balance: $1,500 (spending) + $3,000 (earning)
+   - Perks: "5 more Figma purchases → free month"
+   - AI: "Paid Notion · 2 days ago"
+5. Maya chats: "Send $500 to my Coinbase to pay rent"
+6. AI executes. She sees her checking account topped up.
+7. She tells a freelancer friend about USDChat.
+
+### Success Signals
+- [ ] 3+ deposits received
+- [ ] Yield earning actively
+- [ ] 2+ recurring payments set up
+- [ ] Made outbound transfer (to bank/exchange)
+- [ ] Organic referral
+
+### Emotional State
+"This is my money hub now. I don't think about finances — it just works."
+
+### Features Used
+- Yield management
+- Recurring payments (scheduler)
+- Outbound transfers
+- Perks tracking
+- Chat for one-off actions
+
+---
+
+## Day 90: Power User (Aspirational)
+
+### What Happens
+1. Maya's freelance income is now $8-10K/month through USDChat
+2. Auto-routing enabled: 70% → yield, 20% → spending, 10% → tax savings
+3. She created a "brand vault" for her side project's income
+4. Explored trading: small Polymarket bet on interest rates
+5. Considering making an AI design critic that charges $1 per review
+
+### Success Signals
+- [ ] $10K+ total volume
+- [ ] Auto-routing enabled
+- [ ] Multiple income streams managed
+- [ ] Exploring Horizon 3 features
+
+### Emotional State
+"I went from a freelancer with messy finances to someone with a system. And it was just... chatting."
+
+---
+
+## Journey-Aligned Feature Priority
+
+| Journey Stage | Critical Features | Nice-to-Have |
+|---------------|-------------------|--------------|
+| Day 1 | Wallet creation, deposit, chat | Referral link |
+| Day 7 | Receive payment, yield deposit, gift cards | Balance notifications |
+| Day 30 | Recurring payments, outbound transfers | Perks program |
+| Day 90 | Auto-routing, multi-vault, trading | AI projects |
+
+## Conversion Funnel Targets
+
+| Stage | Target | Notes |
+|-------|--------|-------|
+| Visit → Signup | 30% | Low friction signup |
+| Signup → First Deposit | 50% | "Deposit $10 to try" prompt |
+| Deposit → Yield Enabled | 40% | Day 7 prompt |
+| Yield → Recurring Setup | 30% | Day 14 prompt |
+| Active at Day 30 | 35% | Of those who deposited |
+
+---
+
 # Part VI: Roadmap
 
 ## 2026 Q1 (Now → March)
