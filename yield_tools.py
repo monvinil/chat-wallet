@@ -3,9 +3,15 @@ Yield Management Tools for AI Agent
 
 Provides tools for depositing to and withdrawing from yield protocols.
 Currently supports Aave V3 on Base and Arbitrum.
+
+Integration with BalanceService:
+- Deposits lock balance in internal ledger before blockchain tx
+- Withdrawals unlock balance after blockchain confirmation
+- Provides audit trail for all yield operations
 """
 
 import streamlit as st
+from decimal import Decimal
 from typing import List
 from langchain_core.tools import tool
 
@@ -179,6 +185,7 @@ def execute_yield_deposit(user_confirmed: bool = False) -> str:
 
     amount = pending["amount"]
     network = pending["network"]
+    user_id = st.session_state.get("user_id")
 
     try:
         # Get private key
@@ -186,6 +193,24 @@ def execute_yield_deposit(user_confirmed: bool = False) -> str:
         if not private_key:
             return "Unable to access wallet private key."
 
+        # Lock balance in internal ledger before blockchain transaction
+        ledger_entry_id = None
+        if user_id:
+            try:
+                from balance_service import BalanceService
+                success, ledger_entry_id = BalanceService.lock_for_yield(
+                    user_id=user_id,
+                    chain=network,
+                    token="USDC",
+                    amount=Decimal(str(amount)),
+                    protocol="aave"
+                )
+                if not success:
+                    return f"Unable to lock balance for yield: {ledger_entry_id}"
+            except ImportError:
+                logger.warning("BalanceService not available, proceeding without ledger tracking")
+
+        # Execute on-chain deposit
         client = AaveClient(network)
         result = client.deposit(private_key, amount)
 
@@ -193,6 +218,19 @@ def execute_yield_deposit(user_confirmed: bool = False) -> str:
         del st.session_state._pending_yield_deposit
 
         if result.get("success"):
+            # Update ledger entry with tx hash
+            if user_id and ledger_entry_id:
+                try:
+                    from supabase_client import get_supabase_client
+                    supabase = get_supabase_client(use_service_key=True)
+                    if supabase:
+                        supabase.table("ledger_entries").update({
+                            "status": "confirmed",
+                            "tx_hash": result.get("tx_hash")
+                        }).eq("id", ledger_entry_id).execute()
+                except Exception as e:
+                    logger.error(f"Failed to update ledger entry: {e}")
+
             network_name = "Base" if "base" in network else "Arbitrum"
             return (
                 f"**Deposit Successful!**\n\n"
@@ -202,6 +240,21 @@ def execute_yield_deposit(user_confirmed: bool = False) -> str:
                 f"Your USDC is now earning yield. Check status anytime with 'yield status'."
             )
         else:
+            # Unlock balance if transaction failed
+            if user_id and ledger_entry_id:
+                try:
+                    from balance_service import BalanceService
+                    BalanceService.unlock_from_yield(
+                        user_id=user_id,
+                        chain=network,
+                        token="USDC",
+                        amount=Decimal(str(amount)),
+                        earnings=Decimal("0"),
+                        protocol="aave"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to unlock balance after failed deposit: {e}")
+
             return f"Deposit failed: {result.get('error', 'Unknown error')}"
 
     except Exception as e:
@@ -287,20 +340,47 @@ def execute_yield_withdrawal(user_confirmed: bool = False) -> str:
         return "Unable to access wallet."
 
     amount = pending["amount"]
+    actual_amount = pending.get("actual_amount", amount)
     network = pending["network"]
+    user_id = st.session_state.get("user_id")
 
     try:
         private_key = wallet_data.get("evm", {}).get("private_key") or wallet_data.get("private_key")
         if not private_key:
             return "Unable to access wallet private key."
 
+        # Get balance before withdrawal to calculate earnings
         client = AaveClient(network)
+        balance_before = client.get_ausdc_balance(st.session_state.get("wallet_address", ""))
+
         result = client.withdraw(private_key, amount)
 
         # Clear pending withdrawal
         del st.session_state._pending_yield_withdrawal
 
         if result.get("success"):
+            # Calculate earnings (difference between aUSDC and original deposit)
+            # This is a simplified calculation - in production, track original deposit amount
+            earnings = Decimal("0")  # Would need deposit tracking to calculate accurately
+
+            # Update internal ledger
+            if user_id:
+                try:
+                    from balance_service import BalanceService
+                    # Unlock from yield (moves from locked back to available)
+                    BalanceService.unlock_from_yield(
+                        user_id=user_id,
+                        chain=network,
+                        token="USDC",
+                        amount=Decimal(str(actual_amount if actual_amount > 0 else balance_before)),
+                        earnings=earnings,
+                        protocol="aave"
+                    )
+                except ImportError:
+                    logger.warning("BalanceService not available")
+                except Exception as e:
+                    logger.error(f"Failed to update balance after withdrawal: {e}")
+
             network_name = "Base" if "base" in network else "Arbitrum"
             return (
                 f"**Withdrawal Successful!**\n\n"

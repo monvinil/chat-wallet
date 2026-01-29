@@ -5,16 +5,33 @@ This module provides task execution for scheduled transfers, gift cards, and con
 Can run as:
 1. Standalone worker (for production: python scheduler_executor.py)
 2. On-demand check (for MVP: called on page load)
+3. HTTP endpoint (for cron services like cron-job.org)
 
-Production deployment: Run as separate process/container on Railway
+Production deployment options:
+- Railway: Deploy as separate service
+- Fly.io: Deploy as separate app
+- Render: Background worker
+- External cron: Call /api/execute-tasks endpoint
+
+Environment variables required:
+- SUPABASE_URL
+- SUPABASE_SERVICE_KEY
+- TASK_EXECUTOR_SECRET (for HTTP endpoint auth)
 """
 
 import os
+import sys
 import time
 import json
+import signal
+from decimal import Decimal
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from croniter import croniter
+
+# Add parent directory to path for imports when running standalone
+if __name__ == "__main__":
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from utils.logger import logger
 
@@ -72,42 +89,137 @@ class TaskExecutor:
             return []
 
     def execute_transfer(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute a USDC transfer task"""
+        """
+        Execute a USDC transfer task.
+
+        For scheduled transfers to work, the user must have:
+        1. Enabled "auto-execute" for scheduled payments in settings
+        2. A valid encrypted wallet stored in the database
+        3. Sufficient balance (checked via BalanceService)
+
+        Security: The wallet decryption key is stored encrypted with a
+        user-specific key. For fully autonomous execution, consider
+        using Circle Programmable Wallets instead.
+        """
         from direct_tx import DirectTransactionExecutor
-        from wallet_manager import WalletManager
-        from supabase_client import get_supabase_client, get_user_encrypted_wallet
+        from balance_service import BalanceService, generate_idempotency_key
+        from supabase_client import get_supabase_client
+        from config import calculate_fee
 
         task_params = task.get("task_params", {})
         if isinstance(task_params, str):
             task_params = json.loads(task_params)
 
         to_address = task_params.get("to_address")
-        amount = float(task_params.get("amount", 0))
+        amount = Decimal(str(task_params.get("amount", 0)))
         chain = task_params.get("chain", "base-mainnet")
         user_id = task.get("user_id")
 
         if not to_address or amount <= 0:
             return {"success": False, "error": "Invalid transfer parameters"}
 
-        # Get user's encrypted wallet
+        # Check if user has auto-execute enabled
         supabase = get_supabase_client(use_service_key=True)
         if not supabase:
             return {"success": False, "error": "No database connection"}
 
-        # For automated tasks, we need the wallet to be pre-authorized
-        # This requires the user to have enabled "auto-execution" for scheduled tasks
-        # For MVP: Skip actual execution, just log intent
-        logger.info(f"Would execute transfer: {amount} USDC to {to_address} on {chain}")
+        try:
+            settings = supabase.table("user_settings").select(
+                "auto_execute_scheduled, scheduled_tx_private_key_encrypted"
+            ).eq("user_id", user_id).single().execute()
 
-        # TODO: Implement actual execution with pre-authorized wallet
-        # For now, return success for demo purposes
-        return {
-            "success": True,
-            "simulated": True,
-            "amount": amount,
-            "to_address": to_address,
-            "chain": chain
-        }
+            if not settings.data or not settings.data.get("auto_execute_scheduled"):
+                return {
+                    "success": False,
+                    "error": "Auto-execute not enabled. User must approve manually.",
+                    "requires_manual_approval": True
+                }
+
+            # Check balance via BalanceService
+            fee = Decimal(str(calculate_fee(float(amount))))
+            total_needed = amount + fee
+
+            available = BalanceService.get_available_balance(user_id, chain, "USDC")
+            if available < total_needed:
+                return {
+                    "success": False,
+                    "error": f"Insufficient balance. Need ${total_needed:.2f}, have ${available:.2f}"
+                }
+
+            # Reserve balance (prevents double-spend)
+            idempotency_key = generate_idempotency_key()
+            reserved, ledger_id = BalanceService.reserve_for_send(
+                user_id, chain, "USDC", amount, fee, idempotency_key
+            )
+
+            if not reserved:
+                return {"success": False, "error": f"Failed to reserve balance: {ledger_id}"}
+
+            # Get encrypted private key for auto-execution
+            encrypted_key = settings.data.get("scheduled_tx_private_key_encrypted")
+            if not encrypted_key:
+                # Release the reserved balance
+                BalanceService.release_reserved(user_id, chain, "USDC", amount, fee, ledger_id)
+                return {
+                    "success": False,
+                    "error": "No auto-execution key configured",
+                    "requires_manual_approval": True
+                }
+
+            # Decrypt private key (requires scheduler service secret)
+            try:
+                from utils.encryption import PasswordEncryption
+                scheduler_secret = os.getenv("SCHEDULER_ENCRYPTION_SECRET")
+                if not scheduler_secret:
+                    BalanceService.release_reserved(user_id, chain, "USDC", amount, fee, ledger_id)
+                    return {"success": False, "error": "Scheduler secret not configured"}
+
+                private_key = PasswordEncryption.decrypt_with_key(
+                    encrypted_key, scheduler_secret
+                )
+            except Exception as e:
+                BalanceService.release_reserved(user_id, chain, "USDC", amount, fee, ledger_id)
+                return {"success": False, "error": f"Failed to decrypt key: {e}"}
+
+            # Execute the transfer
+            executor = DirectTransactionExecutor(chain)
+            result = executor.execute_transfer(
+                private_key=private_key,
+                to_address=to_address,
+                amount_usdc=float(amount),
+                user_id=user_id
+            )
+
+            if result.get("success"):
+                # Confirm the send (removes from pending_out)
+                BalanceService.confirm_send(
+                    user_id, chain, "USDC", amount, fee,
+                    tx_hash=result.get("tx_hash"),
+                    ledger_entry_id=ledger_id,
+                    counterparty_address=to_address
+                )
+                return {
+                    "success": True,
+                    "tx_hash": result.get("tx_hash"),
+                    "amount": float(amount),
+                    "to_address": to_address,
+                    "chain": chain,
+                    "fee": float(fee)
+                }
+            else:
+                # Release reserved balance on failure
+                BalanceService.release_reserved(
+                    user_id, chain, "USDC", amount, fee, ledger_id,
+                    reason=result.get("error", "Transaction failed")
+                )
+                return {
+                    "success": False,
+                    "error": result.get("error", "Transaction failed")
+                }
+
+        except Exception as e:
+            logger.error(f"execute_transfer error: {e}")
+            return {"success": False, "error": str(e)}
 
     def execute_gift_card(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a gift card purchase task"""
@@ -327,17 +439,134 @@ def check_and_execute_due_tasks() -> Dict[str, int]:
     return executor.run_once()
 
 
+def run_http_server(port: int = 8080):
+    """
+    Run a simple HTTP server for cron-triggered execution.
+
+    Endpoints:
+    - GET /health - Health check
+    - POST /execute - Execute due tasks (requires auth)
+
+    Use with cron services like cron-job.org, EasyCron, or GitHub Actions.
+    """
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    import urllib.parse
+
+    executor_secret = os.getenv("TASK_EXECUTOR_SECRET", "")
+
+    class TaskHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == "/health":
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"status": "healthy"}')
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def do_POST(self):
+            if self.path == "/execute":
+                # Check auth
+                auth_header = self.headers.get("Authorization", "")
+                if executor_secret and auth_header != f"Bearer {executor_secret}":
+                    self.send_response(401)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(b'{"error": "Unauthorized"}')
+                    return
+
+                # Execute tasks
+                executor = get_executor()
+                result = executor.run_once()
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                response = json.dumps({
+                    "success": True,
+                    "scheduled_processed": result["scheduled"],
+                    "conditional_processed": result["conditional"],
+                    "timestamp": datetime.utcnow().isoformat()
+                })
+                self.wfile.write(response.encode())
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def log_message(self, format, *args):
+            logger.info(f"HTTP: {args[0]}")
+
+    server = HTTPServer(("0.0.0.0", port), TaskHandler)
+    logger.info(f"Starting HTTP server on port {port}")
+    server.serve_forever()
+
+
 if __name__ == "__main__":
-    # Run as standalone worker
     import argparse
 
-    parser = argparse.ArgumentParser(description="Task Executor Worker")
-    parser.add_argument("--interval", type=int, default=60, help="Check interval in seconds")
+    parser = argparse.ArgumentParser(
+        description="Task Executor Worker",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run as continuous worker (checks every 60 seconds)
+  python scheduler_executor.py --mode worker --interval 60
+
+  # Run once and exit (for external cron)
+  python scheduler_executor.py --mode once
+
+  # Run HTTP server (for webhook-based triggering)
+  python scheduler_executor.py --mode http --port 8080
+        """
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["worker", "once", "http"],
+        default="worker",
+        help="Execution mode: worker (continuous), once (single run), http (server)"
+    )
+    parser.add_argument(
+        "--interval",
+        type=int,
+        default=60,
+        help="Check interval in seconds (worker mode only)"
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8080,
+        help="HTTP server port (http mode only)"
+    )
     args = parser.parse_args()
 
-    executor = TaskExecutor()
-    try:
-        executor.run_forever(interval_seconds=args.interval)
-    except KeyboardInterrupt:
-        logger.info("Shutting down task executor")
+    # Setup graceful shutdown
+    def signal_handler(sig, frame):
+        logger.info("Received shutdown signal")
+        executor = get_executor()
         executor.stop()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    if args.mode == "once":
+        # Run once and exit
+        executor = TaskExecutor()
+        result = executor.run_once()
+        total = result["scheduled"] + result["conditional"]
+        logger.info(f"Processed {total} tasks (scheduled: {result['scheduled']}, conditional: {result['conditional']})")
+        sys.exit(0)
+
+    elif args.mode == "http":
+        # Run HTTP server
+        run_http_server(port=args.port)
+
+    else:
+        # Run as continuous worker
+        executor = TaskExecutor()
+        try:
+            executor.run_forever(interval_seconds=args.interval)
+        except KeyboardInterrupt:
+            logger.info("Shutting down task executor")
+            executor.stop()
