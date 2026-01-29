@@ -35,8 +35,8 @@ class Colors:
     # Text
     TEXT_PRIMARY: str = "#f4f4f5"
     TEXT_SECONDARY: str = "#a1a1aa"
-    TEXT_MUTED: str = "#52525b"
-    TEXT_GHOST: str = "#3f3f46"
+    TEXT_MUTED: str = "#71717a"  # Improved contrast (was #52525b)
+    TEXT_GHOST: str = "#52525b"  # Improved contrast for WCAG AA (was #3f3f46)
 
     # Borders
     BORDER_GLASS: str = "rgba(255,255,255,0.08)"

@@ -499,6 +499,19 @@ def send_modal():
         except Exception as e:
             from utils.logger import logger
             logger.warning(f"Fee estimation failed: {e}")
+            # Show warning to user instead of silent failure
+            st.warning("⚠️ Unable to estimate fees. Network may be unavailable.")
+            st.markdown(f"""
+<div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+        <span style="color: #555;">Amount</span>
+        <span style="color: #aaa;">${amount:.2f}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+        <span style="color: #f59e0b;">⚠️ Fees unavailable</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
     # Validate inputs with EIP-55 checksum
     valid_recipient = False

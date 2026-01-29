@@ -267,18 +267,26 @@ def _render_pending_transaction_card():
     </div>
     """, unsafe_allow_html=True)
 
-    # Approval buttons
+    # Approval buttons with loading state
     col1, col2 = st.columns(2)
+
+    # Check if already processing to prevent double-clicks
+    is_processing = st.session_state.get("_tx_processing", False)
+
     with col1:
-        if st.button("CANCEL", key="tx_cancel", use_container_width=True):
+        if st.button("CANCEL", key="tx_cancel", use_container_width=True, disabled=is_processing):
             st.session_state._pending_tx_preview = None
+            st.session_state._tx_processing = False
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": "Transaction cancelled."
             })
             st.rerun()
     with col2:
-        if st.button("APPROVE", key="tx_approve", type="primary", use_container_width=True):
+        approve_label = "APPROVING..." if is_processing else "APPROVE"
+        if st.button(approve_label, key="tx_approve", type="primary", use_container_width=True, disabled=is_processing):
+            # Set processing state immediately
+            st.session_state._tx_processing = True
             # Store approval and let user confirm via chat
             st.session_state._tx_approved = preview
             st.session_state._pending_tx_preview = None
@@ -377,10 +385,12 @@ def render_header():
                     <div style="font-family: 'JetBrains Mono'; font-size: 10px; color: #52525b; text-transform: uppercase; letter-spacing: 0.05em;">USDC</div>
                 </div>
                 """, unsafe_allow_html=True)
-            except Exception:
+            except Exception as e:
+                from utils.logger import logger
+                logger.warning(f"Balance fetch failed: {e}")
                 st.markdown("""
                 <div style="text-align: right; margin-top: 28px;">
-                    <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #22c55e; background: rgba(34,197,94,0.1); padding: 6px 12px; border-radius: 10px;">● ONLINE</span>
+                    <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #f59e0b; background: rgba(245,158,11,0.1); padding: 6px 12px; border-radius: 10px;">● Loading...</span>
                 </div>
                 """, unsafe_allow_html=True)
         else:
@@ -473,13 +483,57 @@ def render_pulse_deck():
         },
     }
 
-    # === DATA SOURCES (mock - replace with real queries) ===
-    active_tasks = []  # TODO: Pull from pending_approvals table
+    # === DATA SOURCES (real queries) ===
+    user_id = st.session_state.get("user_id")
 
-    perks = [
-        {"brand": "spotify", "progress": 75, "target": 100, "reward": "1 Mo Free", "spent": 75},
-        {"brand": "netflix", "progress": 32, "target": 100, "reward": "1 Mo Free", "spent": 32},
-    ]
+    # Get active scheduled tasks
+    active_tasks = []
+    if user_id:
+        try:
+            from scheduler_manager import SchedulerManager
+            active_tasks = SchedulerManager.get_user_tasks(user_id, status="active")[:3]
+        except Exception:
+            pass
+
+    # Get perk progress from user's spending history
+    # For now, show placeholder if no real data - will be replaced with gift card tracking
+    perks = []
+    if user_id:
+        try:
+            from supabase_client import get_supabase_client
+            supabase = get_supabase_client(use_service_key=True)
+            if supabase:
+                # Query gift card purchases for perk progress
+                result = supabase.table("transactions").select("*").eq(
+                    "user_id", user_id
+                ).eq("type", "gift_card").order("created_at", desc=True).limit(5).execute()
+
+                if result.data:
+                    # Calculate progress toward rewards
+                    brand_totals = {}
+                    for tx in result.data:
+                        brand = tx.get("metadata", {}).get("brand", "unknown")
+                        brand_totals[brand] = brand_totals.get(brand, 0) + float(tx.get("amount", 0))
+
+                    # Convert to perk format
+                    for brand, total in brand_totals.items():
+                        if brand in ["spotify", "netflix", "amazon", "uber"]:
+                            perks.append({
+                                "brand": brand,
+                                "progress": min(int(total), 100),
+                                "target": 100,
+                                "reward": "1 Mo Free",
+                                "spent": int(total)
+                            })
+        except Exception:
+            pass
+
+    # Default perks if no real data (shows what's possible)
+    if not perks:
+        perks = [
+            {"brand": "spotify", "progress": 0, "target": 100, "reward": "1 Mo Free", "spent": 0},
+            {"brand": "netflix", "progress": 0, "target": 100, "reward": "1 Mo Free", "spent": 0},
+        ]
 
     # === SLOT BUILDER ===
     slots = []
@@ -550,7 +604,7 @@ def render_pulse_deck():
         "brand_key": "ai",
     })
 
-    # Slot 2: Treasury card (SPOTLIGHT - shows balance + treasury health)
+    # Slot 2: Balance card (SPOTLIGHT - shows balance + yield status)
     usdc_balance = 0.00
     yield_earnings = 0.00
     yield_apy = 0.0
@@ -583,13 +637,13 @@ def render_pulse_deck():
         except Exception:
             pass
 
-    # Build treasury status line
-    treasury_parts = []
+    # Build balance status line
+    status_parts = []
     if yield_apy > 0:
-        treasury_parts.append(f"{yield_apy:.1f}% APY")
+        status_parts.append(f"{yield_apy:.1f}% APY")
     if active_automations > 0:
-        treasury_parts.append(f"{active_automations} auto")
-    treasury_status = " · ".join(treasury_parts) if treasury_parts else "Tap to earn"
+        status_parts.append(f"{active_automations} auto")
+    balance_status = " · ".join(status_parts) if status_parts else "Tap to earn"
 
     # Add action hint if not earning yet
     balance_action = "earn" if yield_apy == 0 else None
@@ -597,7 +651,7 @@ def render_pulse_deck():
         "mode": "stat",
         "title": "BALANCE",
         "main": f"${usdc_balance:.2f}",
-        "stats": treasury_status,
+        "stats": balance_status,
         "spotlight": True,
         "icon": BRANDS["system"]["icon"],
         "brand_key": "system",
@@ -818,13 +872,19 @@ def render_pulse_deck():
         .pulse-card-sub { font-size: 10px !important; }
         .pulse-card-main .usdc-label { display: none; }
     }
-    /* Extra small: iPhone SE, Mini */
+    /* Extra small: iPhone SE, Mini - truncate instead of hide */
     @media (max-width: 375px) {
         .pulse-card { min-width: 130px; }
         .pulse-card-inner { padding: 12px !important; height: 82px !important; }
         .pulse-card-title { font-size: 8px !important; }
         .pulse-card-main { font-size: 13px !important; }
-        .pulse-card-sub { display: none; }
+        .pulse-card-sub {
+            font-size: 9px !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
     }
     </style>
     <script>
@@ -897,8 +957,9 @@ def _render_pulse_card_html(slot: dict) -> str:
         # White glow on mesh gradient cards
         fill_shadow = "0 0 8px rgba(255,255,255,0.6)"
 
-    # === ICON ===
-    icon_html = f'<img src="{icon}" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:1.0;">'
+    # === ICON (with alt text for accessibility) ===
+    title = slot.get("title", "")
+    icon_html = f'<img src="{icon}" alt="{title} icon" style="height:14px;width:auto;max-width:18px;object-fit:contain;filter:{icon_filter};opacity:1.0;">'
 
     # === MAIN VALUE (compact for mobile) ===
     if mode == "perk":
