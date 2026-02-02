@@ -98,9 +98,9 @@ web/
 - [x] Build send form with address validation
 - [x] Build transaction preview modal
 - [x] Build transaction confirmation flow
-- [ ] Build receive page with QR code
-- [ ] Build transaction history list
-- [ ] Add transaction status polling
+- [x] Build receive page with QR code
+- [x] Build transaction history list
+- [ ] Add transaction status polling (enhancement)
 
 ---
 

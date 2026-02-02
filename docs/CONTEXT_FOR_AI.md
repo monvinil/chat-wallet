@@ -54,13 +54,20 @@ USDChat makes your USDC work for you. One-click yield on Aave, automated DCA int
 - [x] Yield backend (Aave - needs UI)
 - [x] Scheduler backend (needs executor deploy)
 
-## What's In Progress (Phase 1)
-- [x] Next.js scaffold (`/web` directory) - COMPLETE
-- [x] Yield API endpoints - COMPLETE
-- [x] Scheduler API endpoints - COMPLETE
-- [x] Earnings API endpoints - COMPLETE
-- [ ] Connect frontend to backend (test end-to-end)
-- [ ] Deploy scheduler executor
+## Phase 1 Complete
+- [x] Next.js 14 scaffold with App Router (`/web` directory)
+- [x] shadcn/ui components (15+ UI components)
+- [x] TanStack Query + Zustand for state management
+- [x] JWT auth flow (login, signup, token refresh)
+- [x] Yield API + UI (Aave deposit/withdraw)
+- [x] Scheduler API + UI (DCA schedules CRUD)
+- [x] Earnings API + UI (30-day chart, summary)
+- [x] All frontend pages (wallet, earn, send, receive, history)
+- [x] Docker Compose for local development
+
+## What's Remaining for Production
+- [ ] End-to-end testing with real backend
+- [ ] Deploy scheduler executor as background worker
 
 ## What's Still Missing
 - [ ] Circle credentials (blocks x402 - Phase 3)
@@ -68,10 +75,10 @@ USDChat makes your USDC work for you. One-click yield on Aave, automated DCA int
 - [ ] RPC keys for production
 
 ## Immediate Priorities
-1. **Phase 1: Money Maker MVP** ← CURRENT
+1. **Phase 1: Money Maker MVP** ✅ COMPLETE
    - Next.js + shadcn/ui scaffold
    - Yield UI, DCA, earnings dashboard
-2. **Phase 2: PWA + Retention**
+2. **Phase 2: PWA + Retention** ← NEXT
    - Push notifications, mobile polish
 3. **Phase 3: Agent Marketplace**
    - After user traction proven
@@ -336,12 +343,12 @@ The founder prefers:
 2. **Check ROADMAP_2026.md** for detailed implementation plans
 3. **Check MANUAL_ACTIONS.md** for pending human tasks
 
-## Phase 1 Next Steps (Money Maker MVP)
-1. Initialize Next.js 14 project in `/web` directory
-2. Install shadcn/ui, TanStack Query, Zustand
-3. Create API client connecting to FastAPI
-4. Build auth flow (JWT login/signup)
-5. Build wallet overview, yield UI, DCA setup, earnings dashboard
+## Phase 2 Next Steps (PWA + Retention)
+1. Configure `next-pwa` in `web/next.config.ts`
+2. Set up push notifications (Firebase or OneSignal)
+3. Build daily earnings notification (6 PM local time)
+4. Email service integration (Resend or SendGrid)
+5. Mobile UI polish (pull-to-refresh, haptic feedback)
 
 ## What's Already Done
 - FastAPI backend (wallet, transactions, agents)
@@ -358,9 +365,10 @@ The founder prefers:
 # Questions to Ask User
 
 If starting fresh:
-1. "Ready to start the Next.js scaffold for Phase 1?"
-2. "Any design preferences for the earnings dashboard?"
-3. "What's the status on Circle/Bitrefill credentials?"
+1. "Phase 1 is complete. Ready to start Phase 2 (PWA + notifications)?"
+2. "Preference for push notifications: Firebase Cloud Messaging or OneSignal?"
+3. "Preference for email service: Resend or SendGrid?"
+4. "What's the status on Circle/Bitrefill credentials?"
 
 ---
 
