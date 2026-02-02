@@ -45,3 +45,13 @@ solders>=0.21.0
 solana>=0.34.0
 bip-utils>=2.9.0
 base58>=2.1.0
+
+# API Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+httpx>=0.26.0
+slowapi>=0.1.9
+pydantic-settings>=2.1.0

@@ -1,258 +1,321 @@
 # USDChat Master TODO
-## Created: January 2026 | Last Session Context
+## February 2026 — Aligned with Strategic Direction
 
 ---
 
-# Context & Reasoning
-
-## What This Document Is
-A persistent todo list with context, so future sessions can pick up where we left off. Includes reasoning for priorities and dependencies.
-
-## Core Product Vision (Refined)
-**One-liner:** USDChat is an AI wallet. Chat to manage your money, earn on idle funds, spend anywhere.
-
-**Three Horizons:**
-1. **AI Wallet (NOW)** — Chat interface, send/receive USDC, gift cards, merchants
-2. **Financial Autopilot (NEXT)** — Yield on idle funds, recurring payments, auto-routing
-3. **AI Projects That Earn (FUTURE)** — Characters with wallets, trading bots, monetized agents
-
-**Primary User:** Remote workers / freelancers who get paid in crypto or want to.
+> **IMPORTANT:** This TODO is subordinate to STRATEGIC_DIRECTION.md
+> All priorities flow from the strategic pillars defined there.
+> See ROADMAP_2026.md for detailed implementation plans.
+> See MANUAL_ACTIONS.md for tasks requiring human intervention.
 
 ---
 
-# A) Functionality
+# Current Focus: Phase 1 — API Integration & x402
 
-## P0 — Ship This Quarter
-
-### 1. Wire Yield UI to Aave Client
-**Status:** Not started
-**Files:** `aave_client.py` (backend ready), `components/chat.py` (Earn modules)
-**What:** Connect "Start Earning" module to actually deposit USDC to Aave
-**Why:** Core Horizon 2 feature. Backend exists, just needs UI wiring.
-**Dependency:** None
-
-### 2. Deploy Scheduler Executor
-**Status:** Not started
-**Files:** `scheduler_manager.py`, `migrations/003_scheduled_tasks.sql` (done)
-**What:** Cron job that checks `scheduled_tasks` table and executes due tasks
-**Why:** Recurring payments won't work without this
-**Dependency:** Needs deployment environment (Supabase Edge Functions or external cron)
-
-### 3. Activate Real Bitrefill API
-**Status:** Not started (currently mock mode)
-**Files:** `bitrefill_api.py`
-**What:** Switch from mock responses to real API calls
-**Why:** Gift cards are a key spending use case
-**Dependency:** Needs real Bitrefill API key in `.env`
-
-### 4. Circle Programmable Wallets SDK
-**Status:** Not started
-**What:** Integrate Circle's embedded wallet SDK for smoother onboarding
-**Why:** Better fiat→USDC flow, cleaner wallet creation
-**Dependency:** Circle developer account, API keys
-**Docs:** https://developers.circle.com/w3s/programmable-wallets
-
-### 5. Email Verification Flow
-**Status:** Not started
-**What:** Send verification email on signup, require confirmation
-**Why:** Security baseline, reduces spam accounts
-**Dependency:** Email service (Supabase has built-in, or use Resend/SendGrid)
+**Status:** IN PROGRESS
+**Blocks:** Agent marketplace, mobile app, x402 micropayments
 
 ---
 
-## P1 — Next Quarter
+# P0 — CRITICAL (Completed ✅)
 
-### 6. Multi-Step AI Agent
-**Status:** Not started
-**What:** Agent can chain actions: "Send $50 to Alice then buy a VPN"
-**Why:** Power user delight, feels like real AI assistant
-**Technical:** LangChain tool sequencing, state management between calls
-**Dependency:** Current tools work, just needs orchestration layer
+## Security Fixes — DONE
 
-### 7. x402 Micropayments
-**Status:** Not started
-**What:** Implement Circle's x402 protocol for AI-to-AI payments
-**Why:** Foundation for Horizon 3 (AI projects that earn)
-**Docs:** https://developers.circle.com/stablecoins/x402
+### 1. Remove Cookie-Stored Wallet Key
+**Status:** ✅ COMPLETE
+**Files:** `session_manager.py`, `wallet_manager.py`
 
-### 8. Hyperliquid Integration
-**Status:** Not started
-**What:** API integration for perpetual trading
-**Why:** Horizon 3 — trading bots
-**Dependency:** Hyperliquid API key, user needs to connect their account
+- [x] Remove `chat_wallet_key` from cookies (was already deprecated)
+- [x] Implement memory-only key storage
+- [x] Add password re-entry on unlock
+- [x] Verified key not stored in cookies
 
-### 9. Polymarket Integration
-**Status:** Not started
-**What:** API for prediction market bets
-**Why:** Horizon 3 — trading bots
-**Dependency:** Polymarket API access
+### 2. Implement Auto-Lock
+**Status:** ✅ COMPLETE
+**Files:** `wallet_manager.py`, `rate_limiter.py`
 
-### 10. Income Routing Engine
-**Status:** Not started
-**What:** Auto-split incoming deposits to buckets (spending/earning/tax)
-**Why:** Horizon 2 — financial autopilot
-**Technical:** Rules engine that triggers on deposit detection
+- [x] Add `last_activity_timestamp` via `_last_wallet_activity`
+- [x] Create `should_auto_lock()` and `check_auto_lock()` (15 min default)
+- [x] Clear sensitive data on timeout
+- [x] User settings support for custom timeout
+
+### 3. Session State Audit
+**Status:** ✅ COMPLETE
+**Files:** `wallet_manager.py`, `session_manager.py`
+
+- [x] Audit all session keys
+- [x] Document sensitive keys in `SENSITIVE_SESSION_KEYS`
+- [x] Fixed `wallet_data` leak in logout/lock flows
+- [x] `lock_wallet()` now clears all sensitive keys
 
 ---
 
-# B) PMF (Product-Market Fit)
+## Manual Actions Required (Parallel Track)
 
-### 11. Define User Journey
-**Status:** ✅ Done
-**What:** Document Day 1, Day 7, Day 30 experience for freelancer persona
-**Why:** Know what "success" looks like, align features to journey
-**Output:** Added to VISION_2026.md as Part V-B
+**Owner:** Founder (cannot be automated)
+**Details:** See MANUAL_ACTIONS.md
 
-### 12. Add Analytics Events
-**Status:** Not started
-**What:** Track activation, first deposit, first send, yield enabled, retention
-**Why:** Can't improve what you don't measure
-**Technical:** PostHog, Mixpanel, or simple Supabase event logging
-
-### 13. In-App Feedback Button
-**Status:** Not started
-**What:** Simple "Send feedback" that logs to Supabase + optional email
-**Why:** Direct user voice
-**Technical:** Quick to build, high value
-
-### 14. Onboarding A/B Tests
-**Status:** Not started
-**What:** Test different hooks for first deposit conversion
-**Why:** Deposit is the key activation metric
-**Dependency:** Needs analytics first
-
-### 15. Document Revenue Model
-**Status:** Partially done (fee structure in config.py)
-**What:** Explicit documentation of all revenue streams
-**Current:** 0.2% + $0.005 flat fee, $3 cap (in `config.py`)
-**Missing:** Yield split percentage, premium tier details
+- [ ] Circle Developer Account setup
+- [ ] Circle API credentials
+- [ ] Bitrefill API credentials
+- [ ] Alchemy/Infura RPC keys
 
 ---
 
-# C) UX/UI
+# P1 — HIGH (Current Sprint)
 
-### 16. Pulse Deck: Balance Card Actionable
-**Status:** Not started
-**What:** "Tap to earn" triggers yield deposit flow
-**Why:** Promise without payoff is bad UX
-**Files:** `components/chat.py` (render_pulse_deck)
+## API Foundation — DONE ✅
 
-### 17. Pulse Deck: Perk Progress Text
-**Status:** Not started
-**What:** Show "25 more to unlock" instead of just "75/100"
-**Why:** Urgency, progress visibility, retention psychology
-**Files:** `components/chat.py` (_render_pulse_card_html)
+### 4. FastAPI Setup
+**Status:** ✅ COMPLETE
+**Files:** `api/` directory
 
-### 18. Pulse Deck: AI Card Last Action
-**Status:** Not started
-**What:** Show last AI action ("Sent $50 · 2h ago") on YOUR AI card
-**Why:** Proof the AI is working, trust building
-**Technical:** Query recent decision_logs or chat history
-**Files:** `components/chat.py` (render_pulse_deck)
+- [x] Create directory structure (`api/`, `api/routes/`, `api/schemas/`, `api/middleware/`)
+- [x] Set up FastAPI app (`api/main.py`)
+- [x] Configure CORS
+- [x] Add JWT auth middleware (`api/middleware/auth.py`)
+- [x] Add rate limiting (slowapi)
 
-### 19. Mobile Responsive Pass
-**Status:** Partially done
-**What:** Test and fix cards, modules, chat on mobile viewports
-**Why:** Many users will be mobile-first
-**Files:** `components/chat.py` (CSS media queries exist, need testing)
+### 5. Wallet API Endpoints
+**Status:** ✅ COMPLETE
+**Files:** `api/routes/wallet.py`
 
-### 20. Onboarding Polish
-**Status:** Not started
-**What:** First-run experience improvements
-**Why:** First 30 seconds determine conversion
-**Files:** `onboarding.py`
+- [x] GET /balance (auth required)
+- [x] GET /address/{chain}
+- [x] POST /create
+- [x] POST /login
+- [x] POST /import
+- [x] POST /refresh (token refresh)
 
----
+### 6. Transaction API Endpoints
+**Status:** ✅ COMPLETE
+**Files:** `api/routes/transactions.py`
 
-# D) From Discussion (Recommendations)
+- [x] POST /preview
+- [x] POST /send
+- [x] GET /status/{hash}
+- [x] GET /history
+- [x] POST /bridge/preview (CCTP)
 
-### 21. AI Confirmation for Large Amounts
-**Status:** Not started
-**What:** Transactions >$100 require explicit confirmation step
-**Why:** Safety, trust, prevents expensive mistakes
-**Technical:** Already have preview system, just add threshold logic
-**Files:** `transaction_tools.py`, `components/chat.py`
+### 7. RLS Policies
+**Status:** [ ] Not Started
+**Files:** Supabase dashboard
+**Details:** See ROADMAP_2026.md Section 0.4
 
-### 22. Chained Tool Calls
-**Status:** Not started
-**What:** Support sequential tool execution in one message
-**Why:** "Pay rent and buy groceries" should work
-**Technical:** LangChain agent already supports this, may need prompt tuning
+- [ ] Create policies for all tables
+- [ ] Remove unnecessary service key usage
+- [ ] Test cross-user access blocked
 
-### 23. Perks → Real Spend Tracking
-**Status:** Not started
-**What:** Connect perk progress to actual gift card purchases
-**Why:** Currently mock data (75/100 hardcoded)
-**Technical:** Query transactions table for gift card purchases by brand
-**Files:** `components/chat.py` (render_pulse_deck)
+## Streamlit → API Integration
 
-### 24. Streak/Retention Card
-**Status:** Not started
-**What:** "Active 5 days · $12.40 earned this week"
-**Why:** Personal investment, retention psychology
-**Technical:** Track daily active sessions, sum yield earnings
+### 8. Migrate Streamlit to API Client
+**Status:** [ ] Not Started
+**Files:** `app.py`, `components/*.py`
 
-### 25. AI Character Monetization Flow
-**Status:** Not started (Horizon 3)
-**What:** Payment links, tips, subscriptions for AI characters
-**Why:** Foundation for "AI projects that earn"
-**Dependency:** x402 micropayments, character creation flow
+- [ ] Create API client wrapper
+- [ ] Replace direct wallet_manager calls with API
+- [ ] Replace direct chain_utils calls with API
+- [ ] Test full flow through API layer
 
 ---
 
-# Priority Stack (Recommended Order)
+# P2 — MEDIUM (Week 3-4)
 
-## Immediate (This Week)
-1. ~~**Wire yield UI**~~ — ✅ Done (backend + UI connected)
-2. ~~**Pulse Deck improvements**~~ — ✅ Done (actionable cards, progress text, AI action)
-3. ~~**Document user journey**~~ — ✅ Done (Day 1/7/30/90 in VISION_2026.md)
+## x402 & Payments
 
-## Next Sprint
-4. **Scheduler executor** — Recurring payments live
-5. **Analytics events** — Start measuring
-6. **Real Bitrefill** — Gift cards end-to-end (needs API key)
+### 8. x402 Protocol Implementation
+**Status:** [ ] Not Started
+**Details:** See ROADMAP_2026.md Section 2.1
+**Dependency:** Circle API credentials
 
-## Following Sprint
-7. **Circle SDK exploration** — Smoother onboarding
-8. **Multi-step agent** — Power user delight
-9. **Mobile responsive** — Expand reach
+- [ ] Study x402 spec
+- [ ] Implement payment request generation
+- [ ] Implement payment verification
+- [ ] Create HTTP 402 handler
 
-## Horizon 3 Prep (Q3)
-10. **Hyperliquid/Polymarket APIs**
-11. **x402 micropayments**
-12. **Character monetization**
+### 9. Payment Links
+**Status:** [ ] Not Started
+**Details:** See ROADMAP_2026.md Section 2.4
 
----
+- [ ] Create shareable links
+- [ ] Generate QR codes
+- [ ] Track usage
+- [ ] Webhooks on payment
 
-# Dependencies / Needs From User
+### 10. Revenue Split System
+**Status:** [ ] Not Started
+**Details:** See ROADMAP_2026.md Section 2.5
 
-| Item | What's Needed |
-|------|---------------|
-| Real Bitrefill | API key in `.env` as `BITREFILL_API_KEY` |
-| Circle SDK | Circle developer account, API credentials |
-| Email verification | Email service config (Supabase built-in or external) |
-| Hyperliquid | API key, user authentication flow |
-| Polymarket | API access |
-| Analytics | PostHog/Mixpanel project or Supabase event table |
+- [ ] Define split ratios (70/20/10)
+- [ ] Implement auto-split
+- [ ] Track all revenue streams
 
 ---
 
-# What's Already Done (This Session)
+# P3 — COMPLETED (Agent Protocol)
 
-1. ✅ VISION_2026.md revised — Horizon 3 reframed as "AI projects that earn"
-2. ✅ Language cleanup — "Treasury" → "Balance" throughout
-3. ✅ Pulse Deck: TREASURY → BALANCE label change
-4. ✅ Decision logger wired to chat
-5. ✅ RPC fallback system added
-6. ✅ Auto-lock functionality added
-7. ✅ Balance caching added
-8. ✅ Supabase migrations created (003, 004)
-9. ✅ Pulse Deck: Balance card triggers yield deposit flow
-10. ✅ Pulse Deck: Perk progress shows "X more → reward"
-11. ✅ Pulse Deck: AI card displays last agent action
-12. ✅ User journey documented (Day 1/7/30/90 for freelancer persona)
+## Agent Protocol — DONE ✅
+
+### 11. Agent Registry Database
+**Status:** ✅ COMPLETE
+**Files:** `migrations/007_agent_registry.sql`
+
+- [x] Create `agents` table (with slug, pricing, capabilities, stats)
+- [x] Create `agent_earnings` table (with auto-split tracking)
+- [x] Create `agent_subscriptions` table
+- [x] Create `agent_requests` table (usage logging)
+- [x] Create `agent_reviews` table
+- [x] Create `agent_capabilities` table (built-in caps)
+- [x] Create `user_agent_permissions` table
+- [x] Add RLS policies for all tables
+- [x] Add triggers for rating/revenue updates
+
+### 12. Agent SDK
+**Status:** ✅ COMPLETE
+**Files:** `sdk/usdchat_agent/`
+
+- [x] Define `Agent` base class
+- [x] Capability declaration system (`@capability` decorator)
+- [x] Payment integration helpers (`@x402_payment` decorator)
+- [x] Type system (AgentContext, UserInfo, PaymentInfo)
+- [x] Exception classes (PaymentRequiredError, CapabilityDeniedError)
+- [x] Example agents (crypto_news_agent.py, trading_bot_agent.py)
+- [x] Package setup (setup.py, README.md)
+
+### 13. Agent API Endpoints
+**Status:** ✅ COMPLETE
+**Files:** `api/routes/agents.py`, `api/schemas/agent.py`
+
+- [x] CRUD for agents (create, read, update, archive)
+- [x] Publish endpoint (draft → pending_review → active)
+- [x] Message endpoint with x402 payment handling
+- [x] Subscription endpoints
+- [x] Review endpoints
+- [x] Creator dashboard (my/agents, my/earnings)
+- [x] Discovery (list, featured, categories, search)
 
 ---
 
-*Last updated: January 2026*
-*Session: VISION review + PMF discussion + TODO creation*
+# Backlog (Deprioritized)
+
+These items from the old TODO are now lower priority:
+
+| Item | Old Priority | New Status | Reason |
+|------|--------------|------------|--------|
+| Pulse Deck improvements | P0 | DONE | Completed in previous session |
+| Wire yield UI to Aave | P0 | P2 | API layer first |
+| Deploy scheduler | P0 | P2 | API layer first |
+| Real Bitrefill | P0 | P1 | Needs API key (manual action) |
+| Mobile responsive | P1 | P3 | API/PWA first |
+| Multi-step agent | P1 | P3 | Agent protocol first |
+| Analytics events | P1 | P2 | After API |
+
+---
+
+# Completed (Recent)
+
+## February 2026 — Agent Protocol Sprint
+- [x] Agent: Database schema with 8 tables (migrations/007_agent_registry.sql)
+- [x] Agent: SDK package (sdk/usdchat_agent/)
+- [x] Agent: Base Agent class with config validation
+- [x] Agent: @capability decorator for permissions
+- [x] Agent: @x402_payment decorator for micropayments
+- [x] Agent: Type system (AgentContext, PaymentInfo, etc.)
+- [x] Agent: Exception classes (PaymentRequiredError)
+- [x] Agent: Example agents (crypto_news, trading_bot)
+- [x] API: Full agent CRUD endpoints
+- [x] API: Agent discovery (list, featured, search, categories)
+- [x] API: Agent subscriptions and reviews
+- [x] API: Creator dashboard (my/agents, my/earnings)
+- [x] Docs: CONTEXT_FOR_AI.md updated with agent info
+
+## February 2026 — Security & API Sprint
+- [x] Security: Cookie wallet key deprecated (memory-only)
+- [x] Security: Auto-lock on idle (15 min default, configurable)
+- [x] Security: Session state audit, fixed wallet_data leak
+- [x] Security: SENSITIVE_SESSION_KEYS documented
+- [x] API: FastAPI foundation with JWT auth
+- [x] API: Wallet endpoints (create, login, import, balance, address, refresh)
+- [x] API: Transaction endpoints (preview, send, history, status, bridge/preview)
+- [x] API: Rate limiting with slowapi
+- [x] API: Pydantic schemas for validation
+- [x] Docs: STRATEGIC_DIRECTION.md (authoritative)
+- [x] Docs: ROADMAP_2026.md (implementation plan)
+- [x] Docs: MANUAL_ACTIONS.md (human tasks)
+- [x] Docs: CONTEXT_FOR_AI.md (session continuity)
+- [x] Docs: North star changed to Weekly Active Creators (WAC)
+
+## Earlier
+- [x] VISION_2026.md revised
+- [x] Pulse Deck improvements (balance, perks, AI card)
+- [x] User journey documented
+- [x] RPC fallback system added
+- [x] Balance caching added
+
+---
+
+# Dependencies Map
+
+```
+Manual Actions (API Keys)
+    │
+    ├──► Circle Credentials ──► x402 Implementation
+    │
+    ├──► Bitrefill API ──► Real Gift Cards
+    │
+    └──► RPC Keys ──► Production Reliability
+
+Security Fixes
+    │
+    └──► API Layer
+           │
+           ├──► x402 Protocol
+           │
+           ├──► Agent Protocol
+           │
+           └──► Mobile App
+```
+
+---
+
+# Weekly Check-In Template
+
+Use this for status updates:
+
+```markdown
+## Week of [DATE]
+
+### Completed
+- [ ] List completed items
+
+### In Progress
+- [ ] List current work
+
+### Blocked
+- [ ] List blockers and why
+
+### Next Week
+- [ ] List planned work
+
+### Manual Actions Status
+- Circle credentials: [ ] Done [ ] Pending [ ] Blocked
+- Bitrefill API: [ ] Done [ ] Pending [ ] Blocked
+- RPC Keys: [ ] Done [ ] Pending [ ] Blocked
+```
+
+---
+
+# Quick Reference
+
+| Document | Purpose |
+|----------|---------|
+| STRATEGIC_DIRECTION.md | Why we're building what |
+| ROADMAP_2026.md | How we're building it |
+| MANUAL_ACTIONS.md | What you need to do |
+| CONTEXT_FOR_AI.md | Quick context for AI sessions |
+| This file | What's being worked on now |
+
+---
+
+*Last Updated: February 2026*
+*Next Review: Weekly or when priorities change*

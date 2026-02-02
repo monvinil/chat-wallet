@@ -16,6 +16,15 @@ from utils.logger import logger
 # Default auto-lock timeout in minutes (can be overridden in user settings)
 DEFAULT_AUTO_LOCK_MINUTES = 15
 
+# SECURITY: Sensitive session state keys that must be cleared on logout/lock
+# These contain cryptographic material or decrypted secrets
+SENSITIVE_SESSION_KEYS = [
+    "wallet_key",           # Fernet encryption key (allows decryption)
+    "wallet_data",          # Decrypted wallet JSON (contains private keys)
+    "_pending_seed_phrase", # Seed phrase shown during signup
+    "_export_key_step",     # Key export flow state
+]
+
 
 class WalletManager:
     """Manages non-custodial wallet operations"""
@@ -291,9 +300,13 @@ class WalletManager:
 
     @staticmethod
     def lock_wallet():
-        """Lock wallet (clear decryption key from memory and cookie)"""
-        if "wallet_key" in st.session_state:
-            del st.session_state.wallet_key
+        """Lock wallet (clear decryption key and sensitive data from memory)"""
+        # Clear sensitive wallet data from memory
+        sensitive_keys = ["wallet_key", "wallet_data", "_pending_seed_phrase"]
+        for key in sensitive_keys:
+            if key in st.session_state:
+                del st.session_state[key]
+
         st.session_state.wallet_locked = True
 
         # Also clear wallet key cookie so it stays locked on refresh

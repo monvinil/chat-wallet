@@ -416,10 +416,11 @@ class SessionManager:
         for key in keys_to_clear:
             del st.session_state[key]
 
-        # Clear core session state
+        # Clear core session state (including sensitive wallet data)
         for key in ["user_id", "user_email", "wallet_address", "wallet_encrypted",
-                    "wallet_salt", "wallet_key", "wallet_locked", "session_token",
+                    "wallet_salt", "wallet_key", "wallet_data", "wallet_locked", "session_token",
                     "balances", "agent", "messages", "guest_mode", "guest_wallet_address",
-                    "guest_mnemonic", "_guest_user_id"]:
+                    "guest_mnemonic", "_guest_user_id", "_pending_seed_phrase",
+                    "_export_key_step", "_last_wallet_activity"]:
             if key in st.session_state:
                 del st.session_state[key]
