@@ -11,17 +11,18 @@
 # Quick Summary
 
 **Project:** USDChat
-**What it is:** AI project launchpad with money rails (NOT just a wallet)
-**Tech Stack:** Python/Streamlit + FastAPI (API layer added Feb 2026)
+**What it is:** Retail money-maker wallet (yield + DCA) with future agent marketplace
+**Tech Stack:** Next.js 14 + shadcn/ui (frontend) + FastAPI (backend)
 **Key Partner:** Circle (USDC infrastructure)
-**Primary Goal:** Let people turn AI ideas into money-making agents
-**North Star:** Weekly Active Creators (WAC)
+**Primary Goal:** Help users earn passive income on their USDC
+**North Star:** Daily Active Users checking earnings
+**Strategic Pivot:** Money maker features first, agent marketplace second
 
 ---
 
 # The Vision (One Paragraph)
 
-USDChat enables anyone to create AI agents that can earn money. The wallet functionality is just plumbing — the real value is the ecosystem of community-created agents that can accept payments, run trades, and monetize autonomously. We're building on Circle's infrastructure (CCTP for bridging, x402 for micropayments) to create network effects where more creators attract more users attract more creators.
+USDChat makes your USDC work for you. One-click yield on Aave, automated DCA into ETH/BTC, and a beautiful earnings dashboard that brings you back every day. The agent marketplace (already built in backend) ships after we have users — because a wallet that makes people $50/month has users, an agent marketplace with no agents has none. We're building on Circle's infrastructure (CCTP for bridging, x402 for micropayments) for the future agent economy.
 
 ---
 
@@ -36,48 +37,58 @@ USDChat enables anyone to create AI agents that can earn money. The wallet funct
 
 # Current State (February 2026)
 
-## What Works
-- Wallet creation (BIP39/44, EVM + Solana)
-- Send/receive USDC
-- Gift card purchases (mocked - needs real API key)
-- AI chat with LangChain tools
-- Yield farming backend (Aave - ready, needs UI wiring)
-- CCTP bridging code (ready, not tested mainnet)
-- **NEW: FastAPI layer with wallet/transaction endpoints**
-- **Security: Cookie wallet key deprecated (memory-only)**
-- **Security: Auto-lock on idle (15 min default)**
+## Strategic Pivot
+- **OLD:** Agent marketplace first, wallet features second
+- **NEW:** Money maker features first, agent marketplace second
+- **Rationale:** A wallet that makes people $50/month has users. An agent marketplace with no agents has none.
 
-## What's In Progress
-- [ ] Streamlit → API client integration
-- [ ] x402 micropayments implementation (blocked on Circle credentials)
+## Frontend Migration
+- **FROM:** Streamlit (full page reloads, limited mobile, 15% of fintech)
+- **TO:** Next.js 14 + shadcn/ui + Tailwind (real-time, PWA, 70% of fintech)
 
-## What's Done (Recently)
-- [x] Agent registry database schema (`migrations/007_agent_registry.sql`)
-- [x] Agent SDK (`sdk/usdchat_agent/`)
-- [x] Agent API endpoints (`/api/v1/agents/*`)
+## What's Done (Backend Ready)
+- [x] Wallet creation (BIP39/44, EVM + Solana)
+- [x] FastAPI layer (wallet, transactions, agents)
+- [x] Agent protocol (database, SDK, API) - ships Phase 3
+- [x] Security hardening (memory-only keys, auto-lock)
+- [x] Yield backend (Aave - needs UI)
+- [x] Scheduler backend (needs executor deploy)
+
+## What's In Progress (Phase 1)
+- [x] Next.js scaffold (`/web` directory) - COMPLETE
+- [x] Yield API endpoints - COMPLETE
+- [x] Scheduler API endpoints - COMPLETE
+- [x] Earnings API endpoints - COMPLETE
+- [ ] Connect frontend to backend (test end-to-end)
+- [ ] Deploy scheduler executor
 
 ## What's Still Missing
-- [ ] Scheduler executor deployment
-- [ ] Circle credentials (user action required)
-- [ ] Bitrefill API key (user action required)
+- [ ] Circle credentials (blocks x402 - Phase 3)
+- [ ] Bitrefill API key (gift cards)
+- [ ] RPC keys for production
 
 ## Immediate Priorities
-1. ~~Security fixes~~ ✅ Done
-2. ~~API layer (FastAPI)~~ ✅ Complete
-3. ~~Agent registry~~ ✅ Schema + SDK + API done
-4. x402 prototype (needs Circle credentials)
-5. Streamlit → API migration
+1. **Phase 1: Money Maker MVP** ← CURRENT
+   - Next.js + shadcn/ui scaffold
+   - Yield UI, DCA, earnings dashboard
+2. **Phase 2: PWA + Retention**
+   - Push notifications, mobile polish
+3. **Phase 3: Agent Marketplace**
+   - After user traction proven
 
 ---
 
 # Architecture
 
-## Current State
+## Target State (Next.js + FastAPI)
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    Streamlit App (app.py)                           │
-│                    - Chat interface                                 │
-│                    - UI components                                  │
+│                    Next.js 14 App (/web)                            │
+│                    - App Router                                     │
+│                    - shadcn/ui components                           │
+│                    - TanStack Query (data fetching)                 │
+│                    - Zustand (state management)                     │
+│                    - PWA with next-pwa                              │
 └─────────────────────────────────────────────────────────────────────┘
                                   │
                                   ▼
@@ -85,7 +96,10 @@ USDChat enables anyone to create AI agents that can earn money. The wallet funct
 │                    FastAPI (api/main.py)                            │
 │                    - /api/v1/wallet/*                               │
 │                    - /api/v1/transactions/*                         │
-│                    - /api/v1/agents/*  ← NEW                        │
+│                    - /api/v1/agents/* (Phase 3)                     │
+│                    - /api/v1/yield/* ✅                             │
+│                    - /api/v1/scheduler/* ✅                         │
+│                    - /api/v1/earnings/* ✅                          │
 │                    - JWT auth, rate limiting                        │
 └─────────────────────────────────────────────────────────────────────┘
                                   │
@@ -96,9 +110,13 @@ USDChat enables anyone to create AI agents that can earn money. The wallet funct
 │   Services   │       │   Services   │       │   Services   │
 │              │       │              │       │              │
 │wallet_manager│       │ Agent SDK    │       │chain_utils   │
-│session_mgr   │       │ Agent API    │       │supabase      │
+│aave_client   │       │ Agent API    │       │supabase      │
+│scheduler_mgr │       │              │       │              │
 └──────────────┘       └──────────────┘       └──────────────┘
 ```
+
+## Legacy (Streamlit - Being Replaced)
+The Streamlit app (`app.py`) remains for reference but is being replaced by the Next.js frontend.
 
 ## API Endpoints Available
 
@@ -145,6 +163,28 @@ USDChat enables anyone to create AI agents that can earn money. The wallet funct
 | `/api/v1/agents/{slug}/reviews` | POST | Create/update review (auth) |
 | `/api/v1/agents/my/agents` | GET | Get creator's agents (auth) |
 | `/api/v1/agents/my/earnings` | GET | Get creator earnings (auth) |
+
+### Yield Endpoints (Phase 1)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/yield/status` | GET | Get yield status (APY, deposited, earned) |
+| `/api/v1/yield/deposit` | POST | Deposit USDC into Aave (auth) |
+| `/api/v1/yield/withdraw` | POST | Withdraw from Aave (auth) |
+
+### Scheduler Endpoints (Phase 1)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/scheduler/create` | POST | Create DCA schedule (auth) |
+| `/api/v1/scheduler/list` | GET | List all schedules (auth) |
+| `/api/v1/scheduler/{id}/cancel` | POST | Cancel a schedule (auth) |
+| `/api/v1/scheduler/{id}/pause` | POST | Pause a schedule (auth) |
+| `/api/v1/scheduler/{id}/resume` | POST | Resume a schedule (auth) |
+
+### Earnings Endpoints (Phase 1)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/earnings/summary` | GET | Get earnings summary (auth) |
+| `/api/v1/earnings/history` | GET | Get earnings history for charts (auth) |
 
 ## Running the API
 ```bash
@@ -265,58 +305,64 @@ The founder prefers:
 # Recent Session Context
 
 ## Work Done (February 2026)
-1. Complete strategic analysis and reframing
-2. Security hardening:
+1. **Strategic Pivot:** Money maker first, agent marketplace second
+2. **Frontend Decision:** Streamlit → Next.js 14 + shadcn/ui
+3. Security hardening:
    - Cookie wallet key deprecated
    - Auto-lock implemented (via rate_limiter.py)
    - Session state audit (wallet_data leak fixed)
-3. FastAPI foundation created:
-   - Wallet endpoints (create, login, import, balance, address)
-   - Transaction endpoints (preview, send, history, status)
-   - JWT authentication middleware
-   - Rate limiting
-4. Documentation restructured
-5. North star changed from TVL to Weekly Active Creators
-6. **Agent Protocol implemented:**
+4. FastAPI foundation created (complete)
+5. Agent Protocol implemented (backend ready, UI in Phase 3):
    - Database schema (`migrations/007_agent_registry.sql`)
-   - Agent SDK with capabilities and x402 payment decorators
-   - Full CRUD API for agents
-   - Subscription and review system
-   - Creator earnings dashboard
+   - Agent SDK (`sdk/usdchat_agent/`)
+   - Full CRUD API (`api/routes/agents.py`)
+6. **Roadmap rewritten** for strategic pivot
+7. **TODO updated** to reflect Phase 1-3 approach
 
 ## Key Decisions
 | Decision | Rationale |
 |----------|-----------|
-| Weekly Active Creators as north star | Avoids TVL/valuation trap |
-| API layer before mobile | Unblocks everything |
-| x402 prioritized | Enables agent economy |
-| Community agents over internal integrations | Network effects |
-| Agent SDK as Python package | Easy for creators to build |
+| Money maker first | Cold-start problem: no agents → no users |
+| Next.js 14 + shadcn/ui | 70% of fintech uses React; PWA support |
+| Daily earnings as north star | Return behavior driver |
+| Agent marketplace Phase 3 | Backend ready, wait for user base |
 | 70/20/10 revenue split | Industry standard, fair to creators |
 
 ---
 
 # How To Continue Work
 
-1. **Check TODO_MASTER.md** for current task list
-2. **Check MANUAL_ACTIONS.md** for pending human tasks
-3. **API is ready** — Full endpoints for wallet, transactions, and agents
-4. **Agent SDK ready** — Creators can start building agents
-5. **Next steps:**
-   - Run `migrations/007_agent_registry.sql` in Supabase
-   - x402 prototype (needs Circle credentials)
-   - Streamlit → API client migration
+1. **Check TODO_MASTER.md** for current task list (Phase 1-3 structure)
+2. **Check ROADMAP_2026.md** for detailed implementation plans
+3. **Check MANUAL_ACTIONS.md** for pending human tasks
+
+## Phase 1 Next Steps (Money Maker MVP)
+1. Initialize Next.js 14 project in `/web` directory
+2. Install shadcn/ui, TanStack Query, Zustand
+3. Create API client connecting to FastAPI
+4. Build auth flow (JWT login/signup)
+5. Build wallet overview, yield UI, DCA setup, earnings dashboard
+
+## What's Already Done
+- FastAPI backend (wallet, transactions, agents)
+- Agent database schema (run in Supabase)
+- Agent SDK (sdk/usdchat_agent/)
+- Security hardening
+
+## Blocked Items (User Action Required)
+- Circle credentials → x402 (Phase 3)
+- Bitrefill API key → Gift cards
 
 ---
 
 # Questions to Ask User
 
 If starting fresh:
-1. "What's the current status on Circle credentials?"
-2. "Should I continue with x402 implementation or focus elsewhere?"
-3. "Any specific features you want prioritized?"
+1. "Ready to start the Next.js scaffold for Phase 1?"
+2. "Any design preferences for the earnings dashboard?"
+3. "What's the status on Circle/Bitrefill credentials?"
 
 ---
 
 *Last Updated: February 2026*
-*Session: Agent Protocol implemented (schema, SDK, API)*
+*Session: Strategic pivot to Money Maker first, Next.js + shadcn/ui*

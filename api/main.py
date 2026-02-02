@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from api.config import settings
 from api.routes import wallet, transactions, health, agents
+from api.routes import yield_routes, scheduler_routes, earnings_routes
 from api.middleware.auth import JWTBearer
 from utils.logger import logger
 
@@ -111,6 +112,9 @@ def create_app() -> FastAPI:
     app.include_router(wallet.router, prefix="/api/v1/wallet", tags=["Wallet"])
     app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Transactions"])
     app.include_router(agents.router, prefix="/api/v1/agents", tags=["Agents"])
+    app.include_router(yield_routes.router, prefix="/api/v1/yield", tags=["Yield"])
+    app.include_router(scheduler_routes.router, prefix="/api/v1/scheduler", tags=["Scheduler"])
+    app.include_router(earnings_routes.router, prefix="/api/v1/earnings", tags=["Earnings"])
 
     return app
 

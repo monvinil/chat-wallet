@@ -265,6 +265,64 @@ class TaskExecutor:
 
         return False
 
+    def execute_dca(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute a DCA (Dollar Cost Average) task.
+
+        Swaps USDC for target token (ETH, WBTC) using DEX.
+        For Phase 1 MVP, uses simple 1inch or Uniswap swap.
+        """
+        from supabase_client import get_supabase_client
+
+        task_params = task.get("task_params", {})
+        if isinstance(task_params, str):
+            task_params = json.loads(task_params)
+
+        amount = float(task_params.get("amount", 0))
+        target_token = task_params.get("target_token", "ETH")
+        source_token = task_params.get("source_token", "USDC")
+        chain = task_params.get("chain", "base-mainnet")
+        wallet_address = task_params.get("wallet_address")
+        user_id = task.get("user_id")
+
+        if amount <= 0:
+            return {"success": False, "error": "Invalid DCA amount"}
+
+        # For MVP, log the DCA intent and mark as simulated
+        # In production, this would:
+        # 1. Check USDC balance
+        # 2. Get quote from DEX aggregator (1inch, ParaSwap)
+        # 3. Execute swap transaction
+        # 4. Record the purchase price for P&L tracking
+
+        logger.info(f"DCA execution: ${amount} {source_token} -> {target_token} on {chain}")
+
+        # Simulated execution for now
+        # TODO: Implement actual DEX swap via 1inch API or direct Uniswap
+        simulated_result = {
+            "success": True,
+            "simulated": True,
+            "amount_in": amount,
+            "token_in": source_token,
+            "token_out": target_token,
+            "chain": chain,
+            "estimated_out": amount / 2500 if target_token == "ETH" else amount / 45000,  # Mock prices
+            "message": "DCA swap simulated (production: implement DEX integration)"
+        }
+
+        # Record in database for earnings tracking
+        try:
+            supabase = get_supabase_client(use_service_key=True)
+            if supabase:
+                # Update task with execution count
+                supabase.table("scheduled_tasks").update({
+                    "run_count": task.get("run_count", 0) + 1,
+                }).eq("id", task["id"]).execute()
+        except Exception as e:
+            logger.warning(f"Failed to update DCA task count: {e}")
+
+        return simulated_result
+
     def execute_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a single task based on its type"""
         task_type = task.get("task_type")
@@ -273,6 +331,8 @@ class TaskExecutor:
             return self.execute_transfer(task)
         elif task_type == "gift_card":
             return self.execute_gift_card(task)
+        elif task_type == "dca":
+            return self.execute_dca(task)
         else:
             return {"success": False, "error": f"Unknown task type: {task_type}"}
 

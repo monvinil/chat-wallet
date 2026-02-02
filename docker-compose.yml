@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-dev-secret-key-change-in-prod}
+      - DEBUG=true
+    volumes:
+      - .:/app
+    command: python run_api.py --debug
+
+  # Next.js Frontend
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    depends_on:
+      - api
+
+  # Scheduler Worker (optional - for DCA execution)
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SCHEDULER_ENCRYPTION_SECRET=${SCHEDULER_ENCRYPTION_SECRET:-dev-scheduler-secret}
+    volumes:
+      - .:/app
+    command: python scheduler_executor.py --mode worker --interval 60
+    depends_on:
+      - api
+    profiles:
+      - with-scheduler  # Only start with: docker-compose --profile with-scheduler up

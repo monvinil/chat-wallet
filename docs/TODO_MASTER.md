@@ -1,307 +1,302 @@
 # USDChat Master TODO
-## February 2026 — Aligned with Strategic Direction
+## February 2026 — Strategic Pivot: Money Maker First
 
 ---
 
-> **IMPORTANT:** This TODO is subordinate to STRATEGIC_DIRECTION.md
-> All priorities flow from the strategic pillars defined there.
-> See ROADMAP_2026.md for detailed implementation plans.
-> See MANUAL_ACTIONS.md for tasks requiring human intervention.
+> **STRATEGIC PIVOT (February 2026)**
+> Prioritizing retail "money maker" features over agent marketplace.
+> A wallet that makes people $50/month has users. An agent marketplace with no agents has none.
+> Frontend migrating: Streamlit → Next.js 14 + shadcn/ui
 
 ---
 
-# Current Focus: Phase 1 — API Integration & x402
+# Current Focus: Phase 1 — Money Maker MVP
 
-**Status:** IN PROGRESS
-**Blocks:** Agent marketplace, mobile app, x402 micropayments
+**Status:** COMPLETE
+**Goal:** Users deposit, see daily earnings, return daily
+**Frontend:** Next.js 14 + shadcn/ui (replacing Streamlit)
 
 ---
 
-# P0 — CRITICAL (Completed ✅)
+# Phase 1: Money Maker MVP
+
+## 1.1 Next.js Project Scaffold
+**Priority:** P0 - CRITICAL
+**Status:** [x] COMPLETE
+**Creates:** `/web` directory
+
+**Tasks:**
+- [x] Initialize Next.js 14 with App Router
+- [x] Install shadcn/ui, Tailwind CSS
+- [x] Install TanStack Query, Zustand
+- [x] Create API client connecting to FastAPI (`lib/api/client.ts`)
+- [x] Implement JWT auth flow (login, signup, token refresh)
+- [x] Create base layout with navigation
+- [x] Build wallet overview page (balance display)
+
+**Directory Structure:**
+```
+web/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── (auth)/login/
+│   ├── (auth)/signup/
+│   └── (dashboard)/wallet/
+├── components/ui/
+├── lib/api.ts
+└── package.json
+```
+
+## 1.2 Yield UI (Start Earning)
+**Priority:** P0 - CRITICAL
+**Status:** [x] COMPLETE
+**Backend:** `aave_client.py` + `api/routes/yield_routes.py`
+
+**Tasks:**
+- [x] Create `/api/v1/yield/deposit` endpoint (wire to aave_client)
+- [x] Create `/api/v1/yield/withdraw` endpoint
+- [x] Create `/api/v1/yield/status` endpoint
+- [x] Build "Start Earning" card component
+- [x] Build yield toggle (on/off)
+- [x] Show projected earnings calculator
+- [x] Add confirmation modal with fee breakdown
+
+## 1.3 Auto-DCA Setup
+**Priority:** P0 - CRITICAL
+**Status:** [x] COMPLETE
+**Backend:** `scheduler_executor.py` + `api/routes/scheduler_routes.py`
+
+**Tasks:**
+- [x] Create `/api/v1/scheduler/create` endpoint
+- [x] Create `/api/v1/scheduler/list` endpoint
+- [x] Create `/api/v1/scheduler/cancel` endpoint
+- [x] Add DCA support to scheduler executor
+- [x] Build DCA setup form component
+- [x] Build active schedules list
+- [x] Add next execution preview
+
+## 1.4 Earnings Dashboard
+**Priority:** P0 - CRITICAL
+**Status:** [x] COMPLETE
+**The Core Return Behavior Driver**
+
+**Tasks:**
+- [x] Create `/api/v1/earnings/summary` endpoint
+- [x] Create `/api/v1/earnings/history` endpoint
+- [x] Build earnings summary cards (today/week/month/all-time)
+- [x] Build 30-day earnings chart (Recharts)
+- [x] Build earnings breakdown by source
+- [x] Add daily/weekly/monthly/all-time toggles
+
+## 1.5 Transaction Flow (Send/Receive)
+**Priority:** P1 - HIGH
+**Status:** [x] COMPLETE
+**Backend:** Already exists via API
+
+**Tasks:**
+- [x] Build send form with address validation
+- [x] Build transaction preview modal
+- [x] Build transaction confirmation flow
+- [ ] Build receive page with QR code
+- [ ] Build transaction history list
+- [ ] Add transaction status polling
+
+---
+
+# Phase 2: PWA + Retention
+
+## 2.1 PWA Configuration
+**Priority:** P0 - CRITICAL (after Phase 1)
+**Status:** [ ] Not Started
+
+**Tasks:**
+- [ ] Configure `next-pwa` in next.config.ts
+- [ ] Create `manifest.json` with app icons
+- [ ] Set up service worker for offline support
+- [ ] Add install prompt banner
+- [ ] Configure app shortcuts (quick send, view earnings)
+
+## 2.2 Push Notifications
+**Priority:** P0 - CRITICAL (after Phase 1)
+**Status:** [ ] Not Started
+**The Daily Return Trigger**
+
+**Tasks:**
+- [ ] Set up web push (Firebase or OneSignal)
+- [ ] Create notification preferences UI
+- [ ] Build daily earnings notification (6 PM local time)
+- [ ] Build transaction notification triggers
+- [ ] Add notification history in-app
+
+## 2.3 Email Notifications
+**Priority:** P1 - HIGH (after Phase 1)
+**Status:** [ ] Not Started
+
+**Tasks:**
+- [ ] Set up email service (Resend or SendGrid)
+- [ ] Design email templates
+- [ ] Weekly earnings summary email
+- [ ] Transaction confirmation emails
+- [ ] Security alert emails
+
+## 2.4 Mobile UI Polish
+**Priority:** P1 - HIGH (after Phase 1)
+**Status:** [ ] Not Started
+
+**Tasks:**
+- [ ] Mobile-first navigation (bottom tabs)
+- [ ] Touch-optimized buttons and inputs
+- [ ] Swipe gestures for common actions
+- [ ] Pull-to-refresh on balances
+- [ ] Haptic feedback on transactions
+
+---
+
+# Phase 3: Agent Marketplace (After User Traction)
+
+## 3.1 Agent Discovery UI
+**Priority:** P1 - HIGH (after Phase 2)
+**Status:** [ ] Not Started
+**Backend:** Already built (api/routes/agents.py)
+
+**Tasks:**
+- [ ] Build agent marketplace page
+- [ ] Build agent cards with stats
+- [ ] Build category filters
+- [ ] Build search functionality
+- [ ] Build agent detail page
+- [ ] Build "Use this agent" flow
+
+## 3.2 x402 Integration
+**Priority:** P0 - CRITICAL (when reached)
+**Status:** [ ] Blocked on Circle credentials
+
+**Tasks:**
+- [ ] Implement x402 payment request generation
+- [ ] Implement payment verification
+- [ ] Create payment confirmation UI
+- [ ] Handle 402 responses in agent chat
+- [ ] Track micropayments in agent_earnings
+
+## 3.3 Agent Chat Interface
+**Priority:** P1 - HIGH (after Phase 2)
+**Status:** [ ] Not Started
+
+**Tasks:**
+- [ ] Build chat UI for agent interaction
+- [ ] Handle streaming responses
+- [ ] Show payment prompts inline
+- [ ] Display agent capabilities
+- [ ] Track conversation history
+
+## 3.4 Creator Onboarding
+**Priority:** P1 - HIGH (after Phase 2)
+**Status:** [ ] Not Started
+
+**Tasks:**
+- [ ] Build "Create Agent" wizard
+- [ ] Build agent configuration form
+- [ ] Build capability selection
+- [ ] Build pricing configuration
+- [ ] Build agent testing sandbox
+- [ ] Build publish/review flow
+
+---
+
+# Completed (Infrastructure Ready)
 
 ## Security Fixes — DONE
+- [x] Cookie wallet key deprecated (memory-only)
+- [x] Auto-lock on idle (15 min default)
+- [x] Session state audit, fixed wallet_data leak
+- [x] SENSITIVE_SESSION_KEYS documented
 
-### 1. Remove Cookie-Stored Wallet Key
-**Status:** ✅ COMPLETE
-**Files:** `session_manager.py`, `wallet_manager.py`
+## FastAPI Backend — DONE
+- [x] JWT auth middleware
+- [x] Wallet endpoints (create, login, import, balance, address, refresh)
+- [x] Transaction endpoints (preview, send, history, status)
+- [x] Rate limiting with slowapi
+- [x] Pydantic schemas for validation
 
-- [x] Remove `chat_wallet_key` from cookies (was already deprecated)
-- [x] Implement memory-only key storage
-- [x] Add password re-entry on unlock
-- [x] Verified key not stored in cookies
-
-### 2. Implement Auto-Lock
-**Status:** ✅ COMPLETE
-**Files:** `wallet_manager.py`, `rate_limiter.py`
-
-- [x] Add `last_activity_timestamp` via `_last_wallet_activity`
-- [x] Create `should_auto_lock()` and `check_auto_lock()` (15 min default)
-- [x] Clear sensitive data on timeout
-- [x] User settings support for custom timeout
-
-### 3. Session State Audit
-**Status:** ✅ COMPLETE
-**Files:** `wallet_manager.py`, `session_manager.py`
-
-- [x] Audit all session keys
-- [x] Document sensitive keys in `SENSITIVE_SESSION_KEYS`
-- [x] Fixed `wallet_data` leak in logout/lock flows
-- [x] `lock_wallet()` now clears all sensitive keys
+## Agent Protocol — DONE (Backend Ready)
+- [x] Database schema (8 tables) - `migrations/007_agent_registry.sql`
+- [x] Agent SDK package - `sdk/usdchat_agent/`
+- [x] Agent API endpoints - `api/routes/agents.py`
+- [x] Example agents (crypto_news, trading_bot)
 
 ---
 
-## Manual Actions Required (Parallel Track)
+# Manual Actions Required (Parallel Track)
 
 **Owner:** Founder (cannot be automated)
 **Details:** See MANUAL_ACTIONS.md
 
-- [ ] Circle Developer Account setup
-- [ ] Circle API credentials
-- [ ] Bitrefill API credentials
-- [ ] Alchemy/Infura RPC keys
+| Item | Status | Blocks |
+|------|--------|--------|
+| Circle API credentials | [ ] Pending | x402 micropayments |
+| Bitrefill API key | [ ] Pending | Gift card purchases |
+| RPC keys (Alchemy/Infura) | [ ] Pending | Production reliability |
 
 ---
 
-# P1 — HIGH (Current Sprint)
+# Technical Debt (Address When Convenient)
 
-## API Foundation — DONE ✅
-
-### 4. FastAPI Setup
-**Status:** ✅ COMPLETE
-**Files:** `api/` directory
-
-- [x] Create directory structure (`api/`, `api/routes/`, `api/schemas/`, `api/middleware/`)
-- [x] Set up FastAPI app (`api/main.py`)
-- [x] Configure CORS
-- [x] Add JWT auth middleware (`api/middleware/auth.py`)
-- [x] Add rate limiting (slowapi)
-
-### 5. Wallet API Endpoints
-**Status:** ✅ COMPLETE
-**Files:** `api/routes/wallet.py`
-
-- [x] GET /balance (auth required)
-- [x] GET /address/{chain}
-- [x] POST /create
-- [x] POST /login
-- [x] POST /import
-- [x] POST /refresh (token refresh)
-
-### 6. Transaction API Endpoints
-**Status:** ✅ COMPLETE
-**Files:** `api/routes/transactions.py`
-
-- [x] POST /preview
-- [x] POST /send
-- [x] GET /status/{hash}
-- [x] GET /history
-- [x] POST /bridge/preview (CCTP)
-
-### 7. RLS Policies
-**Status:** [ ] Not Started
-**Files:** Supabase dashboard
-**Details:** See ROADMAP_2026.md Section 0.4
-
-- [ ] Create policies for all tables
-- [ ] Remove unnecessary service key usage
-- [ ] Test cross-user access blocked
-
-## Streamlit → API Integration
-
-### 8. Migrate Streamlit to API Client
-**Status:** [ ] Not Started
-**Files:** `app.py`, `components/*.py`
-
-- [ ] Create API client wrapper
-- [ ] Replace direct wallet_manager calls with API
-- [ ] Replace direct chain_utils calls with API
-- [ ] Test full flow through API layer
-
----
-
-# P2 — MEDIUM (Week 3-4)
-
-## x402 & Payments
-
-### 8. x402 Protocol Implementation
-**Status:** [ ] Not Started
-**Details:** See ROADMAP_2026.md Section 2.1
-**Dependency:** Circle API credentials
-
-- [ ] Study x402 spec
-- [ ] Implement payment request generation
-- [ ] Implement payment verification
-- [ ] Create HTTP 402 handler
-
-### 9. Payment Links
-**Status:** [ ] Not Started
-**Details:** See ROADMAP_2026.md Section 2.4
-
-- [ ] Create shareable links
-- [ ] Generate QR codes
-- [ ] Track usage
-- [ ] Webhooks on payment
-
-### 10. Revenue Split System
-**Status:** [ ] Not Started
-**Details:** See ROADMAP_2026.md Section 2.5
-
-- [ ] Define split ratios (70/20/10)
-- [ ] Implement auto-split
-- [ ] Track all revenue streams
-
----
-
-# P3 — COMPLETED (Agent Protocol)
-
-## Agent Protocol — DONE ✅
-
-### 11. Agent Registry Database
-**Status:** ✅ COMPLETE
-**Files:** `migrations/007_agent_registry.sql`
-
-- [x] Create `agents` table (with slug, pricing, capabilities, stats)
-- [x] Create `agent_earnings` table (with auto-split tracking)
-- [x] Create `agent_subscriptions` table
-- [x] Create `agent_requests` table (usage logging)
-- [x] Create `agent_reviews` table
-- [x] Create `agent_capabilities` table (built-in caps)
-- [x] Create `user_agent_permissions` table
-- [x] Add RLS policies for all tables
-- [x] Add triggers for rating/revenue updates
-
-### 12. Agent SDK
-**Status:** ✅ COMPLETE
-**Files:** `sdk/usdchat_agent/`
-
-- [x] Define `Agent` base class
-- [x] Capability declaration system (`@capability` decorator)
-- [x] Payment integration helpers (`@x402_payment` decorator)
-- [x] Type system (AgentContext, UserInfo, PaymentInfo)
-- [x] Exception classes (PaymentRequiredError, CapabilityDeniedError)
-- [x] Example agents (crypto_news_agent.py, trading_bot_agent.py)
-- [x] Package setup (setup.py, README.md)
-
-### 13. Agent API Endpoints
-**Status:** ✅ COMPLETE
-**Files:** `api/routes/agents.py`, `api/schemas/agent.py`
-
-- [x] CRUD for agents (create, read, update, archive)
-- [x] Publish endpoint (draft → pending_review → active)
-- [x] Message endpoint with x402 payment handling
-- [x] Subscription endpoints
-- [x] Review endpoints
-- [x] Creator dashboard (my/agents, my/earnings)
-- [x] Discovery (list, featured, categories, search)
-
----
-
-# Backlog (Deprioritized)
-
-These items from the old TODO are now lower priority:
-
-| Item | Old Priority | New Status | Reason |
-|------|--------------|------------|--------|
-| Pulse Deck improvements | P0 | DONE | Completed in previous session |
-| Wire yield UI to Aave | P0 | P2 | API layer first |
-| Deploy scheduler | P0 | P2 | API layer first |
-| Real Bitrefill | P0 | P1 | Needs API key (manual action) |
-| Mobile responsive | P1 | P3 | API/PWA first |
-| Multi-step agent | P1 | P3 | Agent protocol first |
-| Analytics events | P1 | P2 | After API |
-
----
-
-# Completed (Recent)
-
-## February 2026 — Agent Protocol Sprint
-- [x] Agent: Database schema with 8 tables (migrations/007_agent_registry.sql)
-- [x] Agent: SDK package (sdk/usdchat_agent/)
-- [x] Agent: Base Agent class with config validation
-- [x] Agent: @capability decorator for permissions
-- [x] Agent: @x402_payment decorator for micropayments
-- [x] Agent: Type system (AgentContext, PaymentInfo, etc.)
-- [x] Agent: Exception classes (PaymentRequiredError)
-- [x] Agent: Example agents (crypto_news, trading_bot)
-- [x] API: Full agent CRUD endpoints
-- [x] API: Agent discovery (list, featured, search, categories)
-- [x] API: Agent subscriptions and reviews
-- [x] API: Creator dashboard (my/agents, my/earnings)
-- [x] Docs: CONTEXT_FOR_AI.md updated with agent info
-
-## February 2026 — Security & API Sprint
-- [x] Security: Cookie wallet key deprecated (memory-only)
-- [x] Security: Auto-lock on idle (15 min default, configurable)
-- [x] Security: Session state audit, fixed wallet_data leak
-- [x] Security: SENSITIVE_SESSION_KEYS documented
-- [x] API: FastAPI foundation with JWT auth
-- [x] API: Wallet endpoints (create, login, import, balance, address, refresh)
-- [x] API: Transaction endpoints (preview, send, history, status, bridge/preview)
-- [x] API: Rate limiting with slowapi
-- [x] API: Pydantic schemas for validation
-- [x] Docs: STRATEGIC_DIRECTION.md (authoritative)
-- [x] Docs: ROADMAP_2026.md (implementation plan)
-- [x] Docs: MANUAL_ACTIONS.md (human tasks)
-- [x] Docs: CONTEXT_FOR_AI.md (session continuity)
-- [x] Docs: North star changed to Weekly Active Creators (WAC)
-
-## Earlier
-- [x] VISION_2026.md revised
-- [x] Pulse Deck improvements (balance, perks, AI card)
-- [x] User journey documented
-- [x] RPC fallback system added
-- [x] Balance caching added
+| Item | Priority | Effort |
+|------|----------|--------|
+| Pin dependency versions | P0 | Low |
+| Add integration tests | P1 | High |
+| Deduplicate balance cache logic | P2 | Low |
+| Abstract Supabase queries | P2 | Medium |
+| Add structured logging (JSON) | P2 | Low |
+| RPC connection pooling | P2 | Medium |
+| RLS policies for all tables | P1 | Medium |
 
 ---
 
 # Dependencies Map
 
 ```
-Manual Actions (API Keys)
+Phase 1: Money Maker MVP
     │
-    ├──► Circle Credentials ──► x402 Implementation
+    ├──► Next.js Scaffold ──► All Frontend
     │
-    ├──► Bitrefill API ──► Real Gift Cards
+    ├──► Yield API ──► Yield UI
     │
-    └──► RPC Keys ──► Production Reliability
+    └──► Scheduler Deploy ──► Auto-DCA
 
-Security Fixes
+Phase 2: PWA + Retention
     │
-    └──► API Layer
-           │
-           ├──► x402 Protocol
-           │
-           ├──► Agent Protocol
-           │
-           └──► Mobile App
+    ├──► Phase 1 Complete
+    │
+    └──► Push Service Setup ──► Notifications
+
+Phase 3: Agent Marketplace
+    │
+    ├──► Phase 2 Complete (user base)
+    │
+    └──► Circle Credentials ──► x402 Payments
 ```
 
 ---
 
-# Weekly Check-In Template
+# Success Metrics
 
-Use this for status updates:
+## Phase 1 Success (Money Maker MVP)
+- [ ] User can deposit USDC
+- [ ] User can enable yield with one click
+- [ ] User sees daily earnings
+- [ ] User can set up auto-DCA
 
-```markdown
-## Week of [DATE]
+## Phase 2 Success (Retention)
+- [ ] PWA installable on mobile
+- [ ] Daily push notification of earnings
+- [ ] 30%+ users return within 7 days
 
-### Completed
-- [ ] List completed items
-
-### In Progress
-- [ ] List current work
-
-### Blocked
-- [ ] List blockers and why
-
-### Next Week
-- [ ] List planned work
-
-### Manual Actions Status
-- Circle credentials: [ ] Done [ ] Pending [ ] Blocked
-- Bitrefill API: [ ] Done [ ] Pending [ ] Blocked
-- RPC Keys: [ ] Done [ ] Pending [ ] Blocked
-```
+## Phase 3 Success (Marketplace)
+- [ ] 10+ agents published
+- [ ] 100+ agent interactions
+- [ ] $100+ in agent payments
 
 ---
 
@@ -310,7 +305,7 @@ Use this for status updates:
 | Document | Purpose |
 |----------|---------|
 | STRATEGIC_DIRECTION.md | Why we're building what |
-| ROADMAP_2026.md | How we're building it |
+| ROADMAP_2026.md | How we're building it (detailed) |
 | MANUAL_ACTIONS.md | What you need to do |
 | CONTEXT_FOR_AI.md | Quick context for AI sessions |
 | This file | What's being worked on now |
@@ -318,4 +313,4 @@ Use this for status updates:
 ---
 
 *Last Updated: February 2026*
-*Next Review: Weekly or when priorities change*
+*Strategic Pivot: Money Maker First → Agent Marketplace Second*

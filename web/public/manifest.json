@@ -1,0 +1,43 @@
+{
+  "name": "USDChat - Make Your USDC Work",
+  "short_name": "USDChat",
+  "description": "Earn passive income on your USDC with one-click yield and automated DCA",
+  "start_url": "/wallet",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "View Earnings",
+      "short_name": "Earnings",
+      "description": "Check your daily earnings",
+      "url": "/earn",
+      "icons": [{ "src": "/icons/earnings.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Send USDC",
+      "short_name": "Send",
+      "description": "Send USDC to anyone",
+      "url": "/send",
+      "icons": [{ "src": "/icons/send.png", "sizes": "96x96" }]
+    }
+  ],
+  "categories": ["finance", "productivity"],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
