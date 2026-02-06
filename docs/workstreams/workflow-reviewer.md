@@ -3,7 +3,7 @@
 > **Owner**: Workflow Reviewer session
 > **Status**: Sprint 0 COMPLETE
 > **Last updated**: 2026-02-06
-> **Branch**: `claude/audit-production-readiness-XiEcI`
+> **Branch**: `claude/project-analysis-fwmFh`
 
 ---
 
@@ -19,8 +19,8 @@ Answer: **"Is this codebase ready for production, and what needs to change to ge
 
 ### 1. Code Quality Audit
 
-- [x] Review Python code quality (root modules)
-- [x] Review TypeScript code quality (`web/`)
+- [x] Review Python code quality (root modules - are they well-structured?)
+- [x] Review TypeScript code quality (`web/` - is it consistent?)
 - [x] Identify code smells, dead code, and duplication
 - [x] Check for hardcoded values, magic numbers, configuration drift
 - [x] Evaluate error handling patterns
@@ -32,37 +32,46 @@ Answer: **"Is this codebase ready for production, and what needs to change to ge
 - [x] What tests exist currently? (`tests/` directory)
 - [x] What's the test coverage? (run tests if possible)
 - [x] What critical paths have ZERO tests?
-- [x] Propose a testing strategy
+- [x] Propose a testing strategy:
+  - Unit tests (what to test)
+  - Integration tests (API endpoints)
+  - E2E tests (user flows)
+  - Contract tests (blockchain interactions)
 - [x] Estimate effort to reach 60% coverage on critical paths
 
 ### 3. CI/CD Pipeline Design
 
-- [x] Propose a GitHub Actions workflow
-- [x] Define branch strategy
-- [x] Define PR requirements
+- [x] Propose a GitHub Actions workflow:
+  - Lint (Python: ruff/black, TypeScript: eslint)
+  - Type check (mypy, tsc)
+  - Test (pytest, jest/vitest)
+  - Build (Docker images)
+  - Deploy (staging, production)
+- [x] Define branch strategy (main, develop, feature branches)
+- [x] Define PR requirements (reviews, checks, coverage)
 
 ### 4. Dependency Audit
 
-- [x] Are Python dependencies pinned?
-- [x] Are Node dependencies locked?
-- [x] Any known vulnerabilities?
-- [x] Any unnecessary dependencies?
+- [x] Are Python dependencies pinned? (exact versions in requirements.txt)
+- [x] Are Node dependencies locked? (package-lock.json exists?)
+- [x] Any known vulnerabilities? (npm audit, pip-audit)
+- [x] Any unnecessary dependencies? (bloat)
 - [x] Any dangerously outdated dependencies?
 
 ### 5. Developer Experience
 
-- [x] How easy is it to set up the project from scratch?
+- [x] How easy is it to set up the project from scratch? (follow QUICKSTART.md)
 - [x] Are environment variables documented?
 - [x] Is the `sdk/` package installable and usable?
 - [x] Is there API documentation (OpenAPI/Swagger)?
-- [x] What's the inner development loop?
+- [x] What's the inner development loop? (change code -> see result speed)
 
 ### 6. Code Organization Recommendations
 
-- [x] Evaluate the 42 root-level Python files
-- [x] Evaluate the monolith `app.py` (1,227 lines)
-- [x] Evaluate shared code between Streamlit and FastAPI
-- [x] Propose a migration path
+- [x] Evaluate the 42 root-level Python files - propose a reorganization
+- [x] Evaluate the monolith `app.py` (1,227 lines) - propose a split strategy
+- [x] Evaluate shared code between Streamlit and FastAPI - should they share?
+- [x] Propose a migration path from current structure to recommended structure
 
 ---
 
@@ -92,7 +101,7 @@ Answer: **"Is this codebase ready for production, and what needs to change to ge
 - **Files**: Root directory, `web/` directory
 - **Issue**: No `.dockerignore` exists anywhere. `COPY . .` in both Dockerfiles copies `.env` files (with secrets), `.git/`, `node_modules/`, `__pycache__/`, test data, etc.
 - **Risk**: Secrets baked into Docker images. Images are bloated (100MB+ unnecessary).
-- **Fix**: Create `.dockerignore` files excluding `.env*`, `.git`, `node_modules`, `__pycache__`, `*.pyc`, `.next`, etc.
+- **Fix**: Create `.dockerignore` files excluding `.env*`, `.git`, `node_modules`, `__pycache__`, `*.pyc`, `.next`, etc. **STATUS: FIXED in this commit.**
 
 #### C5. Docker Runs as Root
 - **File**: `Dockerfile.api` (entire file)
@@ -197,54 +206,44 @@ Answer: **"Is this codebase ready for production, and what needs to change to ge
 
 ---
 
-### MINOR Issues (Code Quality / Maintainability)
+### Code Quality Issues
 
-#### m1. Duplicated Utility Functions
-- `format_address()` is defined in both `api/routes/wallet.py:53` and `api/routes/transactions.py:50-54`
-- `format_usd()` is defined in both `api/routes/wallet.py:60` and `api/routes/transactions.py:57-59`
-- **Fix**: Move to `api/utils.py` and import.
+#### Python Code Quality
+- **Type hints**: Present in most files (good), but not enforced by mypy. No mypy config exists.
+- **Docstrings**: Good coverage in API routes and middleware. Sparse in root-level utility modules.
+- **Error handling**: Inconsistent. Some modules raise exceptions, some return None, some call `st.error()`. API routes use proper HTTPException.
+- **Import organization**: Broken by `sys.path.insert()` hacks. Circular dependency risk between `config.py`, `chain_utils.py`, and `wallet_manager.py`.
+- **Magic numbers**: `direct_tx.py:168` (ETH=$2000), `direct_tx.py:144` (gas buffer 1.2x), `config.py:112-114` (fee structure), `api/config.py:38` (24h token expiry). Fee structure should be in config/env vars.
 
-#### m2. datetime.utcnow() Deprecated
-- **Files**: `api/middleware/auth.py:56,57,81,82,150`, `supabase_client.py:119,164,219,433`
-- **Issue**: `datetime.utcnow()` is deprecated in Python 3.12+. Should use `datetime.now(timezone.utc)`.
+#### TypeScript Code Quality
+- **Strict mode**: ON (`tsconfig.json:7` - `"strict": true`) - excellent
+- **ESLint**: 0 errors, 19 warnings (all unused imports + 1 `<img>` tag)
+- **No console.log**: Clean - no debug logging left in production code
+- **API client**: Well-structured with token refresh handling and race condition prevention (`client.ts:130-135`)
+- **State management**: Zustand with persistence - clean pattern
+- **Type safety**: Good - types defined in `lib/api/types.ts`, used consistently
+- **XSS**: No `dangerouslySetInnerHTML` found. React JSX auto-escaping provides protection.
+- **Accessibility**: Basic semantic HTML present but no ARIA labels or screen reader support audited.
 
-#### m3. ESLint Warnings in TypeScript (19 warnings)
-- **Files**: Multiple `web/` files
-- **Issue**: 19 ESLint warnings - primarily unused imports (14 warnings) and one `<img>` tag that should use `next/image`.
-- **Fix**: Remove unused imports, replace `<img>` with `<Image>` component.
+### Testing Gaps
 
-#### m4. TypeScript Strict Mode is ON (Good!)
-- **File**: `web/tsconfig.json:7`
-- TypeScript has `"strict": true` which is excellent.
+| Critical Path | Test Coverage | Risk |
+|--------------|---------------|------|
+| Wallet creation/import | Partial (tests exist) | Medium |
+| Password hashing/verification | Covered | Low |
+| Meta-transaction signing | Covered | Low |
+| API authentication (JWT) | NONE | **Critical** |
+| API endpoints (all routes) | NONE | **Critical** |
+| Transaction execution | NONE | **Critical** |
+| Balance queries (blockchain) | NONE | High |
+| Yield/Aave operations | NONE | High |
+| Scheduler/DCA execution | NONE | High |
+| Supabase CRUD operations | NONE | High |
+| Rate limiting | NONE | Medium |
+| Frontend components | NONE | Medium |
+| SDK functionality | NONE | Low (not yet used) |
 
-#### m5. No Python Type Checking Configuration
-- **Issue**: No `mypy.ini`, `pyproject.toml` with mypy config, or `py.typed` marker. Type hints exist in some files but are never verified.
-- **Fix**: Add mypy configuration and CI check.
-
-#### m6. Web Frontend Has No Tests
-- No test files exist in `web/` directory. No test framework configured (no vitest/jest).
-- **Fix**: Add vitest with at least component smoke tests.
-
-#### m7. SDK Has No Tests
-- `sdk/` directory has no test files. `setup.py` references `pytest` in dev deps but no tests exist.
-- **Fix**: Add basic SDK unit tests.
-
-#### m8. SDK setup.py Has Fragile File Read
-- **File**: `sdk/setup.py:13`
-- `long_description=open("README.md").read() if __name__ != "__main__" else ""`
-- **Fix**: Use `pathlib.Path` and handle missing file, or migrate to `pyproject.toml`.
-
-#### m9. No Logging Configuration for Production
-- **Issue**: `utils/logger.py` exists but no log level configuration for production. No structured logging (JSON format for log aggregation).
-- **Fix**: Add configurable log level and structured logging output.
-
-#### m10. Token Storage in localStorage (XSS Risk)
-- **File**: `web/lib/api/client.ts:48`
-- **Issue**: JWT tokens stored in `localStorage`, accessible to any JavaScript on the page.
-- **Risk**: If XSS occurs, attacker can steal tokens. `httpOnly` cookies are more secure.
-- **Mitigation**: The app uses React which auto-escapes JSX, and no `dangerouslySetInnerHTML` was found. Risk is moderate.
-
----
+**Tests could not be run** during this audit because Python dependencies failed to install completely (cffi/cryptography build issues in the CI-like environment). This is itself a finding about reproducibility.
 
 ### Dependency Issues
 
@@ -260,15 +259,13 @@ Answer: **"Is this codebase ready for production, and what needs to change to ge
 #### Node.js (`web/package.json`)
 | Issue | Severity | Details |
 |-------|----------|---------|
-| package-lock.json missing from repo | Major | Was not committed (generated by `npm install` during audit) |
+| package-lock.json missing from repo | Major | Was not committed (generated by `npm install` during audit). **STATUS: FIXED in this commit.** |
 | Deps use `^` ranges | Minor | Standard practice for Node, but `npm ci` with lock file needed |
 | npm audit shows 0 vulnerabilities | Good | Clean bill of health |
 | Next.js 16.1.6 | Good | Current version |
 | React 19.2.3 | Good | Current version |
 
----
-
-### DX (Developer Experience) Issues
+### DX Issues
 
 | Area | Rating | Notes |
 |------|--------|-------|
@@ -288,10 +285,10 @@ Answer: **"Is this codebase ready for production, and what needs to change to ge
 ### Immediate (Before Production - MUST DO)
 
 1. **Fix JWT secret** - Remove default, fail on startup if not set (~1 hour)
-2. **Create `.dockerignore`** files to exclude `.env`, `.git`, etc. (~30 min)
+2. **Create `.dockerignore`** files to exclude `.env`, `.git`, etc. (~30 min) **DONE**
 3. **Add non-root user to Dockerfiles** (~30 min)
 4. **Pin Python dependencies** with exact versions (~2 hours)
-5. **Commit `package-lock.json`** to the web directory (~5 min)
+5. **Commit `package-lock.json`** to the web directory (~5 min) **DONE**
 6. **Create production Docker Compose** with debug off, no volume mounts (~2 hours)
 7. **Fix web Dockerfile** to build for production (multi-stage) (~1 hour)
 8. **Implement real transaction signing** in API or clearly disable/warn (~4-8 hours)
@@ -305,7 +302,7 @@ Answer: **"Is this codebase ready for production, and what needs to change to ge
 3. **Add API endpoint tests** with pytest + httpx TestClient (~3-5 days)
 4. **Add ETH price oracle** for gas estimation (~4 hours)
 5. **Implement token revocation** (Redis blacklist) (~4 hours)
-6. **Set up CI/CD pipeline** (see below) (~4 hours)
+6. **Set up CI/CD pipeline** (see below) (~4 hours) **DONE - `.github/workflows/ci.yml` committed**
 7. **Fix all TODO items** or add proper error responses (~2 days)
 8. **Add structured logging** (~4 hours)
 
@@ -323,7 +320,18 @@ Answer: **"Is this codebase ready for production, and what needs to change to ge
 
 ## Proposed CI/CD Pipeline
 
-See `.github/workflows/ci.yml` committed with this workstream.
+**Implemented**: `.github/workflows/ci.yml` committed with this workstream.
+
+### Pipeline Stages
+
+```
+Push/PR -> Lint (Python ruff/black + TypeScript eslint)
+        -> Type Check (mypy + tsc --noEmit)
+        -> Test (pytest with coverage + vitest when added)
+        -> Build (Next.js production build)
+        -> Security Scan (pip-audit + npm audit)
+        -> Docker Build (API + Web images, on push only)
+```
 
 ### Branch Strategy
 ```
@@ -339,22 +347,15 @@ hotfix/*      - Emergency production fixes
 - No decrease in test coverage
 - Branch must be up-to-date with base
 
-### Pipeline Stages
-
-```
-Push/PR -> Lint (Python + TypeScript)
-        -> Type Check (mypy + tsc)
-        -> Test (pytest + vitest)
-        -> Build (Docker images)
-        -> Security Scan (pip-audit + npm audit)
-        -> Deploy (staging on develop, prod on main)
-```
+### Concurrency
+- Cancels in-progress runs for same branch (saves CI minutes)
+- Runs on push to main/develop and all PRs
 
 ---
 
 ## Code Organization Recommendation
 
-### Current Structure (42 root files):
+### Current Structure (42 root files - problematic):
 ```
 chat-wallet/
 ├── aave_client.py          # Yield
@@ -457,13 +458,22 @@ chat-wallet/
     └── docker-compose.prod.yml
 ```
 
-### Migration Path:
+### Migration Path (Incremental):
 1. Create `core/` package with `__init__.py` files
 2. Move files one-by-one, updating imports (start with `config.py`, `wallet_manager.py`)
 3. Remove `import streamlit` from core modules, replace with logging
 4. Update API routes to import from `core.*`
 5. Keep root-level files as thin shims during migration for backwards compatibility
 6. Remove shims once all imports are updated
+
+### app.py Split Strategy (1,227 lines):
+The monolith `app.py` should be split into:
+- `streamlit_app/app.py` - Main entry, routing, session init (~100 lines)
+- `streamlit_app/pages/chat.py` - Chat interface
+- `streamlit_app/pages/wallet.py` - Wallet management UI
+- `streamlit_app/pages/settings.py` - Settings UI
+- `streamlit_app/components/` - Reusable Streamlit components
+- All business logic already extracted to `core/` (step 2 above)
 
 ---
 
@@ -528,12 +538,24 @@ chat-wallet/
 
 ## Urgent Flags
 
-1. **JWT_SECRET_KEY has a guessable default** - Any deployment without explicitly setting this env var is immediately compromised. All user tokens can be forged.
+1. **JWT_SECRET_KEY has a guessable default** (`api/config.py:36`) - Any deployment without explicitly setting this env var is immediately compromised. All user tokens can be forged.
 
-2. **Transaction send endpoint returns fake tx hashes** - The API endpoint that should send real USDC returns mock data. Users cannot actually send money through the API.
+2. **Transaction send endpoint returns fake tx hashes** (`api/routes/transactions.py:297-321`) - The API endpoint that should send real USDC returns mock data. Users cannot actually send money through the API.
 
-3. **No .dockerignore means secrets in Docker images** - If Docker images are pushed to a registry, `.env` files with API keys and secrets are included.
+3. **No .dockerignore means secrets in Docker images** - If Docker images are pushed to a registry, `.env` files with API keys and secrets are included. **FIXED in this commit.**
 
-4. **Scheduler has unimplemented TODOs in execution paths** - `scheduler_executor.py` has multiple `# TODO: Implement` comments in code paths that could be triggered by user-created schedules, leading to silent failures.
+4. **Scheduler has unimplemented TODOs in execution paths** (`scheduler_executor.py:236,263,301`) - Multiple `# TODO: Implement` comments in code paths that could be triggered by user-created schedules, leading to silent failures.
+
+---
+
+## Files Created/Modified in This Review
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `docs/workstreams/workflow-reviewer.md` | Modified | Complete audit findings |
+| `.github/workflows/ci.yml` | Created | CI/CD pipeline |
+| `.dockerignore` | Created | Prevent secrets in API Docker image |
+| `web/.dockerignore` | Created | Prevent secrets in web Docker image |
+| `web/package-lock.json` | Created | Lock frontend dependencies |
 
 ---
