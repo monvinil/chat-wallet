@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional
 from eth_account import Account
 from eth_account.messages import encode_typed_data
 from web3 import Web3
+from utils.logger import logger
 
 
 class MetaTransaction:
@@ -128,7 +129,7 @@ class MetaTransaction:
             return recovered_address.lower() == expected_signer.lower()
 
         except Exception as e:
-            print(f"Signature verification failed: {e}")
+            logger.warning(f"Signature verification failed: {type(e).__name__}")
             return False
 
     @staticmethod

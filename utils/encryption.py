@@ -109,6 +109,58 @@ class PasswordEncryption:
             return None
 
     @staticmethod
+    def encrypt_with_key(data: str, key_secret: str) -> str:
+        """
+        Encrypt data using a secret key (for scheduler auto-execution keys).
+
+        Uses PBKDF2 to derive a Fernet key from the secret, with a fixed
+        salt derived from the secret itself (deterministic for same secret).
+
+        Args:
+            data: Plain text data to encrypt
+            key_secret: Secret key (e.g., SCHEDULER_ENCRYPTION_SECRET)
+
+        Returns:
+            Encrypted data as base64 string (salt_hex:ciphertext format)
+        """
+        # Generate random salt for each encryption
+        salt = os.urandom(PasswordEncryption.SALT_LENGTH)
+        raw_key = PasswordEncryption.derive_key(key_secret, salt)
+        fernet_key = base64.urlsafe_b64encode(raw_key)
+        cipher = Fernet(fernet_key)
+        encrypted = cipher.encrypt(data.encode())
+        # Store salt with ciphertext so we can decrypt later
+        return f"{salt.hex()}:{encrypted.decode()}"
+
+    @staticmethod
+    def decrypt_with_key(encrypted_data: str, key_secret: str) -> str | None:
+        """
+        Decrypt data using a secret key (for scheduler auto-execution keys).
+
+        Args:
+            encrypted_data: Encrypted data in "salt_hex:ciphertext" format
+            key_secret: Secret key (same one used for encryption)
+
+        Returns:
+            Decrypted plain text, or None if decryption fails
+        """
+        try:
+            # Parse salt and ciphertext
+            parts = encrypted_data.split(":", 1)
+            if len(parts) != 2:
+                return None
+
+            salt_hex, ciphertext = parts
+            salt = bytes.fromhex(salt_hex)
+            raw_key = PasswordEncryption.derive_key(key_secret, salt)
+            fernet_key = base64.urlsafe_b64encode(raw_key)
+            cipher = Fernet(fernet_key)
+            decrypted = cipher.decrypt(ciphertext.encode())
+            return decrypted.decode()
+        except Exception:
+            return None
+
+    @staticmethod
     def hash_password(password: str) -> str:
         """
         Hash password for storage using bcrypt (secure against rainbow tables)

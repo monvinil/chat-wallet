@@ -62,7 +62,7 @@ def _get_cached_supabase_client(_key_hash: str, use_service_key: bool = False) -
     try:
         return create_client(url, key)
     except Exception as e:
-        print(f"Supabase connection failed: {e}")
+        logger.error(f"Supabase connection failed: {type(e).__name__}")
         return None
 
 

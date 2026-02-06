@@ -447,7 +447,11 @@ async def get_transaction_status(
                 detail="Database unavailable"
             )
 
-        result = supabase.table("transactions").select("*").eq("tx_hash", tx_hash).single().execute()
+        # SECURITY: Filter by user_id to prevent IDOR - users can only see their own transactions
+        user_id = credentials.get("sub")
+        result = supabase.table("transactions").select("*").eq(
+            "tx_hash", tx_hash
+        ).eq("user_id", user_id).single().execute()
 
         if not result.data:
             raise HTTPException(

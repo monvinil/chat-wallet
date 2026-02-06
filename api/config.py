@@ -33,7 +33,8 @@ class Settings(BaseSettings):
     cors_allow_headers: List[str] = ["*"]
 
     # JWT Settings
-    jwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "CHANGE-THIS-IN-PRODUCTION-use-secrets-token-hex-32")
+    # SECURITY: No insecure default - must be set via environment variable
+    jwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "")
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60 * 24  # 24 hours
     jwt_refresh_token_expire_days: int = 30
@@ -60,7 +61,20 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """Get cached settings instance."""
-    return Settings()
+    s = Settings()
+    # SECURITY: Validate critical settings at startup
+    if not s.jwt_secret_key:
+        import secrets as _secrets
+        import warnings
+        warnings.warn(
+            "JWT_SECRET_KEY not set! Generating ephemeral key. "
+            "All tokens will be invalidated on restart. "
+            "Set JWT_SECRET_KEY in your .env file for production.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        s.jwt_secret_key = _secrets.token_urlsafe(32)
+    return s
 
 
 # Commonly used settings

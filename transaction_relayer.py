@@ -72,7 +72,7 @@ class TransactionRelayer:
                     Web3.to_checksum_address(user_address)
                 ).call()
                 return Decimal(balance_raw) / Decimal(1e6)
-            except:
+            except Exception:
                 return Decimal(0)
         return Decimal(0)
 
@@ -95,7 +95,7 @@ class TransactionRelayer:
             if self.network["testnet"]:
                 gas_cost_usd = 0.02  # Simulate $0.02 gas cost
 
-        except:
+        except Exception:
             gas_cost_usd = 0.02  # Default estimate
 
         # Calculate app fee
@@ -246,5 +246,5 @@ class TransactionRelayer:
                 "usdc": usdc_balance,
                 "address": self.relayer_address
             }
-        except:
+        except Exception:
             return {"eth": 0, "usdc": 0, "address": self.relayer_address}

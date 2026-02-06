@@ -301,9 +301,8 @@ class WalletManager:
     @staticmethod
     def lock_wallet():
         """Lock wallet (clear decryption key and sensitive data from memory)"""
-        # Clear sensitive wallet data from memory
-        sensitive_keys = ["wallet_key", "wallet_data", "_pending_seed_phrase"]
-        for key in sensitive_keys:
+        # SECURITY: Clear ALL sensitive session keys defined at module level
+        for key in SENSITIVE_SESSION_KEYS:
             if key in st.session_state:
                 del st.session_state[key]
 

@@ -179,7 +179,9 @@ class TaskExecutor:
                 )
             except Exception as e:
                 BalanceService.release_reserved(user_id, chain, "USDC", amount, fee, ledger_id)
-                return {"success": False, "error": f"Failed to decrypt key: {e}"}
+                # SECURITY: Don't leak decryption error details
+                logger.error(f"Scheduled task key decryption failed: {type(e).__name__}")
+                return {"success": False, "error": "Failed to decrypt execution key"}
 
             # Execute the transfer
             executor = DirectTransactionExecutor(chain)
@@ -511,8 +513,14 @@ def run_http_server(port: int = 8080):
     """
     from http.server import HTTPServer, BaseHTTPRequestHandler
     import urllib.parse
+    import hmac
 
     executor_secret = os.getenv("TASK_EXECUTOR_SECRET", "")
+
+    # SECURITY: Refuse to start HTTP server without auth secret
+    if not executor_secret:
+        logger.error("TASK_EXECUTOR_SECRET not set. HTTP endpoint requires authentication.")
+        raise RuntimeError("TASK_EXECUTOR_SECRET must be set for HTTP mode")
 
     class TaskHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -527,9 +535,10 @@ def run_http_server(port: int = 8080):
 
         def do_POST(self):
             if self.path == "/execute":
-                # Check auth
+                # SECURITY: Check auth with timing-safe comparison
                 auth_header = self.headers.get("Authorization", "")
-                if executor_secret and auth_header != f"Bearer {executor_secret}":
+                expected = f"Bearer {executor_secret}"
+                if not hmac.compare_digest(auth_header, expected):
                     self.send_response(401)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
