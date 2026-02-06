@@ -1,11 +1,38 @@
-# Revenue Officer Workstream — USDChat
-## Sprint 0: Fix Project Economics (Grade C+ → B+)
+# Workstream: Revenue Officer
 
-**Owner:** Revenue Officer
-**Date:** February 2026
-**Status:** COMPLETE — Sprint 0 Analysis & Recommendations
+> **Owner**: Revenue Officer session
+> **Status**: COMPLETE — Sprint 0 Analysis & Recommendations
+> **Last updated**: 2026-02-06
 
 ---
+
+## Mandate
+
+You are the revenue officer. You own:
+- Unit economics analysis (is each user profitable?)
+- Pricing strategy (transaction fees, premium tiers, yield splits)
+- Revenue model design (how does USDChat make money sustainably?)
+- Financial projections (what does the path to $50K MRR look like?)
+- Cost analysis (LLM costs, infrastructure, gas)
+- Monetization roadmap (when to introduce what revenue stream)
+
+Your job is to answer: **"How does this become a real business, not a money-losing side project?"**
+
+---
+
+## Context Read
+
+1. `docs/COMMAND_CENTER.md` - Project overview
+2. `docs/STRATEGIC_DIRECTION.md` - Revenue targets (Q2: $5K/mo, Q4: $50K/mo)
+3. `docs/EXECUTIVE_REVIEW_2026-01.md` - CEO gave C+ on economics ("unsustainable")
+4. `docs/BUSINESS_OVERVIEW.txt` - Current fee structure ($0.005 + 0.2%)
+5. `docs/VISION_2026.md` - Revenue metrics and ARPU targets
+6. `MONETIZATION_STRATEGY.md` - Existing yield/monetization plans
+7. `LLM_COSTS.md` - LLM cost analysis
+
+---
+
+# Sprint 0: Fix Project Economics (Grade C+ → B+)
 
 > **TLDR:** USDChat loses money on every transaction at current pricing. A $10 send generates $0.025 in fees but costs $0.032+ (gas + LLM). This document proposes a new pricing structure that achieves profitability at 500 DAUs and scales to $1M+ ARR at 10K users, benchmarked against 10 major competitors.
 
@@ -67,7 +94,7 @@ FEE_MAX        = $3.00
 | Yield farming: NOT active, 0% revenue from idle funds | $0/year | aave_client.py (dormant) |
 | Bridge fees: $0.25 flat estimate, no platform cut | $0/bridge | api/routes/transactions.py:186-189 |
 | Merchant payments: NO platform fee on Porkbun/Mullvad/Travala | $0/purchase | merchant_adapters.py |
-| Premium tier: Does not exist | $0 MRR | — |
+| Premium tier: Does not exist | $0 MRR | -- |
 | Agent marketplace: Schema exists, no revenue yet | $0 | api/schemas/agent.py |
 
 **Total unmonetized surface area:** Gift cards, bridges, merchant payments, yield, premium features.
@@ -99,7 +126,7 @@ FEE_MAX        = $3.00
 
 3. **Subscription models work.** Both Coinbase One ($4.99-$299/mo) and Crypto.com Level Up ($4.99-$29.99/mo) have proven the market will pay for premium features.
 
-4. **No competitor combines self-custody + AI + stablecoin focus.** We occupy a blue ocean — we can price for value, not just undercut on cost.
+4. **No competitor combines self-custody + AI + stablecoin focus.** We occupy a blue ocean -- we can price for value, not just undercut on cost.
 
 5. **Stablecoin-native is an advantage.** USDC transfers are simpler and cheaper than volatile crypto trades. We can offer lower fees than crypto trading platforms while still being profitable.
 
@@ -109,7 +136,7 @@ FEE_MAX        = $3.00
 
 # 3. Proposed Pricing Structure
 
-## 3A. Transaction Fees — New Structure
+## 3A. Transaction Fees -- New Structure
 
 ### Recommended: $0.01 flat + 0.5% (cap $5)
 
@@ -136,28 +163,28 @@ FEE_MAX        = $3.00
 
 ### Why 0.5% is defensible:
 
-- **MetaMask charges 0.875%** for swaps — and they don't have AI assistance, gasless transactions, or gift card/merchant integration.
-- **Phantom charges 0.85%** — same story.
-- **Revolut charges 0.49-1.49%** — and they're custodial.
+- **MetaMask charges 0.875%** for swaps -- and they don't have AI assistance, gasless transactions, or gift card/merchant integration.
+- **Phantom charges 0.85%** -- same story.
+- **Revolut charges 0.49-1.49%** -- and they're custodial.
 - **We offer more value** (AI, gasless, multi-chain, merchant payments) at a lower price point than the self-custody wallet average.
 
 ## 3B. Premium Subscription Tiers
 
-### USDChat Pro — $4.99/month ($49.99/year)
+### USDChat Pro -- $4.99/month ($49.99/year)
 
 | Feature | Free Tier | Pro Tier |
 |---|---|---|
 | AI messages/month | 50 (Gemini Flash) | Unlimited (Gemini Flash) |
-| AI model upgrade | — | Claude Haiku on-demand |
+| AI model upgrade | -- | Claude Haiku on-demand |
 | Transaction fee | $0.01 + 0.5% | $0.01 + 0.3% |
 | Fee cap | $5.00 | $3.00 |
 | Yield farming | Manual opt-in | Auto-enabled, priority protocols |
 | Yield split (user share) | 30% | 50% |
 | Scheduled payments | 3 active | Unlimited |
-| Priority support | — | Yes |
-| Agent marketplace discount | — | 10% off paid agents |
+| Priority support | -- | Yes |
+| Agent marketplace discount | -- | 10% off paid agents |
 
-### USDChat Business — $19.99/month ($199.99/year)
+### USDChat Business -- $19.99/month ($199.99/year)
 
 | Feature | Business Tier |
 |---|---|
@@ -180,7 +207,7 @@ FEE_MAX        = $3.00
 | 10K users, 10% Pro, 3% Biz | 8,700 | 1,000 | 300 | **$10,990** |
 | 25K users, 12% Pro, 4% Biz | 21,000 | 3,000 | 1,000 | **$34,970** |
 
-## 3C. Yield Farming Revenue — Activate Immediately
+## 3C. Yield Farming Revenue -- Activate Immediately
 
 ### Recommended: 70/30 split (platform/user) for Free, 50/50 for Pro, 30/70 for Business
 
@@ -204,7 +231,7 @@ FEE_MAX        = $3.00
 | $5M | 5% | 55% | **$137,500** |
 | $10M | 5% | 55% | **$275,000** |
 
-## 3D. Gift Card & Merchant Commissions — Start Tracking
+## 3D. Gift Card & Merchant Commissions -- Start Tracking
 
 ### Bitrefill Affiliate Revenue
 
@@ -228,7 +255,7 @@ Add a 1% convenience fee on merchant payments (Porkbun, Mullvad, Travala). Users
 | $25K | $250 | **$3,000** |
 | $100K | $1,000 | **$12,000** |
 
-## 3E. Bridge Fees — Add Platform Cut
+## 3E. Bridge Fees -- Add Platform Cut
 
 Add a 0.1% platform fee on CCTP bridge transactions (in addition to gas).
 
@@ -238,7 +265,7 @@ Add a 0.1% platform fee on CCTP bridge transactions (in addition to gas).
 | $500K | $500 | **$6,000** |
 | $2M | $2,000 | **$24,000** |
 
-## 3F. Agent Marketplace Revenue (Future — Already Coded)
+## 3F. Agent Marketplace Revenue (Future -- Already Coded)
 
 The agent schema already supports revenue splits (api/schemas/agent.py:56-59):
 - Creator: 70% (configurable 50-90%)
@@ -303,9 +330,9 @@ The agent schema already supports revenue splits (api/schemas/agent.py:56-59):
 
 | Revenue Source | Calculation | Monthly |
 |---|---|---|
-| Transaction fees | 10 tx × $50 avg × 0.5% + $0.01 = $2.60 | $2.60 |
-| Yield (70% of 5% on $200 avg) | $200 × 5% × 70% / 12 | $0.58 |
-| Gift card commission (3%) | 2 purchases × $50 avg × 3% | $3.00 |
+| Transaction fees | 10 tx x $50 avg x 0.5% + $0.01 = $2.60 | $2.60 |
+| Yield (70% of 5% on $200 avg) | $200 x 5% x 70% / 12 | $0.58 |
+| Gift card commission (3%) | 2 purchases x $50 avg x 3% | $3.00 |
 | **Total RPUPM** | | **$6.18** |
 
 ### Pro Tier User ($4.99/mo subscription)
@@ -313,9 +340,9 @@ The agent schema already supports revenue splits (api/schemas/agent.py:56-59):
 | Revenue Source | Calculation | Monthly |
 |---|---|---|
 | Subscription | $4.99 | $4.99 |
-| Transaction fees | 15 tx × $75 avg × 0.3% + $0.01 = $3.53 | $3.53 |
-| Yield (50% of 5% on $500 avg) | $500 × 5% × 50% / 12 | $1.04 |
-| Gift card commission (3%) | 4 purchases × $75 avg × 3% | $9.00 |
+| Transaction fees | 15 tx x $75 avg x 0.3% + $0.01 = $3.53 | $3.53 |
+| Yield (50% of 5% on $500 avg) | $500 x 5% x 50% / 12 | $1.04 |
+| Gift card commission (3%) | 4 purchases x $75 avg x 3% | $9.00 |
 | **Total RPUPM** | | **$18.56** |
 
 ### Business Tier User ($19.99/mo subscription)
@@ -323,9 +350,9 @@ The agent schema already supports revenue splits (api/schemas/agent.py:56-59):
 | Revenue Source | Calculation | Monthly |
 |---|---|---|
 | Subscription | $19.99 | $19.99 |
-| Transaction fees | 30 tx × $200 avg × 0.2% + $0.005 = $12.15 | $12.15 |
-| Yield (30% of 5% on $2K avg) | $2000 × 5% × 30% / 12 | $2.50 |
-| Gift card/merchant | 5 purchases × $100 avg × 3% | $15.00 |
+| Transaction fees | 30 tx x $200 avg x 0.2% + $0.005 = $12.15 | $12.15 |
+| Yield (30% of 5% on $2K avg) | $2000 x 5% x 30% / 12 | $2.50 |
+| Gift card/merchant | 5 purchases x $100 avg x 3% | $15.00 |
 | **Total RPUPM** | | **$49.64** |
 
 ## 4C. Contribution Margin Per User
@@ -395,12 +422,12 @@ The agent schema already supports revenue splits (api/schemas/agent.py:56-59):
 ## Revenue Mix at Scale (Scenario C)
 
 ```
-Transaction Fees    ████████████████████████   48%
-Subscriptions       ██████████████             19%
-Yield Farming       █████████                  12%
-Agent Marketplace   ██████████                 11%
-Gift Card Commissions ██████                    8%
-Merchant + Bridge   █                           2%
+Transaction Fees    ||||||||||||||||||||||||   48%
+Subscriptions       ||||||||||||||             19%
+Yield Farming       |||||||||                  12%
+Agent Marketplace   ||||||||||                 11%
+Gift Card Commissions ||||||                    8%
+Merchant + Bridge   |                           2%
 ```
 
 ---
@@ -489,7 +516,7 @@ Add commission tracking to bitrefill_client.py to monitor affiliate earnings.
 |---|---|---|
 | User churn from fee increase | Medium | Still cheapest self-custody wallet by 40%. Grandfather early users for 3 months. |
 | Competitor undercutting | Low | Our unique value is AI + self-custody + USDC focus. No competitor has this stack. |
-| Fee perception ("they raised fees 150%!") | Medium | Frame as "now with Pro tier — lower fees than ever." Lead with Pro value, not fee increase. |
+| Fee perception ("they raised fees 150%!") | Medium | Frame as "now with Pro tier -- lower fees than ever." Lead with Pro value, not fee increase. |
 | Subscription conversion too low | Medium | Free tier is still functional. Subscription is for power users. 5-10% conversion is industry standard. |
 
 ## Yield Farming Risks
@@ -563,20 +590,28 @@ Add commission tracking to bitrefill_client.py to monitor affiliate earnings.
 
 | File | Change Required | Priority |
 |---|---|---|
-| `config.py:111-114` | Update FEE_FLAT, FEE_PERCENTAGE, FEE_MAX | P0 — Week 1 |
-| `free_tier.py:14` | Add daily message cap (20/day) | P0 — Week 1 |
-| `merchant_adapters.py` | Add 1% convenience fee | P1 — Week 1 |
-| `bitrefill_client.py` | Add affiliate commission tracking | P1 — Week 1 |
-| `app.py` | Add hybrid LLM routing (Gemini/Haiku/Sonnet by tier) | P1 — Week 2 |
-| `aave_client.py` | Activate yield deposits with split tracking | P1 — Weeks 2-4 |
-| `yield_tools.py` | Add yield split logic by subscription tier | P1 — Weeks 2-4 |
-| `api/routes/transactions.py:186-189` | Add 0.1% bridge platform fee | P2 — Month 2 |
-| `api/schemas/agent.py` | Already coded — enable marketplace payments | P2 — Month 2 |
-| New: `subscription.py` | Stripe integration, tier management | P1 — Weeks 2-3 |
-| New: `supabase_migration_subscriptions.sql` | Subscription tier column in user_settings | P1 — Week 2 |
+| `config.py:111-114` | Update FEE_FLAT, FEE_PERCENTAGE, FEE_MAX | P0 -- Week 1 |
+| `free_tier.py:14` | Add daily message cap (20/day) | P0 -- Week 1 |
+| `merchant_adapters.py` | Add 1% convenience fee | P1 -- Week 1 |
+| `bitrefill_client.py` | Add affiliate commission tracking | P1 -- Week 1 |
+| `app.py` | Add hybrid LLM routing (Gemini/Haiku/Sonnet by tier) | P1 -- Week 2 |
+| `aave_client.py` | Activate yield deposits with split tracking | P1 -- Weeks 2-4 |
+| `yield_tools.py` | Add yield split logic by subscription tier | P1 -- Weeks 2-4 |
+| `api/routes/transactions.py:186-189` | Add 0.1% bridge platform fee | P2 -- Month 2 |
+| `api/schemas/agent.py` | Already coded -- enable marketplace payments | P2 -- Month 2 |
+| New: `subscription.py` | Stripe integration, tier management | P1 -- Weeks 2-3 |
+| New: `supabase_migration_subscriptions.sql` | Subscription tier column in user_settings | P1 -- Week 2 |
+
+---
+
+## Urgent Flags
+
+- **CRITICAL:** Current pricing loses money on every transaction under $22. Fee increase to $0.01 + 0.5% is the single highest-impact change and should be implemented immediately.
+- **HIGH:** Yield farming (Aave) is coded but dormant. Activating it unlocks $27.5K-$275K/yr in revenue depending on AUM, with zero new feature development needed.
+- **MEDIUM:** LLM costs on free tier are $0 (Gemini Flash), but if users upgrade to Claude Sonnet without a subscription, we lose money. Tier-gating LLM models is essential.
 
 ---
 
 *Document Owner: Revenue Officer*
 *Last Updated: February 6, 2026*
-*Status: Sprint 0 COMPLETE — Ready for implementation review*
+*Status: Sprint 0 COMPLETE -- Ready for implementation review*
