@@ -2,7 +2,7 @@
 
 > **Last updated**: 2026-02-06
 > **Architect session**: active
-> **Sprint**: Sprint 0 - Strategic Foundation & Competitive Assessment
+> **Sprint**: Sprint 0 → Sprint 1 transition
 
 ---
 
@@ -17,7 +17,7 @@ This is the **single source of truth** for all parallel Claude Code sessions wor
 4. Execute your tasks autonomously - you have full freedom within your mandate
 5. Write all findings, recommendations, and changes back to your workstream file
 6. If you make code changes, commit with prefix: `[role-name] description`
-7. Push to branch: `claude/project-analysis-fwmFh`
+7. Push to branch: `claude/project-analysis-fwmFh` (see Git Protocol below)
 8. If you need to flag something urgent to the architect, write it to the `## Urgent Flags` section of your workstream file
 
 **You do NOT need to:**
@@ -34,10 +34,47 @@ This is the **single source of truth** for all parallel Claude Code sessions wor
 
 ---
 
+## Git Protocol (CRITICAL - Read This)
+
+All sessions share one branch: `claude/project-analysis-fwmFh`
+
+**Before writing:**
+```bash
+git fetch origin claude/project-analysis-fwmFh
+git pull origin claude/project-analysis-fwmFh --rebase
+```
+
+**After writing:**
+```bash
+git add docs/workstreams/YOUR-FILE.md
+git commit -m "[role-name] Sprint 0: description of findings"
+git push -u origin claude/project-analysis-fwmFh
+```
+
+**If push fails (merge conflict):**
+```bash
+git pull origin claude/project-analysis-fwmFh --rebase
+# resolve conflicts (keep both changes)
+git push -u origin claude/project-analysis-fwmFh
+```
+
+**If push fails with 403 / permission error**, retry up to 4 times with 2s delay between attempts. If it still fails, save your workstream file content and report the error in your session output.
+
+**Rules:**
+- Each role only modifies its own workstream file (no cross-file edits except architect)
+- Always pull before push (avoids conflicts)
+- Commit messages must start with `[role-name]` prefix
+- The architect is the only role that edits `COMMAND_CENTER.md`
+- All other docs (`docs/*.md`) are read-only for roles (flag changes needed to architect via your workstream file)
+
+---
+
 ## Project State (What Exists Today)
 
 ### One-Liner
-USDChat is an AI-powered, non-custodial crypto wallet where users manage USDC through natural language conversation. Strategic pivot: "Not a wallet - an AI project launchpad with money rails."
+USDChat is a wallet for people who want to make money with AI. It connects USDC to LLMs and ships pre-built money-making mechanisms (yield, DCA, automated trading, agent payments) so users earn from day one.
+
+> **NOTE TO ALL ROLES**: The "AI project launchpad" framing in older docs was aspirational positioning written by a previous AI assistant. It does not reflect the current code. Ground your analysis in what the code actually does, not what the docs describe. The founder's vision: **a competitive wallet with built-in ways for people to make money using AI**.
 
 ### Tech Stack
 | Layer | Technology | Location |
@@ -73,10 +110,16 @@ USDChat is an AI-powered, non-custodial crypto wallet where users manage USDC th
 - Production deployment
 - Fiat on/off ramp
 
-### Critical Blockers (Require Founder Action)
+### Infrastructure
+- **Hosting**: Railway (synced from git, live)
+- **Database**: Supabase (live, schema applied)
+- **Circle**: Warm relationship - founder is close friends with Arc (Circle's chain) leadership
+- **Deployment**: Railway auto-deploys from git pushes
+
+### Remaining Blockers (Require Founder Action)
 | Blocker | Impact | Status |
 |---------|--------|--------|
-| Circle API credentials | Blocks x402, CCTP production, hosted wallets | Pending |
+| Circle API credentials | Blocks x402, CCTP production | Warm relationship, in progress |
 | Bitrefill API key | Blocks gift card purchases | Pending |
 | Production RPC keys (Alchemy/Infura) | Blocks reliable mainnet access | Pending |
 
