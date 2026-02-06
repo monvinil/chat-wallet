@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Next.js build
+.next
+out
+
+# Environment files (contain secrets)
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+
+# Testing
+coverage
+__tests__
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Misc
+*.md
+.git

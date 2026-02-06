@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Environment files (contain secrets)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+htmlcov/
+.coverage
+coverage.xml
+
+# Node (web has its own Dockerfile)
+web/node_modules
+web/.next
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Documentation (not needed in API image)
+docs/
+*.md
+!README.md
+
+# Tests (not needed in production image)
+tests/
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+
+# CI
+.github/
