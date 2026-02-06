@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpRight, ArrowDownLeft, TrendingUp, Wallet, Copy, Check, ExternalLink } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, TrendingUp, Wallet, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
 
@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useWalletBalances } from '@/lib/hooks';
 import { useEarningsSummary } from '@/lib/hooks';
+import { useYieldStatus } from '@/lib/hooks';
 import { useAuthStore } from '@/lib/stores/auth';
 import { toast } from 'sonner';
 
@@ -17,14 +18,19 @@ export default function WalletPage() {
   const { user } = useAuthStore();
   const { data: balances, isLoading: balancesLoading } = useWalletBalances();
   const { data: earnings, isLoading: earningsLoading } = useEarningsSummary();
+  const { data: yieldStatus } = useYieldStatus();
   const [copied, setCopied] = useState(false);
 
   const copyAddress = async () => {
     if (!user?.evm_address) return;
-    await navigator.clipboard.writeText(user.evm_address);
-    setCopied(true);
-    toast.success('Address copied to clipboard');
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(user.evm_address);
+      setCopied(true);
+      toast.success('Address copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy address');
+    }
   };
 
   const formatAddress = (address: string) => {
@@ -54,6 +60,7 @@ export default function WalletPage() {
               size="icon"
               className="h-6 w-6"
               onClick={copyAddress}
+              aria-label="Copy address to clipboard"
             >
               {copied ? (
                 <Check className="h-3 w-3 text-green-500" />
@@ -175,23 +182,25 @@ export default function WalletPage() {
         </CardContent>
       </Card>
 
-      {/* CTA to enable yield */}
-      <Card className="border-dashed">
-        <CardContent className="py-6">
-          <div className="text-center">
-            <TrendingUp className="mx-auto mb-2 h-8 w-8 text-primary" />
-            <h3 className="font-semibold">Start earning on your USDC</h3>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Enable yield to earn up to 8% APY automatically
-            </p>
-            <Button asChild>
-              <Link href="/earn">
-                Enable Yield
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* CTA to enable yield - only show when yield is not active */}
+      {!yieldStatus?.enabled && (
+        <Card className="border-dashed">
+          <CardContent className="py-6">
+            <div className="text-center">
+              <TrendingUp className="mx-auto mb-2 h-8 w-8 text-primary" />
+              <h3 className="font-semibold">Start earning on your USDC</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Enable yield to earn up to 8% APY automatically
+              </p>
+              <Button asChild>
+                <Link href="/earn">
+                  Enable Yield
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

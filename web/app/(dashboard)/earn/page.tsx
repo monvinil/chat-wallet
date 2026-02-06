@@ -5,9 +5,7 @@ import {
   TrendingUp,
   Zap,
   Calendar,
-  ChevronRight,
   Loader2,
-  Info,
   Pause,
   Play,
   Trash2,
@@ -24,7 +22,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -50,16 +47,18 @@ import { useSchedules, useCreateSchedule, useCancelSchedule, usePauseSchedule, u
 import { useEarningsSummary, useEarningsHistory } from '@/lib/hooks';
 import { useWalletBalances } from '@/lib/hooks';
 
-// Mock chart data (will be replaced with real data)
-const mockChartData = Array.from({ length: 30 }, (_, i) => ({
-  date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-  earnings: Math.random() * 0.5 + 0.2,
-}));
+const frequencyLabels: Record<string, string> = {
+  daily: 'day',
+  weekly: 'week',
+  biweekly: '2 weeks',
+  monthly: 'month',
+};
 
 export default function EarnPage() {
   const { data: yieldStatus, isLoading: yieldLoading } = useYieldStatus();
   const { data: schedules, isLoading: schedulesLoading } = useSchedules();
   const { data: earnings, isLoading: earningsLoading } = useEarningsSummary();
+  const { data: earningsHistory } = useEarningsHistory();
   const { data: balances } = useWalletBalances();
 
   const depositMutation = useYieldDeposit();
@@ -71,6 +70,8 @@ export default function EarnPage() {
 
   const [yieldDialogOpen, setYieldDialogOpen] = useState(false);
   const [dcaDialogOpen, setDcaDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
   const [dcaAmount, setDcaAmount] = useState('50');
   const [dcaFrequency, setDcaFrequency] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly'>('weekly');
   const [dcaToken, setDcaToken] = useState('ETH');
@@ -95,6 +96,19 @@ export default function EarnPage() {
     });
     setDcaDialogOpen(false);
   };
+
+  const handleCancelSchedule = async () => {
+    if (!cancelTargetId) return;
+    await cancelScheduleMutation.mutateAsync(cancelTargetId);
+    setCancelDialogOpen(false);
+    setCancelTargetId(null);
+  };
+
+  // Transform earnings history into chart data
+  const chartData = earningsHistory?.items?.map((item) => ({
+    date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    earnings: item.amount,
+  })) || [];
 
   return (
     <div className="space-y-6">
@@ -135,39 +149,44 @@ export default function EarnPage() {
           <CardDescription>Last 30 days</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockChartData}>
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `$${value.toFixed(2)}`}
-                />
-                <Tooltip
-                  formatter={(value) => [`$${(value as number).toFixed(2)}`, 'Earnings']}
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="earnings"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {chartData.length > 0 ? (
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `$${value.toFixed(2)}`}
+                  />
+                  <Tooltip
+                    formatter={(value) => [`$${(value as number).toFixed(2)}`, 'Earnings']}
+                    contentStyle={{
+                      borderRadius: '8px',
+                    }}
+                    wrapperClassName="!bg-card !border-border"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="earnings"
+                    stroke="var(--color-primary)"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="flex h-48 items-center justify-center text-muted-foreground">
+              <p className="text-sm">No earnings data yet. Enable yield to start earning.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -338,7 +357,7 @@ export default function EarnPage() {
                   </div>
                   <div className="rounded-lg bg-muted p-3 text-sm">
                     <p className="text-muted-foreground">
-                      You&apos;ll buy ${dcaAmount} worth of {dcaToken} every {dcaFrequency === 'biweekly' ? '2 weeks' : dcaFrequency.replace('ly', '')}.
+                      You&apos;ll buy ${dcaAmount} worth of {dcaToken} every {frequencyLabels[dcaFrequency]}.
                     </p>
                   </div>
                   <Button
@@ -375,10 +394,10 @@ export default function EarnPage() {
                 >
                   <div>
                     <p className="font-medium">
-                      ${schedule.amount} → {schedule.target_token}
+                      ${schedule.amount} &rarr; {schedule.target_token}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Every {schedule.frequency === 'biweekly' ? '2 weeks' : schedule.frequency.replace('ly', '')}
+                      Every {frequencyLabels[schedule.frequency] || schedule.frequency}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Next: {new Date(schedule.next_execution).toLocaleDateString()}
@@ -393,6 +412,7 @@ export default function EarnPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => pauseScheduleMutation.mutate(schedule.id)}
+                        aria-label="Pause schedule"
                       >
                         <Pause className="h-4 w-4" />
                       </Button>
@@ -401,6 +421,7 @@ export default function EarnPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => resumeScheduleMutation.mutate(schedule.id)}
+                        aria-label="Resume schedule"
                       >
                         <Play className="h-4 w-4" />
                       </Button>
@@ -409,7 +430,11 @@ export default function EarnPage() {
                       variant="ghost"
                       size="icon"
                       className="text-destructive"
-                      onClick={() => cancelScheduleMutation.mutate(schedule.id)}
+                      onClick={() => {
+                        setCancelTargetId(schedule.id);
+                        setCancelDialogOpen(true);
+                      }}
+                      aria-label="Cancel schedule"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -426,6 +451,37 @@ export default function EarnPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Schedule</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel this auto-invest schedule? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
+              Keep Schedule
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelSchedule}
+              disabled={cancelScheduleMutation.isPending}
+            >
+              {cancelScheduleMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                'Cancel Schedule'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

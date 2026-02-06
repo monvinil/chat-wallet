@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 
 import { useWalletBalances, useTransactionPreview, useTransactionSend } from '@/lib/hooks';
+import { toast } from 'sonner';
 
 const chains = [
   { value: 'base-mainnet', label: 'Base' },
@@ -48,14 +49,17 @@ export default function SendPage() {
   const handlePreview = async () => {
     if (!toAddress || !amount) return;
 
-    await previewMutation.mutateAsync({
-      to_address: toAddress,
-      amount: parseFloat(amount),
-      chain,
-      token: 'USDC',
-    });
-
-    setConfirmDialogOpen(true);
+    try {
+      await previewMutation.mutateAsync({
+        to_address: toAddress,
+        amount: parseFloat(amount),
+        chain,
+        token: 'USDC',
+      });
+      setConfirmDialogOpen(true);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to preview transaction');
+    }
   };
 
   const handleSend = async () => {
@@ -177,14 +181,6 @@ export default function SendPage() {
               </>
             )}
           </Button>
-
-          {previewMutation.error && (
-            <p className="text-sm text-destructive">
-              {previewMutation.error instanceof Error
-                ? previewMutation.error.message
-                : 'Failed to preview transaction'}
-            </p>
-          )}
         </CardContent>
       </Card>
 

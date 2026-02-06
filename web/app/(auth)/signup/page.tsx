@@ -54,10 +54,14 @@ export default function SignupPage() {
 
   const copyMnemonic = async () => {
     if (!mnemonic) return;
-    await navigator.clipboard.writeText(mnemonic);
-    setCopied(true);
-    toast.success('Recovery phrase copied to clipboard');
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(mnemonic);
+      setCopied(true);
+      toast.success('Recovery phrase copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy. Please select and copy the words manually.');
+    }
   };
 
   const handleConfirm = () => {
@@ -92,6 +96,7 @@ export default function SignupPage() {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
+                autoComplete="email"
                 {...register('email')}
                 disabled={isLoading}
               />
@@ -107,6 +112,7 @@ export default function SignupPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Create a strong password"
+                  autoComplete="new-password"
                   {...register('password')}
                   disabled={isLoading}
                 />
@@ -116,6 +122,7 @@ export default function SignupPage() {
                   size="icon"
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -135,6 +142,7 @@ export default function SignupPage() {
                 id="confirmPassword"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Confirm your password"
+                autoComplete="new-password"
                 {...register('confirmPassword')}
                 disabled={isLoading}
               />
@@ -160,12 +168,6 @@ export default function SignupPage() {
                 Sign in
               </Link>
             </div>
-            <div className="text-center text-sm text-muted-foreground">
-              Have a recovery phrase?{' '}
-              <Link href="/import" className="text-primary hover:underline">
-                Import wallet
-              </Link>
-            </div>
           </CardFooter>
         </form>
       </Card>
@@ -180,6 +182,7 @@ export default function SignupPage() {
             </DialogTitle>
             <DialogDescription>
               This is the ONLY way to recover your wallet. Write it down and store it safely.
+              Never share it with anyone.
             </DialogDescription>
           </DialogHeader>
 
@@ -213,18 +216,23 @@ export default function SignupPage() {
               )}
             </Button>
 
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-3">
               <input
                 type="checkbox"
-                id="confirm"
+                id="confirm-backup"
                 checked={confirmed}
                 onChange={(e) => setConfirmed(e.target.checked)}
-                className="mt-1"
+                className="mt-1 h-4 w-4 rounded border-input"
+                aria-describedby="confirm-backup-description"
               />
-              <label htmlFor="confirm" className="text-sm text-muted-foreground">
+              <label id="confirm-backup-description" htmlFor="confirm-backup" className="text-sm text-muted-foreground cursor-pointer">
                 I have saved my recovery phrase in a secure location. I understand that losing it means losing access to my wallet forever.
               </label>
             </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              This dialog cannot be dismissed until you confirm above.
+            </p>
 
             <Button
               className="w-full"

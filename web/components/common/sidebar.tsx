@@ -1,24 +1,23 @@
 'use client';
 
-import Link from 'next/link';
 import {
   Wallet,
   TrendingUp,
   Send,
+  ArrowDownLeft,
   History,
-  Settings,
   LogOut,
   CircleDollarSign,
 } from 'lucide-react';
 import { NavLink } from './nav-link';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/lib/stores/auth';
 
 const navItems = [
   { href: '/wallet', icon: Wallet, label: 'Wallet' },
   { href: '/earn', icon: TrendingUp, label: 'Earn' },
   { href: '/send', icon: Send, label: 'Send' },
+  { href: '/receive', icon: ArrowDownLeft, label: 'Receive' },
   { href: '/history', icon: History, label: 'History' },
 ];
 
@@ -45,22 +44,15 @@ export function Sidebar() {
         <div className="mb-3 truncate text-sm text-muted-foreground">
           {user?.email}
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild className="flex-1">
-            <Link href="/settings">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={logout}
-            className="text-destructive hover:text-destructive"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={logout}
+          className="w-full justify-start text-destructive hover:text-destructive"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign out
+        </Button>
       </div>
     </aside>
   );

@@ -26,13 +26,18 @@ export default function ReceivePage() {
   const copyAddress = async () => {
     const address = addressData?.address || user?.evm_address;
     if (!address) return;
-    await navigator.clipboard.writeText(address);
-    setCopied(true);
-    toast.success('Address copied to clipboard');
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      toast.success('Address copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy address');
+    }
   };
 
   const address = addressData?.address || user?.evm_address || '';
+  const selectedChainLabel = chains.find(c => c.value === selectedChain)?.label || '';
 
   return (
     <div className="space-y-6">
@@ -68,7 +73,7 @@ export default function ReceivePage() {
               <div className="rounded-lg border bg-white p-4">
                 <img
                   src={`data:image/png;base64,${addressData.qr_code}`}
-                  alt="QR Code"
+                  alt={`QR code for your ${selectedChainLabel} deposit address`}
                   className="h-40 w-40"
                 />
               </div>
@@ -81,7 +86,7 @@ export default function ReceivePage() {
 
           {/* Address */}
           <div className="space-y-2">
-            <p className="text-sm font-medium">Your {chains.find(c => c.value === selectedChain)?.label} Address</p>
+            <p className="text-sm font-medium">Your {selectedChainLabel} Address</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 break-all rounded-lg bg-muted p-3 text-sm">
                 {isLoading ? <Skeleton className="h-5 w-full" /> : address}
@@ -91,6 +96,7 @@ export default function ReceivePage() {
                 size="icon"
                 onClick={copyAddress}
                 disabled={isLoading}
+                aria-label="Copy address to clipboard"
               >
                 {copied ? (
                   <Check className="h-4 w-4 text-green-500" />
@@ -113,7 +119,7 @@ export default function ReceivePage() {
           <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4 text-sm">
             <p className="font-medium text-yellow-600 dark:text-yellow-500">Important</p>
             <p className="text-muted-foreground">
-              Only send USDC on the {chains.find(c => c.value === selectedChain)?.label} network to this address.
+              Only send USDC on the {selectedChainLabel} network to this address.
               Sending other tokens or using the wrong network may result in permanent loss of funds.
             </p>
           </div>

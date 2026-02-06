@@ -1,9 +1,10 @@
 'use client';
 
-import { ArrowUpRight, ArrowDownLeft, RefreshCw, ExternalLink, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowUpRight, ArrowDownLeft, RefreshCw, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -58,7 +59,8 @@ function formatAddress(address: string) {
 }
 
 export default function HistoryPage() {
-  const { data, isLoading, refetch, isRefetching } = useTransactionHistory();
+  const [page, setPage] = useState(1);
+  const { data, isLoading, refetch, isRefetching } = useTransactionHistory(page);
 
   return (
     <div className="space-y-6">
@@ -72,6 +74,7 @@ export default function HistoryPage() {
           size="sm"
           onClick={() => refetch()}
           disabled={isRefetching}
+          aria-label="Refresh transactions"
         >
           {isRefetching ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -137,9 +140,22 @@ export default function HistoryPage() {
         </CardContent>
       </Card>
 
-      {data && data.total > data.per_page && (
+      {data && data.total > data.page * data.per_page && (
         <div className="flex justify-center">
-          <Button variant="outline">Load More</Button>
+          <Button
+            variant="outline"
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              'Load More'
+            )}
+          </Button>
         </div>
       )}
     </div>
