@@ -1,8 +1,100 @@
-# R&D Lab: 2026 Technology Landscape Scan
-## USDChat Integration Opportunities Report
+# Workstream: R&D / Idea Lab
+
+> **Owner**: R&D session
+> **Status**: Sprint 0 Complete
+> **Last updated**: 2026-02-06
+
+---
+
+## Mandate
+
+You are the R&D lab. You own:
+- Scanning the 2026 technology landscape for opportunities
+- Identifying emerging protocols, APIs, and integrations that USDChat should adopt
+- Evaluating "what's possible now" that wasn't possible 6 months ago
+- Proposing innovative features that create competitive advantage
+- Evaluating build-vs-integrate decisions for new capabilities
+
+You are the eyes looking forward. Your job is to answer: **"What can we build in 2026 that nobody else is building yet?"**
+
+---
+
+## Context Read
+
+1. `docs/COMMAND_CENTER.md` - Project overview
+2. `docs/STRATEGIC_DIRECTION.md` - Current strategy and macro trends
+3. `docs/AI_MONEY_INTEGRATION_ANALYSIS.md` - Current integration analysis
+4. `docs/VISION_2026.md` - Three horizons and competitive landscape
+5. `docs/CIRCLE_INTEGRATION_PLAN.md` - Circle integration plans
+
+## What USDChat Currently Integrates
+- Aave (yield), Circle CCTP (bridging), Bitrefill (gift cards)
+- LangChain + Claude (AI), Web3.py (EVM), Solana SDK
+- Gmail OAuth (email automation)
+
+---
+
+## Sprint 0 Research Agenda
+
+### 1. AI Agent Payment Infrastructure (2026)
+- [x] What is the current state of x402 protocol? Who's adopted it? What's the ecosystem?
+- [x] What other AI-to-AI payment protocols exist? (Lightning, Solana Pay, etc.)
+- [x] What are the leading AI agent frameworks? (Anthropic tool use, OpenAI Assistants, CrewAI, AutoGen, etc.)
+- [x] How are AI agents being monetized in 2026? What payment models work?
+- [x] What agent marketplaces exist? What can we learn from them?
+
+### 2. Stablecoin & DeFi Landscape (Feb 2026)
+- [x] Status of stablecoin legislation (GENIUS Act, etc.)
+- [x] New yield opportunities beyond Aave (vaults.fyi, Beefy, Morpho, Pendle, etc.)
+- [x] Cross-chain bridging state of the art (LayerZero, Wormhole, Across, etc.)
+- [x] Account abstraction adoption (ERC-4337, ERC-7702, smart wallets)
+- [x] Base ecosystem growth and opportunities
+- [x] Solana DeFi innovations
+
+### 3. AI + Finance Convergence
+- [x] Who is building AI-powered wallets/financial tools in 2026?
+- [x] What AI capabilities are new since Jan 2025? (computer use, long context, real-time, multimodal)
+- [x] How is Claude being used in financial applications?
+- [x] What's the state of autonomous AI agents with spending authority?
+- [x] AI-driven trading strategies (are they working? what platforms?)
+
+### 4. User Experience Innovations
+- [x] Passkey authentication for wallets (biometric wallet unlock)
+- [x] Voice-first wallet interfaces (is anyone doing this?)
+- [x] Social features in wallets (sharing, following, copying trades)
+- [x] Gamification in fintech (what's working in 2026?)
+- [x] PWA capabilities update (what new web APIs are available?)
+
+### 5. Integration Opportunities
+- [x] Which APIs/services should USDChat integrate that it doesn't know about yet?
+- [x] Virtual card issuance providers (Privacy.com, Lithic, Marqeta)
+- [x] Fiat on/off ramp options (MoonPay, Transak, Ramp Network, Circle)
+- [x] Commerce integrations beyond Bitrefill
+- [x] Identity/KYC-lite solutions (World ID, Polygon ID, etc.)
+
+### 6. Emerging Threat Assessment
+- [x] Are any major players (Coinbase, Metamask, Phantom) adding AI features?
+- [x] Are there well-funded startups in the AI+wallet space?
+- [x] What's ChatGPT/OpenAI doing with payments/commerce?
+- [x] Could Apple/Google wallet features threaten this space?
+
+---
+
+## Urgent Flags
+
+1. **Coinbase Base App** is the closest competitor — custodial but adding AI + social + USDC payments. Monitor closely.
+2. **x402 V2 shipped** without us. Circle is watching for serious builders. x402 prototype is P0.
+3. **Bridge (Stripe) virtual cards** eliminate the card-only wall. This was P3, should be P1 now.
+4. **GENIUS Act is law** — validates our entire USDC strategy. Use this in fundraising immediately.
+5. **MCP is becoming the standard** for AI-to-payments. If we don't ship an MCP server, agents will use Stripe/Worldpay instead of us.
+
+---
+
+# Research Findings
+
+## 2026 Technology Landscape Scan — USDChat Integration Opportunities Report
 
 **Date:** February 6, 2026
-**Status:** Sprint 0 Complete
 **Author:** R&D Lab Workstream (AI-assisted)
 
 ---
@@ -760,6 +852,32 @@ Five mega-trends are converging simultaneously — and USDChat sits at the inter
 >
 > We're not a wallet. We're not an exchange. We're the infrastructure
 > where AI ideas become money.
+
+---
+
+## Recommendations Summary
+
+### Integrate Now (Low effort, high impact)
+- **vaults.fyi API** — 1,000+ yield strategies via single API, AI-recommended
+- **x402 V2 via CDP facilitator** — free tier, 1,000 tx/month, build into FastAPI gateway
+- **Passkey wallet creation** — eliminate seed phrases for onboarding
+
+### Build Next Quarter (Medium effort, strategic value)
+- **USDChat MCP Server** — expose wallet ops as MCP tools for any AI agent
+- **Bridge (Stripe) virtual cards** — USDC-funded cards at 150M+ merchants
+- **Hyperliquid trading agent** — highest-volume perp DEX, core agent use case
+- **Morpho Blue yield** — higher APY than Aave, institutional credibility
+
+### Watch & Evaluate (Promising but early)
+- **Circle Arc L1** — testnet impressive but mainnet unproven; be ready to deploy early
+- **Agent Identity (DIDs)** — governance gap is real but standards not mature
+- **ACP (Stripe + OpenAI)** — powerful but fiat-focused; complement x402, don't replace
+
+### Skip (Overhyped or irrelevant for now)
+- Building our own L1/L2 chain
+- Token/coin launch (distraction)
+- Voice-first wallet (too early, limited demand)
+- Native mobile app before PWA proves retention
 
 ---
 
