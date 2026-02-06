@@ -3,7 +3,8 @@
 
 ---
 
-> **CRITICAL: If you're an AI assistant and context was lost, READ THIS DOCUMENT FIRST.**
+> **CRITICAL: If you're an AI assistant and context was lost, READ `PROJECT_OVERVIEW.md` (repo root) FIRST.**
+> That is the authoritative coordination document. This file is supplementary.
 > This provides essential context about the project, its direction, and current state.
 
 ---
@@ -11,12 +12,17 @@
 # Quick Summary
 
 **Project:** USDChat
-**What it is:** Retail money-maker wallet (yield + DCA) with future agent marketplace
-**Tech Stack:** Next.js 14 + shadcn/ui (frontend) + FastAPI (backend)
+**Domain:** usd.chat | **Twitter/X:** x.com/usdchat
+**What it is:** Self-custodial USDC wallet with yield, DCA, and future AI agent marketplace
+**Tech Stack:** Next.js 16 + shadcn/ui (frontend) + FastAPI (backend)
 **Key Partner:** Circle (USDC infrastructure)
 **Primary Goal:** Help users earn passive income on their USDC
-**North Star:** Daily Active Users checking earnings
+**North Star:** Weekly Active Creators (WAC) — not TVL
 **Strategic Pivot:** Money maker features first, agent marketplace second
+**Stage:** Stealth — no live users yet
+
+> **CUSTODY WARNING:** See `PROJECT_OVERVIEW.md` Section 5. The scheduler_executor.py
+> stores encrypted private keys server-side. This MUST be fixed before launch.
 
 ---
 
@@ -28,10 +34,11 @@ USDChat makes your USDC work for you. One-click yield on Aave, automated DCA int
 
 # Critical Documents (Read Order)
 
-1. **STRATEGIC_DIRECTION.md** — Primary strategy and building direction
-2. **ROADMAP_2026.md** — Detailed implementation plan with todos
-3. **MANUAL_ACTIONS.md** — Tasks requiring human action (API keys, etc.)
-4. **This file** — Quick context for new sessions
+1. **PROJECT_OVERVIEW.md** (repo root) — Authoritative coordination document (read FIRST)
+2. **STRATEGIC_DIRECTION.md** — Primary strategy and building direction
+3. **ROADMAP_2026.md** — Detailed implementation plan with todos
+4. **MANUAL_ACTIONS.md** — Tasks requiring human action (API keys, etc.)
+5. **This file** — Quick context for new sessions
 
 ---
 
@@ -362,15 +369,26 @@ The founder prefers:
 
 ---
 
+# Founder Decisions (February 2026)
+
+These are confirmed by the founder and override earlier assumptions:
+
+1. **PumpFun/meme coins:** KEEP as UI pass-through wrapper. Not a legal issue if USDChat is just the interface and user interacts with contracts directly.
+2. **Community vaults:** KEEP — but only as smart contract wrappers (non-custodial). Many DeFi protocols do this successfully.
+3. **AI characters:** REFRAMED — not about creating characters, but enabling creators to build AI agents/influencers that earn money through socials. Core "Idea → Money" pipeline.
+4. **Card issuance:** KILLED — "Was never my idea" (founder).
+5. **Yield as revenue:** Founder agrees it's a good model but raised custody concern. Answer: non-custodial IF user signs deposit tx. See custody audit.
+6. **Fee structure:** OPEN — founder wants chain-specific analysis before changing.
+
 # Questions to Ask User
 
 If starting fresh:
 1. "Phase 1 is complete. Ready to start Phase 2 (PWA + notifications)?"
-2. "Preference for push notifications: Firebase Cloud Messaging or OneSignal?"
-3. "Preference for email service: Resend or SendGrid?"
-4. "What's the status on Circle/Bitrefill credentials?"
+2. "The custody issue in scheduler_executor.py needs fixing before launch. Want me to implement Option D (pending approval on next login) as the simplest fix?"
+3. "Alchemy key is blocking production RPC reliability. Ready to set it up?"
+4. "What's the status on Circle credentials?"
 
 ---
 
-*Last Updated: February 2026*
-*Session: Strategic pivot to Money Maker first, Next.js + shadcn/ui*
+*Last Updated: February 6, 2026*
+*Session: New lead architect onboarding, custody audit, founder corrections*

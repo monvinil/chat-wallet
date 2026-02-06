@@ -4,9 +4,10 @@
 ---
 
 > **CRUCIAL CONTEXT FOR ALL SESSIONS**
-> This document represents the authoritative building direction for USDChat.
-> If context is lost between sessions, START HERE.
-> Last updated: February 2026
+> This document represents the strategic building direction for USDChat.
+> **For the central coordination document, see `PROJECT_OVERVIEW.md` (repo root).**
+> If context is lost between sessions, read PROJECT_OVERVIEW.md first, then this.
+> Last updated: February 6, 2026
 
 ---
 
@@ -51,10 +52,11 @@ More creators → Better agents → More users → More revenue → More creator
 
 ### Agent Types We Enable:
 1. **Trading Bots** — Hyperliquid, Polymarket, DEX strategies
-2. **AI Characters** — Personalities that charge for access/tips
+2. **AI Influencer Agents** — Creator-built AI personalities that earn through socials (3rd party integrations connecting LLMs to capital and tools) [FOUNDER CLARIFIED: not us creating characters, but enabling creators]
 3. **Content Agents** — Generate content for micropayments
 4. **Service Bots** — Task completion for fees
 5. **Yield Strategies** — Automated DeFi management
+6. **DeFi Pass-throughs** — UI wrappers for protocols like PumpFun (non-custodial, user interacts with contracts directly) [FOUNDER CONFIRMED]
 
 ### Revenue Model:
 - Creator: 70%
@@ -69,9 +71,11 @@ Every wallet is a vault. Every agent has a vault.
 |------------|-------|---------|
 | Personal Vault | User | Full self-custody |
 | Agent Vault | Creator | Agent operates, creator sets rules |
-| Community Vault | Multiple | Shared strategies, pooled capital |
+| Community Vault | Multiple | Shared strategies, pooled capital — MUST be implemented as smart contracts only (non-custodial) [FOUNDER CONFIRMED] |
 
 **Revenue from vaults:** 20% of yield on all idle funds.
+
+**CUSTODY NOTE:** Community vaults are viable IF implemented as smart contracts where users deposit directly (like Yearn/Beefy vaults). USDChat must NOT pool user funds server-side. See `PROJECT_OVERVIEW.md` Section 5 for full custody audit.
 
 **Note:** TVL is a secondary metric, not the north star. Optimizing for TVL creates a bootstrapping dead loop where fundraising valuation becomes tied to TVL, making it difficult to accelerate growth.
 
