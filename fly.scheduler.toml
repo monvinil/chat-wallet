@@ -1,0 +1,24 @@
+# =============================================================================
+# Fly.io Configuration - USDChat Scheduler Worker
+# Deploy: fly deploy --config fly.scheduler.toml
+# =============================================================================
+
+app = "usdchat-scheduler"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile.api.production"
+
+[env]
+  PYTHONUNBUFFERED = "1"
+
+# No HTTP service — this is a background worker
+[processes]
+  worker = "python scheduler_executor.py --mode worker --interval 60"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+  cpus = 1
+
+# Health check via process monitoring (Fly restarts if process exits)

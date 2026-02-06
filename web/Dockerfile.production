@@ -1,0 +1,64 @@
+# =============================================================================
+# USDChat Frontend - Production Dockerfile
+# Multi-stage build for optimized Next.js production image
+# =============================================================================
+
+# Stage 1: Install dependencies
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production && \
+    cp -R node_modules /prod_node_modules && \
+    npm ci
+
+# Stage 2: Build the application
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Build-time environment variables
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+# Disable Next.js telemetry
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npm run build
+
+# Stage 3: Production runner
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Security: run as non-root user
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 appuser
+
+# Copy production dependencies and built app
+COPY --from=deps /prod_node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.ts ./next.config.ts
+
+# Next.js production optimizations
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0"
+
+# Switch to non-root user
+USER appuser
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD wget -qO- http://localhost:3000/ || exit 1
+
+CMD ["npm", "start"]

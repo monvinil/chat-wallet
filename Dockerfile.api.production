@@ -1,0 +1,72 @@
+# =============================================================================
+# USDChat API - Production Dockerfile
+# Multi-stage build for minimal, secure production image
+# =============================================================================
+
+# Stage 1: Build dependencies
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Install build-time system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies into a virtual env
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Production image
+FROM python:3.11-slim AS production
+
+# Security: run as non-root user
+RUN groupadd --gid 1001 appuser && \
+    useradd --uid 1001 --gid 1001 --shell /bin/bash --create-home appuser
+
+WORKDIR /app
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Python optimizations
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
+
+# Copy application code (only what's needed)
+COPY api/ ./api/
+COPY utils/ ./utils/
+COPY run_api.py .
+COPY config.py .
+COPY supabase_client.py .
+COPY chain_utils.py .
+COPY wallet_manager.py .
+COPY balance_service.py .
+COPY aave_client.py .
+COPY cctp_client.py .
+COPY direct_tx.py .
+COPY meta_tx.py .
+COPY transaction_relayer.py .
+COPY scheduler_executor.py .
+COPY scheduler_manager.py .
+COPY settings_manager.py .
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Health check using Python (no curl/wget dependency)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+# Production command: uvicorn with multiple workers
+CMD ["python", "run_api.py", "--port", "8000", "--workers", "2"]
