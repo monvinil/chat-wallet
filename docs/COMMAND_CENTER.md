@@ -218,52 +218,117 @@ Every role produces their initial assessment and actionable recommendations. The
 
 ## Architecture Decisions Log
 
-Decisions made by the architect that all roles must respect:
-
 | Date | Decision | Rationale | Status |
 |------|----------|-----------|--------|
 | 2026-02 | Next.js 14 replaces Streamlit | PWA support, React ecosystem, mobile-first | ACTIVE |
 | 2026-02 | Base is primary chain | Cheapest gas, Circle native, Coinbase ecosystem | ACTIVE |
 | 2026-02 | Self-custody only (no custodial) | Regulatory advantage, user trust | ACTIVE |
-| 2026-02 | Agent marketplace is the moat | Network effects > feature list | ACTIVE |
-| 2026-02 | Weekly Active Creators is north star | Avoids TVL trap, measures real engagement | ACTIVE |
-| 2026-02 | 70/20/10 revenue split (creator/platform/referrer) | Fair to creators, sustainable for platform | ACTIVE |
 | 2026-02 | LangChain + Claude for AI | Structured tool calling, best reasoning | ACTIVE |
+| **2026-02-06** | **North star: Monthly Active Treasuries (MAT)** | WAC requires marketplace that doesn't exist. MAT = wallets >$100 + >1 tx/mo + yield | **REPLACES WAC** |
+| **2026-02-06** | **Positioning: "The Autopilot for Your USDC"** | "AI launchpad" was aspirational vapor. Autopilot matches what code does | **REPLACES LAUNCHPAD** |
+| **2026-02-06** | **Pricing: $0.01 + 0.5% (cap $5)** | Old pricing ($0.005+0.2%) loses money. Breakeven at $8 vs $22 | **REPLACES OLD FEES** |
+| **2026-02-06** | **Model routing: Haiku 70% / Sonnet 30%** | LLM costs drop from $0.012 to $0.003/msg | **NEW** |
+| **2026-02-06** | **Yield is the business** | 70/30 platform/user split at $3M AUM = $8,750/mo | **NEW** |
+| **2026-02-06** | **Target segment: crypto-native freelancers** | Quantifiable pain (3-5% Wise fees), natural yield loop | **NEW** |
+| **2026-02-06** | **Kill: Community Vaults, meme coins, card issuance, AI characters** | Securities law, regulatory risk, no users to support | **NEW** |
 
 ---
 
 ## Key Documents Index
 
-Read in this order for full context:
-
 | Priority | Document | Purpose |
 |----------|----------|---------|
-| 1 | `docs/CONTEXT_FOR_AI.md` | Quick project context (architecture, endpoints, current state) |
-| 2 | `docs/STRATEGIC_DIRECTION.md` | Authoritative strategy (pillars, metrics, what we don't do) |
-| 3 | `docs/VISION_2026.md` | Full product vision (three horizons, user journeys, competitive landscape) |
-| 4 | `docs/ROADMAP_2026.md` | Implementation plan (Phase 1-3, technical debt, success metrics) |
-| 5 | `docs/TODO_MASTER.md` | Current task tracking |
-| 6 | `docs/EXECUTIVE_REVIEW_2026-01.md` | Honest critique (CTO B-, PM B, Design A-, CEO C+, VC B-) |
-| 7 | `docs/SECURITY_TODO.md` | Security issues and fixes |
-| 8 | `docs/AI_MONEY_INTEGRATION_ANALYSIS.md` | What AI can/can't automate with money |
-| 9 | `docs/ROADMAP_FEATURES.md` | Feature specs (scheduler, bridging, insights) |
-| 10 | `docs/CIRCLE_INTEGRATION_PLAN.md` | Circle partnership technical plan |
+| 1 | `docs/RECONSTRUCTED_ARCHITECTURE.md` | **Architect's code-grounded plan (Sprint 1 source of truth)** |
+| 2 | `docs/COMMAND_CENTER.md` | This file - coordination hub |
+| 3 | `docs/workstreams/*.md` | All 9 Sprint 0 role outputs |
+| 4 | `docs/CONTEXT_FOR_AI.md` | Quick project context |
+| 5 | `docs/STRATEGIC_DIRECTION.md` | Strategy (partially outdated - see decisions log) |
+| 6 | `docs/SECURITY_TODO.md` | Security issues |
 
 ---
 
-## Coordination Notes
+## Sprint 0 Complete - Cross-Role Synthesis
 
-> This section is for cross-role observations. Any role can add a note here by editing this file.
-> Format: `[ROLE] [DATE] note`
+### What All 9 Roles Agree On
 
-_No notes yet. Roles will add notes as they work._
+1. **DO NOT LAUNCH YET** — API send is fake, JWT has hardcoded fallback, charts show random data
+2. **YIELD IS THE BUSINESS** — not transaction fees. $8,750/mo at $3M AUM via 70/30 split
+3. **POSITIONING: "Autopilot for USDC"** — not "AI launchpad" (code doesn't support that claim)
+4. **TARGET: Crypto-native freelancers** — quantifiable pain, natural yield retention loop
+5. **KILL: Community Vaults, meme coins, AI characters, card issuance, Streamlit**
+6. **BUILD: Yield activation, model routing, pricing fix, OFAC screening, push notifications**
+
+### Urgent Risk (Compliance)
+Server-side encrypted key storage may classify USDChat as custodian under FinCEN. Must audit `wallet_manager.py`, `meta_tx.py`, `scheduler_executor.py` and verify keys are NEVER accessible server-side. This is a launch blocker.
 
 ---
 
-## Sprint Backlog (Architect Maintains)
+## Sprint 1: Make It Real (Architect's Construction Plan)
 
-> This is populated after Sprint 0 assessments are complete.
+### Goal: Fix every broken thing → ship to production → get first 10 real users
 
-_Pending Sprint 0 completion._
+### Week 1: Fix Hard Blockers (No new features — just make existing code honest)
+
+| # | Task | Owner | Files | Hours |
+|---|------|-------|-------|-------|
+| 1 | **Remove JWT hardcoded fallback** — fail on startup if not set | Architect | `api/config.py:36` | 1h |
+| 2 | **Fix API send endpoint** — wire real transaction signing or disable | Architect | `api/routes/transactions.py:297-321` | 4-8h |
+| 3 | **Replace mock earnings data** — connect to real hooks | Architect | `web/` earn page components | 2h |
+| 4 | **Fix pricing** — $0.01 + 0.5% cap $5 | Architect | `config.py:111-114` | 1h |
+| 5 | **PBKDF2 → 600K iterations** | Architect | `utils/encryption.py` | 2h |
+| 6 | **Audit key storage** — verify non-custodial architecture | Security | `wallet_manager.py`, `meta_tx.py`, `scheduler_executor.py` | 4h |
+| 7 | **OFAC SDN screening** (free list) | Compliance | New middleware | 8h |
+| 8 | **Geo-block NY + WA + sanctioned countries** | Compliance | New middleware | 4h |
+
+### Week 2: Production Deployment
+
+| # | Task | Owner | Files | Hours |
+|---|------|-------|-------|-------|
+| 9 | **Production Dockerfiles** — multi-stage, non-root, real builds | DevOps | `Dockerfile.api`, `web/Dockerfile` | 4h |
+| 10 | **Restrict CORS** — actual domains only | DevOps | `api/main.py` | 1h |
+| 11 | **Create .dockerignore** | DevOps | New files | 30m |
+| 12 | **Deploy to Railway/Vercel/Fly.io** | DevOps | Infrastructure | 4h |
+| 13 | **Merge designer's 17 UX fixes** | Architect | From `claude/ux-ui-audit-FPOzz` | 2h |
+| 14 | **Fix dead navigation links** — /settings, /import, /notifications | Designer | `web/app/` | 4h |
+| 15 | **Model routing** — Haiku for simple, Sonnet for complex | Architect | `app.py` or new `model_router.py` | 4h |
+
+### Week 3: First Users
+
+| # | Task | Owner | Files | Hours |
+|---|------|-------|-------|-------|
+| 16 | **PWA config** — service worker, manifest, install prompt | Architect | `web/next.config.ts`, `web/public/` | 4h |
+| 17 | **Push notifications** — "You earned $X today" | Architect | New notification service | 8h |
+| 18 | **ToS + Privacy Policy** pages | Compliance | `web/app/` legal pages | 8h |
+| 19 | **Yield risk disclosure** — user acknowledgment before first deposit | Compliance + Designer | `web/` modal | 2h |
+| 20 | **Pin all dependencies** | Workflow | `requirements.txt`, `package.json` | 2h |
+| 21 | **CI/CD pipeline** (merge workflow reviewer's config) | Workflow | `.github/workflows/ci.yml` | 2h |
+
+### Founder Actions (Parallel — No Code Needed)
+
+| Action | Urgency | Impact |
+|--------|---------|--------|
+| Alchemy free-tier signup | This week | Reliable RPC |
+| Domain name purchase | This week | Professional URL for deployment |
+| Twitter/X account creation | This week | Growth channel |
+| Discord server setup | This week | Community |
+| Circle API credentials request | This month | x402, CCTP |
+| Legal opinion on meta-tx relayer | This month | $3-5K, needed for compliance |
+
+---
+
+## Session Branch Registry
+
+| Role | Branch | Status |
+|------|--------|--------|
+| Architect | `claude/project-analysis-fwmFh` | Active (main branch) |
+| Designer | `claude/ux-ui-audit-FPOzz` | Sprint 0 complete — 17 fixes to merge |
+| PMF Analyst | `claude/pmf-analysis-usdchat-QG4Cj` | Sprint 0 complete |
+| Security Auditor | `claude/security-audit-usdchat-EyCQM` | Sprint 0 complete |
+| R&D Lab | `claude/rd-tech-landscape-scan-uwLrf` | Sprint 0 complete |
+| Revenue Officer | `claude/fix-project-economics-vUdyi` | Sprint 0 complete |
+| Compliance | `claude/review-compliance-docs-hj9xG` | Sprint 0 complete |
+| Workflow Reviewer | `claude/audit-production-readiness-XiEcI` | Sprint 0 complete |
+| DevOps | `claude/setup-production-deployment-sQo0k` | Sprint 0 complete |
+| Growth | `claude/usdchat-growth-strategy-MCFqq` | Sprint 0 complete |
 
 ---
