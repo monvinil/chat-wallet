@@ -1519,6 +1519,28 @@ def chat_interface(create_agent_func):
                                 "output_preview": str(getattr(msg, 'content', ''))[:500]
                             })
 
+                    # Track API key usage (token counts + cost)
+                    try:
+                        if user_id and not llm_config.get("using_free_tier"):
+                            from api_key_usage import APIKeyUsageTracker
+                            total_input = 0
+                            total_output = 0
+                            for msg in result_messages:
+                                usage = getattr(msg, 'usage_metadata', None)
+                                if usage:
+                                    total_input += usage.get('input_tokens', 0)
+                                    total_output += usage.get('output_tokens', 0)
+                            if total_input > 0 or total_output > 0:
+                                APIKeyUsageTracker.record_usage(
+                                    user_id=user_id,
+                                    provider=llm_config.get("provider", "unknown"),
+                                    model=llm_config.get("model", "unknown"),
+                                    input_tokens=total_input,
+                                    output_tokens=total_output,
+                                )
+                    except Exception as usage_err:
+                        logger.debug(f"Usage tracking failed: {usage_err}")
+
                     # Log decision for AI training data
                     try:
                         log_ai_decision(
@@ -1544,6 +1566,20 @@ def chat_interface(create_agent_func):
             except Exception as e:
                 response = f"**System Error:** {str(e)}"
                 response_container.markdown(f"<div style='color: #ccc; font-family: 'Inter', -apple-system, sans-serif; font-weight: 300; font-size: 15px; line-height: 1.7;'>{html.escape(response)}</div>", unsafe_allow_html=True)
+
+                # Track failed API request
+                try:
+                    if user_id and not llm_config.get("using_free_tier"):
+                        from api_key_usage import APIKeyUsageTracker
+                        APIKeyUsageTracker.record_usage(
+                            user_id=user_id,
+                            provider=llm_config.get("provider", "unknown"),
+                            model=llm_config.get("model", "unknown"),
+                            success=False,
+                            error_message=str(e)[:500],
+                        )
+                except Exception:
+                    pass
 
                 # Log failed decision
                 try:

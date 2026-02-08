@@ -50,8 +50,8 @@ def settings_page():
     settings_tab = st.session_state.get("settings_tab", None)
 
     # Tabs for different settings sections
-    tab_names = ["AI Provider", "Connected Accounts", "Limits", "Security"]
-    tab1, tab2, tab3, tab4 = st.tabs(tab_names)
+    tab_names = ["AI Provider", "Usage", "Connected Accounts", "Limits", "Security"]
+    tab1, tab_usage, tab2, tab3, tab4 = st.tabs(tab_names)
 
     # Auto-select tab if coming from quick action
     if settings_tab == "provider":
@@ -190,6 +190,12 @@ def settings_page():
                 st.rerun()
             else:
                 st.error("Failed to save")
+
+    # ============================================================================
+    # TAB: Usage Statistics
+    # ============================================================================
+    with tab_usage:
+        _render_usage_tab(user_id)
 
     # ============================================================================
     # TAB 2: Connected Accounts
@@ -451,6 +457,93 @@ def settings_page():
                         st.error("Could not disconnect accounts")
                 else:
                     st.warning("No active session")
+
+
+def _render_usage_tab(user_id: str):
+    """Render the API key usage statistics tab."""
+    from api_key_usage import APIKeyUsageTracker
+
+    st.markdown("""
+    <div style="margin-bottom: 24px;">
+        <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 16px; font-weight: 400; color: white;">API Key Usage</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; margin-top: 4px;">Token usage and estimated costs for your API key</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    summary = APIKeyUsageTracker.get_usage_summary(user_id)
+
+    # Period stats cards
+    col1, col2, col3 = st.columns(3)
+    for col, label, data in [
+        (col1, "Today", summary["today"]),
+        (col2, "This Week", summary["this_week"]),
+        (col3, "This Month", summary["this_month"]),
+    ]:
+        with col:
+            cost_str = f"${data['cost']:.4f}" if data["cost"] < 1 else f"${data['cost']:.2f}"
+            tokens_str = f"{data['tokens']:,}"
+            st.markdown(f"""
+            <div style="background: rgba(255,255,255,0.04); border-radius: 12px; padding: 16px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">{label}</div>
+                <div style="font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 300; color: white; letter-spacing: -0.02em;">{cost_str}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666; margin-top: 4px;">{data['requests']} requests &middot; {tokens_str} tokens</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
+
+    # Per-model breakdown
+    if summary["by_model"]:
+        st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 12px;'>Usage by Model</div>", unsafe_allow_html=True)
+        for entry in summary["by_model"]:
+            cost_str = f"${entry['cost']:.4f}" if entry["cost"] < 1 else f"${entry['cost']:.2f}"
+            st.markdown(f"""
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                <div>
+                    <span style="font-family: 'Inter', sans-serif; font-size: 13px; color: #ccc;">{entry['model']}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555; margin-left: 8px;">{entry['provider']}</span>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: white;">{cost_str}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #555; margin-left: 8px;">{entry['requests']} req</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0;'></div>", unsafe_allow_html=True)
+
+    # Recent requests
+    st.markdown("<div style='font-size: 13px; color: #888; margin-bottom: 12px;'>Recent Requests</div>", unsafe_allow_html=True)
+    recent = APIKeyUsageTracker.get_recent_requests(user_id, limit=10)
+
+    if recent:
+        for req in recent:
+            cost_str = f"${float(req.get('estimated_cost', 0)):.4f}"
+            tokens = req.get("total_tokens", 0)
+            model = req.get("model", "unknown")
+            created = req.get("created_at", "")[:16].replace("T", " ")
+            status_color = "#22c55e" if req.get("success", True) else "#ef4444"
+            status_dot = f'<span style="color: {status_color};">&#9679;</span>'
+            st.markdown(f"""
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                <div>
+                    {status_dot}
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888; margin-left: 6px;">{model}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; margin-left: 8px;">{created}</span>
+                </div>
+                <div>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888;">{tokens:,} tok</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666; margin-left: 8px;">{cost_str}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="text-align: center; padding: 32px 0;">
+            <div style="font-family: 'Inter', sans-serif; font-size: 14px; color: #555;">No usage data yet</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #444; margin-top: 4px;">Start chatting and your API key usage will appear here</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 def show_settings_button():

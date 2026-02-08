@@ -1,7 +1,7 @@
 """API Route modules."""
 
 from api.routes import health, wallet, transactions, agents
-from api.routes import yield_routes, scheduler_routes, earnings_routes
+from api.routes import yield_routes, scheduler_routes, earnings_routes, usage_routes
 
 __all__ = [
     "health",
@@ -11,4 +11,5 @@ __all__ = [
     "yield_routes",
     "scheduler_routes",
     "earnings_routes",
+    "usage_routes",
 ]

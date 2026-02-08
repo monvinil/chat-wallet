@@ -115,6 +115,7 @@ def create_app() -> FastAPI:
     app.include_router(yield_routes.router, prefix="/api/v1/yield", tags=["Yield"])
     app.include_router(scheduler_routes.router, prefix="/api/v1/scheduler", tags=["Scheduler"])
     app.include_router(earnings_routes.router, prefix="/api/v1/earnings", tags=["Earnings"])
+    app.include_router(usage_routes.router, prefix="/api/v1/usage", tags=["Usage"])
 
     return app
 
